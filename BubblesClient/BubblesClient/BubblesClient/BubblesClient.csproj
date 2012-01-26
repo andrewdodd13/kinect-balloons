@@ -112,6 +112,10 @@
     <Compile Include="Input\Manager\InputManager.cs" />
     <Compile Include="Input\Manager\IInputManager.cs" />
     <Compile Include="Input\Controllers\KeyboardInputMethod.cs" />
+    <Compile Include="Model\Balloon.cs" />
+    <Compile Include="Network\Event\NewBalloonEvent.cs" />
+    <Compile Include="Network\INetworkEventManager.cs" />
+    <Compile Include="Network\MockNetworkManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />

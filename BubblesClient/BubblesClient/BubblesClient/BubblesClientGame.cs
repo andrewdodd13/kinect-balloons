@@ -10,6 +10,9 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using BubblesClient.Input.Manager;
 using BubblesClient.Input.Controllers;
+using BubblesClient.Network;
+using BubblesClient.Model;
+using BubblesClient.Network.Event;
 
 namespace BubblesClient
 {
@@ -19,16 +22,18 @@ namespace BubblesClient
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
         GraphicsDeviceManager graphics;
-        IInputManager input;
         SpriteBatch spriteBatch;
         Color backgroundColour = Color.Blue;
+
+        IInputManager _input;
+        INetworkEventManager _networkEvents = new MockNetworkManager();
 
         public BubblesClientGame()
         {
             graphics = new GraphicsDeviceManager(this);
 
-            input = new InputManager();
-            input.Initialise(new KeyboardInputMethod());
+            _input = new InputManager();
+            _input.Initialise(new KeyboardInputMethod());
 
             Content.RootDirectory = "Content";
         }
@@ -78,10 +83,13 @@ namespace BubblesClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            // TODO: Add your update logic here
-            input.BeginFrame();
+            // Query the Network Manager for events
+            PerformNetworkEvents();
 
-            if (input.SwipeLeftControl == ButtonState.Pressed)
+            // TODO: Add your update logic here
+            _input.BeginFrame();
+
+            if (_input.SwipeLeftControl == ButtonState.Pressed)
             {
                 if(backgroundColour == Color.Red) 
                 {
@@ -97,7 +105,7 @@ namespace BubblesClient
                 }
             }
 
-            input.EndFrame();
+            _input.EndFrame();
 
             base.Update(gameTime);
         }
@@ -113,6 +121,45 @@ namespace BubblesClient
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
+        }
+
+        /// <summary>
+        /// Helper method to perform actions for any network events which have
+        /// occurred since the last frame. This involves destroying balloons 
+        /// which the server has decided are too old, and adding any new 
+        /// balloons we have been sent.
+        /// </summary>
+        protected void PerformNetworkEvents()
+        {
+            // Firstly, pop any balloons that need to be popped
+            List<Balloon> poppedBalloons = _networkEvents.GetPoppedBalloons();
+            poppedBalloons.ForEach(x => PopBalloon(x));
+
+            // Then add any new balloons that we have been sent
+            List<NewBalloonEvent> newBalloons = _networkEvents.GetNewBalloons();
+            newBalloons.ForEach(x => AddBalloon(x));
+        }
+
+        /// <summary>
+        /// Adds a new balloon to the screen. The New Balloon Event describes
+        /// details of the balloon and also the initial position and velocity
+        /// of the balloon.
+        /// </summary>
+        /// <param name="newBalloonEvent">The New Balloon Event describing the
+        /// Balloon to add.</param>
+        protected void AddBalloon(NewBalloonEvent newBalloonEvent)
+        {
+
+        }
+
+        /// <summary>
+        /// Pops the specified Balloon. This will cause an animation to be 
+        /// started and remove the Balloon from the internal list of balloons 
+        /// on this client.
+        /// </summary>
+        /// <param name="balloon">The balloon to pop</param>
+        protected void PopBalloon(Balloon balloon)
+        {
         }
     }
 }

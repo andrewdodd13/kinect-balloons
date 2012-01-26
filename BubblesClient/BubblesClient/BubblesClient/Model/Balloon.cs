@@ -15,11 +15,18 @@ namespace BubblesClient.Model
     /// Note: It belongs in the server project, but we don't have one of those 
     /// yet.
     /// </summary>
-    class Balloon
+    public class Balloon
     {
         public string TargetURL { get; set; }
         public string Source { get; set; }
         public string Excerpt { get; set; }
+
+        public Balloon(string targetURL, string source, string excerpt)
+        {
+            TargetURL = targetURL;
+            Source = source;
+            Excerpt = excerpt;
+        }
 
         // Do we need formatting options, etc?
     }

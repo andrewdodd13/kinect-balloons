@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using BubblesClient.Model;
 using Microsoft.Xna.Framework;
+using BubblesClient.Network.Event;
 
 namespace BubblesClient.Network
 {
@@ -15,14 +16,14 @@ namespace BubblesClient.Network
     /// changes to the server state, and then to notify the server of any 
     /// changes to state it needs to make.
     /// </summary>
-    interface INetworkEventManager
+    public interface INetworkEventManager
     {
         /// <summary>
-        /// Returns a list of new Balloons added by the server since the last 
-        /// call to this function.
+        /// Returns a list of new Balloons Events added by the server since the
+        /// last call to this function.
         /// </summary>
         /// <returns></returns>
-        List<Balloon> GetNewBalloons();
+        List<NewBalloonEvent> GetNewBalloons();
 
         /// <summary>
         /// Returns a list of Balloons which the server has asked us to pop 
