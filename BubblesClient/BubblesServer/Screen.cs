@@ -7,6 +7,7 @@ namespace BubblesServer
 {
     public enum ScreenDirection
     {
+        Unknown,
         Left,
         Right
     }
@@ -55,6 +56,7 @@ namespace BubblesServer
 		
 		public void Run()
         {
+            Console.WriteLine("New screen: {0}", m_id);
 			while(true)
             {
 				try

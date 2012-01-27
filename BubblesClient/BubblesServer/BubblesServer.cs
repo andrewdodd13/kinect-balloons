@@ -44,6 +44,7 @@ namespace BubblesServer
             m_socket.Listen(0);
             using(m_socket)
             {
+                Console.WriteLine("Waiting for clients to connect...");
                 while(true)
                 {
                     Socket conn = m_socket.Accept();
@@ -51,6 +52,13 @@ namespace BubblesServer
                     ScreenConnection screenConn = new ScreenConnection(conn);
                     Screen screen = new Screen("Foo", screenID, screenConn, this);
                     m_screens.Add(screenID, screen);
+                    lock(m_bubbles)
+                    {
+                        foreach(int bubbleID in m_bubbles.Keys)
+                        {
+                            screen.EnqueueMessage(new AddMessage(bubbleID));   
+                        }
+                    }
                 }
             }
         }
