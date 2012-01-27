@@ -36,6 +36,7 @@
     <Compile Include="BubblesServer.cs" />
     <Compile Include="BubblesMessage.cs" />
     <Compile Include="ScreenConnection.cs" />
+    <Compile Include="Bubble.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />

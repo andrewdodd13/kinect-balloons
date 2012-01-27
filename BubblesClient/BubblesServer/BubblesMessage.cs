@@ -4,8 +4,11 @@ namespace BubblesServer
 {
     public enum BubblesMessageType
     {
-        NewBubble,
-        GetBubbleInfo
+        Add,
+        ChangeScreen,
+        GetInfo,
+        Update,
+        Pop
     }
     
     public class BubblesMessage
@@ -24,7 +27,7 @@ namespace BubblesServer
         }
     }
     
-    public class NewBubbleNotification : BubblesMessage
+    public class AddMessage : BubblesMessage
     {
         private int m_bubbleID;
         
@@ -33,10 +36,32 @@ namespace BubblesServer
             set { m_bubbleID = value; }
         }
         
-        public NewBubbleNotification(int bubbleID)
-            : base(BubblesMessageType.NewBubble)
+        public AddMessage(int bubbleID) : base(BubblesMessageType.Add)
         {
             m_bubbleID = bubbleID;
+        }
+    }
+    
+    public class ChangeScreenMessage : BubblesMessage
+    {
+        private int m_bubbleID;
+        private ScreenDirection m_direction;
+
+        public ScreenDirection Direction {
+            get {
+                return this.m_direction;
+            }
+        }        
+        public int BubbleID {
+            get { return this.m_bubbleID; }
+            set { m_bubbleID = value; }
+        }
+        
+        public ChangeScreenMessage(int bubbleID, ScreenDirection direction)
+            : base(BubblesMessageType.ChangeScreen)
+        {
+            m_bubbleID = bubbleID;
+            m_direction = direction;
         }
     }
 }
