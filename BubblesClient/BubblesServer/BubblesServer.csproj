@@ -31,4 +31,13 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="BubblesServer.cs" />
+    <Compile Include="BubblesMessage.cs" />
+    <Compile Include="ScreenConnection.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Net" />
+    <Reference Include="System" />
+  </ItemGroup>
 </Project>
