@@ -37,6 +37,9 @@
     <Compile Include="BubblesMessage.cs" />
     <Compile Include="ScreenConnection.cs" />
     <Compile Include="Bubble.cs" />
+    <Compile Include="CircularQueue.cs" />
+    <Compile Include="ExclusiveCircularQueue.cs" />
+    <Compile Include="PredicateCondition.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />

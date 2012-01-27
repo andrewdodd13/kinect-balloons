@@ -24,7 +24,7 @@ namespace BubblesServer
 		private Thread m_thread;
 		
         private Dictionary<int, Bubble> m_bubbles;
-		private Queue<BubblesMessage> m_queue;
+        private ExclusiveCircularQueue<BubblesMessage> m_queue;
 		
 		// Methods
 		
@@ -35,7 +35,7 @@ namespace BubblesServer
 			m_connection = connection;
             m_server = server;
             m_bubbles = new Dictionary<int, Bubble>();
-            m_queue = new Queue<BubblesMessage>();
+            m_queue = new ExclusiveCircularQueue<BubblesMessage>(64);
 			m_thread = new Thread(Run);
 			m_thread.Start();
 		}
@@ -57,12 +57,12 @@ namespace BubblesServer
 		public void Run()
         {
             Console.WriteLine("New screen: {0}", m_id);
+            m_connection.BeginReceiveMessage(MessageReceived);
 			while(true)
             {
+                BubblesMessage msg = m_queue.Dequeue();
 				try
                 {
-					BubblesMessage msg = m_connection.ReceiveMessage();
-					
 					if(msg == null)
                     {	
 						break;
@@ -70,6 +70,11 @@ namespace BubblesServer
 					
 					switch(msg.Type)
                     {
+                    case BubblesMessageType.Add:
+                        AddMessage am = (AddMessage)msg;
+                        m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
+                        m_connection.SendMessage(am);    
+                        break;
 					case BubblesMessageType.ChangeScreen:
                         ChangeScreenMessage csm = (ChangeScreenMessage)msg;
 						Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
@@ -88,37 +93,23 @@ namespace BubblesServer
 				}
                 catch(ThreadInterruptedException e)
                 {
-					ProcessQueue();
+					break;
 				}
 			}
-		}
-		
-		// Process new bubbles queue
-		public void ProcessQueue()
-        {
-            lock(m_queue)
-            {
-                foreach(BubblesMessage m in m_queue)
-                {
-                    switch(m.Type)
-                    {
-                    case BubblesMessageType.Add:
-                        AddMessage am = (AddMessage)m;
-                        m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
-                        m_connection.SendMessage(am);    
-                        break;
-                    }
-                }
-            }
 		}
         
         public void EnqueueMessage(BubblesMessage message)
         {
-            lock(m_queue)
+            m_queue.Enqueue(message);
+        }
+        
+        private void MessageReceived(BubblesMessage message)
+        {
+            EnqueueMessage(message);
+            if(message != null)
             {
-                m_queue.Enqueue(message);
-                m_thread.Interrupt();
-            }
+                m_connection.BeginReceiveMessage(MessageReceived);    
+            }            
         }
 	}
 }
