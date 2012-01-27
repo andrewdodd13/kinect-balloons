@@ -43,23 +43,20 @@ namespace BubblesServer
 		public void Run() {
 			while(true) {
 				try {
-					BubbleMessage msg = m_connection.ReceiveMessage();
+					BubblesMessage msg = m_connection.ReceiveMessage();
 					
 					if(msg == null) {	
 						break;
 					}
 					
 					switch(msg.Type) {
-					case BubbleGoesLeft:
+					case BubblesMessageType.BubbleLeft:
 						
 						break;
-					case BubbleGoesRight:
+					case BubblesMessageType.Update:
 						
 						break;
-					case BubbleUpdate:
-						
-						break;
-					case BubblePop:
+					case BubblesMessageType.Pop:
 						
 						break;
 					}
@@ -70,10 +67,10 @@ namespace BubblesServer
 			}
 		}
 		
-		// 
+		// Process new bubbles queue
 		public void ProcessQueue() {
 			foreach(Bubble b in m_queue) {
-				m_connection.SendMessage(new Bu(b));	
+				m_connection.SendMessage(new NewBubbleNotification(b));	
 			}
 		}
 		
