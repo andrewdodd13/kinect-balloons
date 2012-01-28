@@ -13,7 +13,7 @@ namespace BubblesServer
             m_port = port;
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
                                   ProtocolType.Tcp);
-            m_queue = new ExclusiveCircularQueue<Message>(64);
+            m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
             m_nextBubbleID = 0;
             m_screens = new Dictionary<int, Screen>();
@@ -97,7 +97,7 @@ namespace BubblesServer
         #region Implementation
         private int m_port;
         private Socket m_socket;
-        private ExclusiveCircularQueue<Message> m_queue;
+        private CircularQueue<Message> m_queue;
         private int m_nextScreenID;
         private int m_nextBubbleID;
         private Dictionary<int, Screen> m_screens;

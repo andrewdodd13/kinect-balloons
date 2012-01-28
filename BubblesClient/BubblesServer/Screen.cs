@@ -24,7 +24,7 @@ namespace BubblesServer
             m_connection = connection;
             m_server = server;
             m_bubbles = new Dictionary<int, Bubble>();
-            m_queue = new ExclusiveCircularQueue<Message>(64);
+            m_queue = new CircularQueue<Message>(64);
             m_thread = new Thread(Run);
             m_thread.Start();
         }
@@ -57,7 +57,7 @@ namespace BubblesServer
 		private Thread m_thread;
 		
         private Dictionary<int, Bubble> m_bubbles;
-        private ExclusiveCircularQueue<Message> m_queue;
+        private CircularQueue<Message> m_queue;
         
         /// <summary>
         /// Thread Main.

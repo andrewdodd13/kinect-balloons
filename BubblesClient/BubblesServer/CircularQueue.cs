@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading;
 
 namespace BubblesServer
 {
     /// <summary>
     /// Fixed-size buffer that can be used to synchronize data between producers and consumers.
     /// </summary>
-    public abstract class CircularQueue<T>
+    public class CircularQueue<T>
     {
         #region Champs
         /// <summary>
@@ -32,6 +33,9 @@ namespace BubblesServer
         /// Position d'écriture dans le buffer (prochain élément à être écrit).
         /// </summary>
         protected int writePosition;
+        readonly object syncExcl = new object();
+        PredicateCondition canRead;
+        PredicateCondition canWrite;
         #endregion
         #region Propriétés
         /// <summary>
@@ -51,7 +55,10 @@ namespace BubblesServer
         {
             get
             {
-                return available;
+                lock( syncExcl )
+                {
+                    return available;
+                }
             }
         }
         /// <summary>
@@ -61,7 +68,10 @@ namespace BubblesServer
         {
             get
             {
-                return (capacity == 0);
+                lock( syncExcl )
+                {
+                    return (capacity == 0);
+                }
             }
         }
         /// <summary>
@@ -71,7 +81,10 @@ namespace BubblesServer
         {
             get
             {
-                return (available == 0);
+                lock( syncExcl )
+                {
+                    return (available == 0);
+                }
             }
         }
         #endregion
@@ -80,7 +93,7 @@ namespace BubblesServer
         /// Crée un nouveau buffer circulaire avec la taille spécifiée.
         /// </summary>
         /// <param name="size"> Taille du buffer. </param>
-        protected CircularQueue( int size )
+        public CircularQueue( int size )
         {
             if( size < 0 )
             {
@@ -92,6 +105,8 @@ namespace BubblesServer
                 this.buffer = new T[ size ];
                 InitBuffer( size, true );
             }
+            canRead = new PredicateCondition( delegate() { return available != 0; }, syncExcl );
+            canWrite = new PredicateCondition( delegate() { return capacity != 0; }, syncExcl );
         }
         /// <summary>
         /// Crée un nouveau buffer circulaire à partir des éléments présents dans un tableau.
@@ -100,7 +115,7 @@ namespace BubblesServer
         /// <param name="ownsArray"> Indique si le buffer utilise directement le tableau (true) ou copie son contenu dans un nouveau tableau (false). </param>
         /// <param name="empty"> Indique si le buffer doit être considéré comme vide ou plein à sa création. </param>
         /// <remarks> Si ownsArray vaut false, le tableau est copié dans le buffer en une opération rapide qui ne met pas en jeu de verrou. </remarks>
-        protected CircularQueue( T[] array, bool ownsArray, bool empty )
+        public CircularQueue( T[] array, bool ownsArray, bool empty )
         {
             if( array == null )
             {
@@ -121,6 +136,8 @@ namespace BubblesServer
                     InitBuffer( this.size, empty );
                 }
             }
+            canRead = new PredicateCondition( delegate() { return available != 0; }, syncExcl );
+            canWrite = new PredicateCondition( delegate() { return capacity != 0; }, syncExcl );
         }
         #endregion
         #region Implémentation
@@ -144,15 +161,46 @@ namespace BubblesServer
             }
         }
         /// <summary>
-        /// En cas de substitution dans une classe dérivée, ajoute une valeur à la fin du buffer circulaire.
+        /// Ajoute une valeur à la fin du buffer circulaire.
         /// </summary>
         /// <param name="value"> Valeur à ajouter. </param>
-        public abstract void Enqueue( T value );
+        public virtual void Enqueue( T value )
+        {
+            lock( syncExcl )
+            {
+                //attend qu'il y ait de la place dans le buffer
+                canWrite.Wait();
+    
+                --capacity;
+                EnqueueCore( value );
+                ++available;
+    
+                //avertir les threads attendant pour la lecture
+                canRead.SignalAll();                
+            }
+        }
         /// <summary>
-        /// En cas de substitution dans une classe dérivée, retire la valeur au début du buffer circulaire.
+        /// Retire la valeur au début du buffer circulaire.
         /// </summary>
         /// <returns> Valeur retirée. </returns>
-        public abstract T Dequeue();
+        public virtual T Dequeue()
+        {
+            T temp;
+
+            lock( syncExcl )
+            {
+                //attend qu'il y ait des valeurs à lire
+                canRead.Wait();
+    
+                --available;
+                temp = DequeueCore();
+                ++capacity;
+    
+                //avertir les threads attendant pour l'écriture
+                canWrite.SignalAll();                
+                return temp;
+            }
+        }
         /// <summary>
         /// Copie une valeur dans le buffer à la position actuelle d'écriture et incrémente cette position.
         /// </summary>
@@ -181,16 +229,145 @@ namespace BubblesServer
             return value;
         }
         /// <summary>
-        /// En cas de substitution dans une classe dérivée, lit la valeur au début du buffer circulaire sans la retirer.
+        /// Lit la valeur au début du buffer circulaire sans la retirer.
         /// </summary>
         /// <returns> Valeur lue. </returns>
-        public abstract T Peek();
+        public virtual T Peek()
+        {
+            lock( syncExcl )
+            {
+                //attend qu'il y ait des blocs à lire
+                canRead.Wait();
+
+                //récupère le bloc depuis le buffer
+                return buffer[ readPosition ];
+            }
+        }
         /// <summary>
-        /// En cas de substitution dans une classe dérivée, essaie de retirer la valeur au début du buffer circulaire sans attendre si aucune valeur n'est présente dans le buffer.
+        /// Essaie de retirer la valeur au début du buffer circulaire sans attendre si aucune valeur n'est présente dans le buffer.
         /// </summary>
         /// <param name="value"> Valeur retirée en cas de succès. </param>
         /// <returns> true si une valeur a été retirée, false sinon. </returns>
-        public abstract bool TryDequeue( out T value );        
+        public virtual bool TryDequeue( out T value )
+        {
+            if( Monitor.TryEnter( syncExcl ) )
+            {
+                try
+                {
+                    //regarde s'il y a une valeur à lire
+                    if( available > 0 )
+                    {
+                        value = Dequeue();
+                        return true;
+                    }
+                    else
+                    {
+                        value = default( T );
+                        return false;
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit( syncExcl );
+                }
+            }
+            else
+            {
+                value = default( T );
+                return false;
+            }
+        }
         #endregion
     }
+    
+    /// <summary>
+    /// Représente une condition utilisant un délégué pour vérifier si elle est vérifiée ou non.
+    /// </summary>
+    public class PredicateCondition
+    {
+        #region Champs
+        readonly ConditionPredicate predicate;
+        readonly object conditionLock;
+        #endregion
+        #region Constructeur
+        /// <summary>
+        /// Crée une nouvelle condition avec le délégué spécifié, qui utilise un objet interne pour la synchronisation.
+        /// </summary>
+        /// <param name="predicate"> Délégué à utiliser pour vérifier la condition. </param>        
+        /// <remarks>
+        /// Le verrou sur l'objet de synchronisation interne est acquis pendant l'appel du délégué.
+        /// </remarks>
+        public PredicateCondition( ConditionPredicate predicate ) : this( predicate, new object() )
+        {
+        }
+        /// <summary>
+        /// Crée une nouvelle condition avec le délégué spécifié et l'objet de synchronisation spécifiés.
+        /// </summary>
+        /// <param name="predicate"> Délégué à utiliser pour vérifier la condition. </param>
+        /// <param name="conditionLock"> Objet à utiliser pour synchroniser l'accès à la condition. </param>
+        /// <remarks>
+        /// Le verrou sur <paramref name="conditionLock"/> est acquis pendant l'appel du délégué.
+        /// </remarks>
+        public PredicateCondition( ConditionPredicate predicate, object conditionLock )
+        {
+            if( predicate == null )
+            {
+                throw new ArgumentNullException( "predicate" );
+            }
+            else if( conditionLock == null )
+            {
+                throw new ArgumentNullException( "conditionLock" );
+            }
+            this.predicate = predicate;
+            this.conditionLock = conditionLock;
+        }
+        #endregion
+        #region Implémentation
+        /// <summary>
+        /// Attend que la condition soit vérifiée.
+        /// </summary>
+        public void Wait()
+        {
+            lock( conditionLock )
+            {
+                while( !predicate() )
+                {
+                    Monitor.Wait( conditionLock );
+                }
+            }
+        }
+        /// <summary>
+        /// Signale que la valeur de la condition peut avoir changé, si c'est le cas, réveille un seul thread attendant que la condition soit vérifiée.
+        /// </summary>
+        public void Signal()
+        {
+            lock( conditionLock )
+            {
+                if( predicate() )
+                {
+                    Monitor.Pulse( conditionLock );
+                }
+            }
+        }
+        /// <summary>
+        /// Signale que la valeur de la condition peut avoir changé, si c'est le cas, réveille tous les threads attendant que la condition soit vérifiée.
+        /// </summary>
+        public void SignalAll()
+        {
+            lock( conditionLock )
+            {
+                if( predicate() )
+                {
+                    Monitor.PulseAll( conditionLock );
+                }
+            }
+        }
+        #endregion
+    }
+    
+    /// <summary>
+    /// Délégué indiquant si une condition est vérifiée ou non.
+    /// </summary>
+    /// <returns> true si la condition est actuellement vérifiée, false sinon. </returns>
+    public delegate bool ConditionPredicate();
 }
