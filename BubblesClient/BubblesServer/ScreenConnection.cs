@@ -8,7 +8,7 @@ namespace BubblesServer
     /// <summary>
     /// Function that can be used to receive messages.
     /// </summary>
-    public delegate void MessageCallback(BubblesMessage msg);
+    public delegate void MessageCallback(Message msg);
     
     /// <summary>
     /// Represents a connection between a screen and the bubble server.
@@ -45,7 +45,7 @@ namespace BubblesServer
         /// <summary>
         /// Send a message to the client (blocking).
         /// </summary>
-        public void SendMessage(BubblesMessage message)
+        public void SendMessage(Message message)
         {
             string line = message.Format();
             Console.WriteLine(">> {0}", line);
@@ -95,7 +95,7 @@ namespace BubblesServer
             }
             m_receiveBuffer.Write(op.Buffer, 0, bytesRead);
             
-            BubblesMessage msg = TryReadMessage();
+            Message msg = TryReadMessage();
             if(msg == null)
             {
                 // we did not receive enough data to read the message
@@ -113,7 +113,7 @@ namespace BubblesServer
         /// <returns>
         /// Message read or null if there is not enough data for a complete message.
         /// </returns>
-        private BubblesMessage TryReadMessage()
+        private Message TryReadMessage()
         {
             // Detect the first newline in the buffered data.
             int c;
@@ -150,7 +150,7 @@ namespace BubblesServer
             return ParseMessage(line);
         }
         
-        private BubblesMessage ParseMessage(string line)
+        private Message ParseMessage(string line)
         {
             string[] parts = line.Split(' ');
             if(parts.Length < 1)

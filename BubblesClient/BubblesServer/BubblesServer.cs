@@ -13,7 +13,7 @@ namespace BubblesServer
             m_port = port;
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
                                   ProtocolType.Tcp);
-            m_queue = new ExclusiveCircularQueue<BubblesMessage>(64);
+            m_queue = new ExclusiveCircularQueue<Message>(64);
             m_nextScreenID = 0;
             m_nextBubbleID = 0;
             m_screens = new Dictionary<int, Screen>();
@@ -43,7 +43,7 @@ namespace BubblesServer
                 m_socket.BeginAccept(AcceptCompleted, null);
                 while(true)
                 {
-                    BubblesMessage msg = m_queue.Dequeue();
+                    Message msg = m_queue.Dequeue();
                     if(!HandleMessage(msg))
                     {
                         break;
@@ -56,7 +56,7 @@ namespace BubblesServer
         /// <summary>
         /// Send a message to the screen. It will be handled in the server's thread.
         /// </summary>
-        public void EnqueueMessage(BubblesMessage message)
+        public void EnqueueMessage(Message message)
         {
             m_queue.Enqueue(message);
         }
@@ -97,7 +97,7 @@ namespace BubblesServer
         #region Implementation
         private int m_port;
         private Socket m_socket;
-        private ExclusiveCircularQueue<BubblesMessage> m_queue;
+        private ExclusiveCircularQueue<Message> m_queue;
         private int m_nextScreenID;
         private int m_nextBubbleID;
         private Dictionary<int, Screen> m_screens;
@@ -109,7 +109,7 @@ namespace BubblesServer
         /// <returns>
         /// True if the message has been handled, false if messages should stop being processed.
         /// </returns>
-        private bool HandleMessage(BubblesMessage msg)
+        private bool HandleMessage(Message msg)
         {
             if(msg == null)
             {
@@ -117,7 +117,7 @@ namespace BubblesServer
             }
             switch(msg.Type)
             {
-            case BubblesMessageType.Connected:
+            case MessageType.Connected:
                 return HandleScreenConnected((ConnectedMessage)msg);
             default:
                 // Disconnect when receiving unknown messages

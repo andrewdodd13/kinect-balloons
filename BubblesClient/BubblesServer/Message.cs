@@ -6,7 +6,7 @@ namespace BubblesServer
     /// <summary>
     /// List of all message types.
     /// </summary>
-    public enum BubblesMessageType
+    public enum MessageType
     {
         Add,
         ChangeScreen,
@@ -20,17 +20,17 @@ namespace BubblesServer
     /// <summary>
     /// Message that can be sent between a screen and bubble server or within the server.
     /// </summary>
-    public abstract class BubblesMessage
+    public abstract class Message
     {
         /// <summary>
         /// Identifies the type of the message.
         /// </summary>
-        public BubblesMessageType Type
+        public MessageType Type
         {
             get { return m_type; }
         }
         
-        public BubblesMessage(BubblesMessageType type)
+        public Message(MessageType type)
         {
             m_type = type;
         }
@@ -40,10 +40,10 @@ namespace BubblesServer
         /// </summary>
         public abstract string Format();
         
-        private readonly BubblesMessageType m_type;
+        private readonly MessageType m_type;
     }
     
-    public class AddMessage : BubblesMessage
+    public class AddMessage : Message
     {   
         public int BubbleID
         {
@@ -51,7 +51,7 @@ namespace BubblesServer
             set { m_bubbleID = value; }
         }
         
-        public AddMessage(int bubbleID) : base(BubblesMessageType.Add)
+        public AddMessage(int bubbleID) : base(MessageType.Add)
         {
             m_bubbleID = bubbleID;
         }
@@ -64,7 +64,7 @@ namespace BubblesServer
         private int m_bubbleID;
     }
     
-    public class ChangeScreenMessage : BubblesMessage
+    public class ChangeScreenMessage : Message
     {
         public ScreenDirection Direction
         {
@@ -78,7 +78,7 @@ namespace BubblesServer
         }
         
         public ChangeScreenMessage(int bubbleID, ScreenDirection direction)
-            : base(BubblesMessageType.ChangeScreen)
+            : base(MessageType.ChangeScreen)
         {
             m_bubbleID = bubbleID;
             m_direction = direction;
@@ -106,14 +106,14 @@ namespace BubblesServer
         }
     }
     
-    public class ConnectedMessage : BubblesMessage
+    public class ConnectedMessage : Message
     {   
         public Socket Connection
         {
             get { return this.m_socket; }
         }
         
-        public ConnectedMessage(Socket socket) : base(BubblesMessageType.Connected)
+        public ConnectedMessage(Socket socket) : base(MessageType.Connected)
         {
             m_socket = socket;
         }
@@ -126,14 +126,14 @@ namespace BubblesServer
         private Socket m_socket;
     }
     
-    public class DisconnectedMessage : BubblesMessage
+    public class DisconnectedMessage : Message
     {   
         public int ScreenID
         {
             get { return this.m_screenID; }
         }
         
-        public DisconnectedMessage(int screenID) : base(BubblesMessageType.Disconnected)
+        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected)
         {
             m_screenID = screenID;
         }

@@ -34,12 +34,12 @@
   <ItemGroup>
     <Compile Include="Screen.cs" />
     <Compile Include="BubblesServer.cs" />
-    <Compile Include="BubblesMessage.cs" />
     <Compile Include="ScreenConnection.cs" />
     <Compile Include="Bubble.cs" />
     <Compile Include="CircularQueue.cs" />
     <Compile Include="ExclusiveCircularQueue.cs" />
     <Compile Include="PredicateCondition.cs" />
+    <Compile Include="Message.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />
