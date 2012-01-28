@@ -33,13 +33,13 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Screen.cs" />
-    <Compile Include="BubblesServer.cs" />
     <Compile Include="ScreenConnection.cs" />
     <Compile Include="Bubble.cs" />
     <Compile Include="CircularQueue.cs" />
     <Compile Include="ExclusiveCircularQueue.cs" />
     <Compile Include="PredicateCondition.cs" />
     <Compile Include="Message.cs" />
+    <Compile Include="Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />

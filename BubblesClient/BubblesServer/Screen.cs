@@ -17,7 +17,7 @@ namespace BubblesServer
 	public class Screen
 	{
         #region Public interface
-        public Screen(string name, int id, ScreenConnection connection, BubblesServer server)
+        public Screen(string name, int id, ScreenConnection connection, Server server)
         {
             m_name = name;
             m_id = id;
@@ -52,7 +52,7 @@ namespace BubblesServer
 		private string m_name;
 		private readonly int m_id;
 		
-        private BubblesServer m_server;
+        private Server m_server;
 		private ScreenConnection m_connection;
 		private Thread m_thread;
 		

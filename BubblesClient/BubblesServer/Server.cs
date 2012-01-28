@@ -5,10 +5,10 @@ using System.Net.Sockets;
 
 namespace BubblesServer
 {
-	public class BubblesServer
+	public class Server
 	{
         #region Public interface
-        public BubblesServer(int port)
+        public Server(int port)
         {
             m_port = port;
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
@@ -22,7 +22,7 @@ namespace BubblesServer
         
         public static void Main(string[] args)
         {
-            BubblesServer server = new BubblesServer(4000);
+            Server server = new Server(4000);
             server.Run();
         }
         
