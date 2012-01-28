@@ -64,48 +64,58 @@ namespace BubblesServer
         /// </summary>
         private void Run()
         {
-            Console.WriteLine("New screen: {0}", m_id);
-            m_connection.BeginReceiveMessage(MessageReceived);
-            try
+            Console.WriteLine("Screen connected: {0}", m_id);
+            using(m_connection)
             {
-                while(true)
+                m_connection.BeginReceiveMessage(MessageReceived);
+                try
                 {
-                    BubblesMessage msg = m_queue.Dequeue();
-                    if(msg == null)
-                    {    
-                        break;
+                    while(true)
+                    {
+                        BubblesMessage msg = m_queue.Dequeue();
+                        if(!HandleMessage(msg))
+                        {    
+                            break;
+                        }
                     }
-                    HandleMessage(msg);
+                }
+                catch(ThreadInterruptedException)
+                {
                 }
             }
-            catch(ThreadInterruptedException)
-            {
-            }
             Console.WriteLine("Screen disconnected: {0}", m_id);
+            m_server.EnqueueMessage(new DisconnectedMessage(m_id));
         }
         
-        private void HandleMessage(BubblesMessage msg)
+        /// <summary>
+        /// Handles a message. Must be called from the screen's thread.
+        /// </summary>
+        /// <returns>
+        /// True if the message has been handled, false if messages should stop being processed.
+        /// </returns>
+        private bool HandleMessage(BubblesMessage msg)
         {
+            if(msg == null)
+            {
+                return false;
+            }
             switch(msg.Type)
             {
             case BubblesMessageType.Add:
                 AddMessage am = (AddMessage)msg;
                 m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
-                m_connection.SendMessage(am);    
-                break;
+                m_connection.SendMessage(am);
+                return true;
             case BubblesMessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
                 Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
                 m_bubbles.Remove(csm.BubbleID);
                 m_server.ChangeScreen(csm.BubbleID, newScreen);
                 newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
-                break;
-            case BubblesMessageType.Update:
-             
-                break;
-            case BubblesMessageType.Pop:
-             
-                break;
+                return true;
+            default:
+                // Disconnect when receiving unknown messages
+                return false;
             }
         }
         
@@ -123,4 +133,3 @@ namespace BubblesServer
         #endregion
 	}
 }
-

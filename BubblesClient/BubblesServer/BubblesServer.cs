@@ -7,31 +7,26 @@ namespace BubblesServer
 {
 	public class BubblesServer
 	{
-        private int m_port;
-        private Socket m_socket;
-        private int m_nextScreenID;
-        private int m_nextBubbleID;
-        private Dictionary<int, Screen> m_screens;
-        private Dictionary<int, Bubble> m_bubbles;
-        
-		public BubblesServer(int port)
-		{
+        #region Public interface
+        public BubblesServer(int port)
+        {
             m_port = port;
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
                                   ProtocolType.Tcp);
+            m_queue = new ExclusiveCircularQueue<BubblesMessage>(64);
             m_nextScreenID = 0;
             m_nextBubbleID = 0;
             m_screens = new Dictionary<int, Screen>();
             m_bubbles = new Dictionary<int, Bubble>();
-		}
+        }
         
         public static void Main(string[] args)
         {
-            BubblesServer server =  new BubblesServer(4000);
-            server.run();
+            BubblesServer server = new BubblesServer(4000);
+            server.Run();
         }
         
-        public void run()
+        public void Run()
         {
             // Create some bubbles
             for(int i = 0; i < 2; i++)
@@ -39,28 +34,31 @@ namespace BubblesServer
                 CreateBubble();
             }
             
-            // Listen on the given port
-            m_socket.Bind(new IPEndPoint(IPAddress.Any, m_port));
-            m_socket.Listen(0);
             using(m_socket)
             {
+                // Listen on the given port
+                m_socket.Bind(new IPEndPoint(IPAddress.Any, m_port));
+                m_socket.Listen(0);
                 Console.WriteLine("Waiting for clients to connect...");
+                m_socket.BeginAccept(AcceptCompleted, null);
                 while(true)
                 {
-                    Socket conn = m_socket.Accept();
-                    int screenID = m_nextScreenID++;
-                    ScreenConnection screenConn = new ScreenConnection(conn);
-                    Screen screen = new Screen("Foo", screenID, screenConn, this);
-                    m_screens.Add(screenID, screen);
-                    lock(m_bubbles)
+                    BubblesMessage msg = m_queue.Dequeue();
+                    if(!HandleMessage(msg))
                     {
-                        foreach(int bubbleID in m_bubbles.Keys)
-                        {
-                            screen.EnqueueMessage(new AddMessage(bubbleID));   
-                        }
+                        break;
                     }
                 }
+                Console.WriteLine("Server is stopping.");
             }
+        }
+        
+        /// <summary>
+        /// Send a message to the screen. It will be handled in the server's thread.
+        /// </summary>
+        public void EnqueueMessage(BubblesMessage message)
+        {
+            m_queue.Enqueue(message);
         }
         
         public Screen ChooseNewScreen(Screen oldScreen, ScreenDirection direction)
@@ -95,6 +93,74 @@ namespace BubblesServer
                 b.Screen = newScreen;
             }
         }
+        #endregion
+        #region Implementation
+        private int m_port;
+        private Socket m_socket;
+        private ExclusiveCircularQueue<BubblesMessage> m_queue;
+        private int m_nextScreenID;
+        private int m_nextBubbleID;
+        private Dictionary<int, Screen> m_screens;
+        private Dictionary<int, Bubble> m_bubbles;
+        
+        /// <summary>
+        /// Handle a message. Must be called from the server's thread.
+        /// </summary>
+        /// <returns>
+        /// True if the message has been handled, false if messages should stop being processed.
+        /// </returns>
+        private bool HandleMessage(BubblesMessage msg)
+        {
+            if(msg == null)
+            {
+                return false;
+            }
+            switch(msg.Type)
+            {
+            case BubblesMessageType.Connected:
+                return HandleScreenConnected((ConnectedMessage)msg);
+            default:
+                // Disconnect when receiving unknown messages
+                return false;
+            }
+        }
+        
+        private bool HandleScreenConnected(ConnectedMessage msg)
+        {
+            ScreenConnection screenConn = new ScreenConnection(msg.Connection);
+            int screenID = m_nextScreenID++;
+            Screen screen = new Screen("Screen-" + screenID, screenID, screenConn, this);
+            m_screens.Add(screenID, screen);
+            lock(m_bubbles)
+            {
+                foreach(int bubbleID in m_bubbles.Keys)
+                {
+                    screen.EnqueueMessage(new AddMessage(bubbleID));   
+                }
+            }
+            return true;
+        }
+        
+        private bool HandleScreenDisconnected(DisconnectedMessage msg)
+        {
+            // Stop the server after the first client disconnected
+            m_screens.Remove(msg.ScreenID);
+            return false;
+        }
+        
+        private void AcceptCompleted(IAsyncResult result)
+        {
+            try
+            {
+                Socket conn = m_socket.EndAccept(result);
+                EnqueueMessage(new ConnectedMessage(conn));
+                m_socket.BeginAccept(AcceptCompleted, null);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Error with accept: {0}", e);
+            }
+        }
+        #endregion
 	}
 }
-

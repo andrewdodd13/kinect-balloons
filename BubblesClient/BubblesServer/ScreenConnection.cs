@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
 
 namespace BubblesServer
 {
@@ -12,16 +13,20 @@ namespace BubblesServer
     /// <summary>
     /// Represents a connection between a screen and the bubble server.
     /// </summary>
-    public class ScreenConnection
+    public class ScreenConnection : IDisposable
     {
         #region Public interface
         public ScreenConnection(Socket socket)
         {
             m_socket = socket;
-            m_stream = new NetworkStream(m_socket);
-            m_writer = new StreamWriter(m_stream);
+            m_encoding = new UTF8Encoding();
             m_receiveBuffer = new MemoryStream();
-            m_reader = new StreamReader(m_receiveBuffer);
+            m_reader = new StreamReader(m_receiveBuffer, m_encoding);
+        }
+        
+        public void Dispose()
+        {
+            m_socket.Close();
         }
         
         /// <summary>
@@ -44,16 +49,15 @@ namespace BubblesServer
         {
             string line = message.Format();
             Console.WriteLine(">> {0}", line);
-            m_writer.WriteLine(line);
-            m_writer.Flush();
+            byte[] data = m_encoding.GetBytes(line + "\n");
+            m_socket.Send(data);
         }
         #endregion
         #region Implementation
         private Socket m_socket;
-        private NetworkStream m_stream;
-        private StreamWriter m_writer;
         private MemoryStream m_receiveBuffer;
         private StreamReader m_reader;
+        private Encoding m_encoding;
         
         /// <summary>
         /// Holds state for an asynchronous operation to receive a message.

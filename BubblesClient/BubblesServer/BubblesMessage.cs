@@ -1,4 +1,5 @@
 using System;
+using System.Net.Sockets;
 
 namespace BubblesServer
 {
@@ -11,11 +12,13 @@ namespace BubblesServer
         ChangeScreen,
         GetInfo,
         Update,
-        Pop
+        Pop,
+        Connected,
+        Disconnected
     }
     
     /// <summary>
-    /// Message that can be sent between a screen and bubble server.
+    /// Message that can be sent between a screen and bubble server or within the server.
     /// </summary>
     public abstract class BubblesMessage
     {
@@ -101,5 +104,45 @@ namespace BubblesServer
                 throw new ArgumentOutOfRangeException();
             }
         }
+    }
+    
+    public class ConnectedMessage : BubblesMessage
+    {   
+        public Socket Connection
+        {
+            get { return this.m_socket; }
+        }
+        
+        public ConnectedMessage(Socket socket) : base(BubblesMessageType.Connected)
+        {
+            m_socket = socket;
+        }
+        
+        public override string Format()
+        {
+            return String.Format("connected");
+        }
+        
+        private Socket m_socket;
+    }
+    
+    public class DisconnectedMessage : BubblesMessage
+    {   
+        public int ScreenID
+        {
+            get { return this.m_screenID; }
+        }
+        
+        public DisconnectedMessage(int screenID) : base(BubblesMessageType.Disconnected)
+        {
+            m_screenID = screenID;
+        }
+        
+        public override string Format()
+        {
+            return String.Format("disconnected {0}", m_screenID);
+        }
+        
+        private int m_screenID;
     }
 }
