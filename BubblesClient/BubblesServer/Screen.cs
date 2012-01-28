@@ -1,10 +1,12 @@
 using System;
-using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Generic;
 
 namespace BubblesServer
 {
+    /// <summary>
+    /// Used to describe the direction taken by a bubble when it leaves a screen.
+    /// </summary>
     public enum ScreenDirection
     {
         Unknown,
@@ -14,10 +16,88 @@ namespace BubblesServer
     
 	public class Screen
 	{
+        #region Public interface
+        public Screen(string name, int id, ScreenConnection connection, BubblesServer server)
+        {
+            m_name = name;
+            m_id = id;
+            m_connection = connection;
+            m_server = server;
+            m_bubbles = new Dictionary<int, Bubble>();
+            m_queue = new ExclusiveCircularQueue<BubblesMessage>(64);
+            m_thread = new Thread(Run);
+            m_thread.Start();
+        }
+     
+        public int ID
+        {
+            get { return m_id; }
+        }
+     
+        public string Name
+        {
+            get { return m_name; }
+        }
+     
+        /// <summary>
+        /// Thread Main.
+        /// </summary>
+        public void Run()
+        {
+            Console.WriteLine("New screen: {0}", m_id);
+            m_connection.BeginReceiveMessage(MessageReceived);
+            while(true)
+            {
+                BubblesMessage msg = m_queue.Dequeue();
+                try
+                {
+                    if(msg == null)
+                    {    
+                        break;
+                    }
+                 
+                    switch(msg.Type)
+                    {
+                    case BubblesMessageType.Add:
+                        AddMessage am = (AddMessage)msg;
+                        m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
+                        m_connection.SendMessage(am);    
+                        break;
+                    case BubblesMessageType.ChangeScreen:
+                        ChangeScreenMessage csm = (ChangeScreenMessage)msg;
+                        Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
+                        m_bubbles.Remove(csm.BubbleID);
+                        m_server.ChangeScreen(csm.BubbleID, newScreen);
+                        newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
+                        break;
+                    case BubblesMessageType.Update:
+                     
+                        break;
+                    case BubblesMessageType.Pop:
+                     
+                        break;
+                 }
+                 
+             }
+             catch(ThreadInterruptedException e)
+             {
+                 break;
+             }
+         }
+     }
+        
+        /// <summary>
+        /// Send a message to the screen. It will be handled in the screen's thread.
+        /// </summary>
+        public void EnqueueMessage(BubblesMessage message)
+        {
+            m_queue.Enqueue(message);
+        }
+        #endregion
+        #region Implementation
 		// Memebers
-		
-		private String m_name;
-		private Int32 m_id;
+		private string m_name;
+		private readonly int m_id;
 		
         private BubblesServer m_server;
 		private ScreenConnection m_connection;
@@ -25,84 +105,10 @@ namespace BubblesServer
 		
         private Dictionary<int, Bubble> m_bubbles;
         private ExclusiveCircularQueue<BubblesMessage> m_queue;
-		
-		// Methods
-		
-		public Screen(String name, Int32 id, ScreenConnection connection, BubblesServer server)
-		{
-			m_name = name;
-			m_id = id;
-			m_connection = connection;
-            m_server = server;
-            m_bubbles = new Dictionary<int, Bubble>();
-            m_queue = new ExclusiveCircularQueue<BubblesMessage>(64);
-			m_thread = new Thread(Run);
-			m_thread.Start();
-		}
-		
-		// Getters
-		
-		public Int32 ID()
-        {
-			return m_id;
-		}
-		
-		public String Name()
-        {
-			return m_name;
-		}
-		
-		// Thread Main
-		
-		public void Run()
-        {
-            Console.WriteLine("New screen: {0}", m_id);
-            m_connection.BeginReceiveMessage(MessageReceived);
-			while(true)
-            {
-                BubblesMessage msg = m_queue.Dequeue();
-				try
-                {
-					if(msg == null)
-                    {	
-						break;
-					}
-					
-					switch(msg.Type)
-                    {
-                    case BubblesMessageType.Add:
-                        AddMessage am = (AddMessage)msg;
-                        m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
-                        m_connection.SendMessage(am);    
-                        break;
-					case BubblesMessageType.ChangeScreen:
-                        ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-						Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
-                        m_bubbles.Remove(csm.BubbleID);
-                        m_server.ChangeScreen(csm.BubbleID, newScreen);
-                        newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
-						break;
-					case BubblesMessageType.Update:
-						
-						break;
-					case BubblesMessageType.Pop:
-						
-						break;
-					}
-					
-				}
-                catch(ThreadInterruptedException e)
-                {
-					break;
-				}
-			}
-		}
         
-        public void EnqueueMessage(BubblesMessage message)
-        {
-            m_queue.Enqueue(message);
-        }
-        
+        /// <summary>
+        /// Called when a message is received from the client (can run in any thread).
+        /// </summary>
         private void MessageReceived(BubblesMessage message)
         {
             EnqueueMessage(message);
@@ -111,6 +117,7 @@ namespace BubblesServer
                 m_connection.BeginReceiveMessage(MessageReceived);    
             }            
         }
+        #endregion
 	}
 }
 

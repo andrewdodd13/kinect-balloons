@@ -3,7 +3,7 @@
 namespace BubblesServer
 {
     /// <summary>
-    /// Buffer circulaire de taille fixe pouvant être utilisé pour synchroniser des données entre un ou plusieurs producteurs et consommateurs.
+    /// Fixed-size buffer that can be used to synchronize data between producers and consumers.
     /// </summary>
     public abstract class CircularQueue<T>
     {

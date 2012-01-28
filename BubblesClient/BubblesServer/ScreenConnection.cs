@@ -33,7 +33,8 @@ namespace BubblesServer
         public void BeginReceiveMessage(MessageCallback callback)
         {
             ReceiveOperation op = new ReceiveOperation(256, callback);
-            m_stream.BeginRead(op.Buffer, 0, op.Buffer.Length, ReadFinished, op);
+            m_socket.BeginReceive(op.Buffer, 0, op.Buffer.Length,
+                                  SocketFlags.None, ReadFinished, op);
         }
         
         /// <summary>
@@ -89,7 +90,7 @@ namespace BubblesServer
         private void ReadFinished(IAsyncResult result)
         {
             ReceiveOperation op = (ReceiveOperation)result.AsyncState;
-            int bytesRead = m_stream.EndRead(result);
+            int bytesRead = m_socket.EndReceive(result);
             if(bytesRead == 0)
             {
                 // connection was closed
