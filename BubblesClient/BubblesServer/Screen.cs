@@ -38,53 +38,6 @@ namespace BubblesServer
         {
             get { return m_name; }
         }
-     
-        /// <summary>
-        /// Thread Main.
-        /// </summary>
-        public void Run()
-        {
-            Console.WriteLine("New screen: {0}", m_id);
-            m_connection.BeginReceiveMessage(MessageReceived);
-            while(true)
-            {
-                BubblesMessage msg = m_queue.Dequeue();
-                try
-                {
-                    if(msg == null)
-                    {    
-                        break;
-                    }
-                 
-                    switch(msg.Type)
-                    {
-                    case BubblesMessageType.Add:
-                        AddMessage am = (AddMessage)msg;
-                        m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
-                        m_connection.SendMessage(am);    
-                        break;
-                    case BubblesMessageType.ChangeScreen:
-                        ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-                        Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
-                        m_bubbles.Remove(csm.BubbleID);
-                        m_server.ChangeScreen(csm.BubbleID, newScreen);
-                        newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
-                        break;
-                    case BubblesMessageType.Update:
-                     
-                        break;
-                    case BubblesMessageType.Pop:
-                     
-                        break;
-                 }
-                 
-             }
-             catch(ThreadInterruptedException e)
-             {
-                 break;
-             }
-         }
-     }
         
         /// <summary>
         /// Send a message to the screen. It will be handled in the screen's thread.
@@ -105,6 +58,56 @@ namespace BubblesServer
 		
         private Dictionary<int, Bubble> m_bubbles;
         private ExclusiveCircularQueue<BubblesMessage> m_queue;
+        
+        /// <summary>
+        /// Thread Main.
+        /// </summary>
+        private void Run()
+        {
+            Console.WriteLine("New screen: {0}", m_id);
+            m_connection.BeginReceiveMessage(MessageReceived);
+            try
+            {
+                while(true)
+                {
+                    BubblesMessage msg = m_queue.Dequeue();
+                    if(msg == null)
+                    {    
+                        break;
+                    }
+                    HandleMessage(msg);
+                }
+            }
+            catch(ThreadInterruptedException)
+            {
+            }
+            Console.WriteLine("Screen disconnected: {0}", m_id);
+        }
+        
+        private void HandleMessage(BubblesMessage msg)
+        {
+            switch(msg.Type)
+            {
+            case BubblesMessageType.Add:
+                AddMessage am = (AddMessage)msg;
+                m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
+                m_connection.SendMessage(am);    
+                break;
+            case BubblesMessageType.ChangeScreen:
+                ChangeScreenMessage csm = (ChangeScreenMessage)msg;
+                Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
+                m_bubbles.Remove(csm.BubbleID);
+                m_server.ChangeScreen(csm.BubbleID, newScreen);
+                newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
+                break;
+            case BubblesMessageType.Update:
+             
+                break;
+            case BubblesMessageType.Pop:
+             
+                break;
+            }
+        }
         
         /// <summary>
         /// Called when a message is received from the client (can run in any thread).

@@ -42,18 +42,10 @@ namespace BubblesServer
         /// </summary>
         public void SendMessage(BubblesMessage message)
         {
-            string line = null;
-            switch(message.Type)
-            {
-            case BubblesMessageType.Add:
-                AddMessage am = (AddMessage)message;
-                line = string.Format("add {0}", am.BubbleID);
-                break;
-            default:
-                throw new Exception("Unknown message type");
-            }
-            Console.WriteLine("Sending: {0}", line);
+            string line = message.Format();
+            Console.WriteLine(">> {0}", line);
             m_writer.WriteLine(line);
+            m_writer.Flush();
         }
         #endregion
         #region Implementation
@@ -142,6 +134,8 @@ namespace BubblesServer
             string line;
             m_receiveBuffer.Seek(0, SeekOrigin.Begin);
             line = m_reader.ReadLine();
+            
+            Console.WriteLine("<< {0}", line);
             
             // Remove that line from the reception buffer
             long bytesLeft = m_receiveBuffer.Length - m_receiveBuffer.Position;
