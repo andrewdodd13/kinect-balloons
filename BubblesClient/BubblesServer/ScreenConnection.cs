@@ -20,8 +20,9 @@ namespace BubblesServer
         {
             m_socket = socket;
             m_encoding = new UTF8Encoding();
-            m_receiveBuffer = new MemoryStream();
-            m_reader = new StreamReader(m_receiveBuffer, m_encoding);
+            m_receiveBuffer = new CircularBuffer(4096);
+            m_receiveStream = m_receiveBuffer.CreateReadStream();
+            m_reader = new StreamReader(m_receiveStream, m_encoding);
         }
         
         public void Dispose()
@@ -37,9 +38,20 @@ namespace BubblesServer
         /// </param>
         public void BeginReceiveMessage(MessageCallback callback)
         {
-            ReceiveOperation op = new ReceiveOperation(256, callback);
-            m_socket.BeginReceive(op.Buffer, 0, op.Buffer.Length,
-                                  SocketFlags.None, ReadFinished, op);
+            byte[] buffer;
+            int offset, size;
+            lock(m_receiveBuffer)
+            {
+                buffer = m_receiveBuffer.Buffer;
+                offset = m_receiveBuffer.WriteOffset;
+                size = m_receiveBuffer.ForwardCapacity;
+            }
+            if(size == 0)
+            {
+                throw new InvalidOperationException("ForwardCapacity is nil");
+            }
+            m_socket.BeginReceive(buffer, offset, size,
+                                  SocketFlags.None, ReadFinished, callback);
         }
         
         /// <summary>
@@ -55,55 +67,44 @@ namespace BubblesServer
         #endregion
         #region Implementation
         private Socket m_socket;
-        private MemoryStream m_receiveBuffer;
+        private CircularBuffer m_receiveBuffer;
+        private Stream m_receiveStream;
         private StreamReader m_reader;
         private Encoding m_encoding;
-        
-        /// <summary>
-        /// Holds state for an asynchronous operation to receive a message.
-        /// </summary>
-        internal class ReceiveOperation
-        {
-            /// <summary>
-            /// Buffer to write data received from the socket.
-            /// </summary>
-            public byte[] Buffer;
-            /// <summary>
-            /// Function to call when a complete message has been received.
-            /// </summary>
-            public MessageCallback Callback;
-            
-            public ReceiveOperation(int size, MessageCallback callback)
-            {
-                Buffer = new byte[size];
-                Callback = callback;
-            }
-        }
         
         /// <summary>
         /// Called when the asynchronous receive operation finishes.
         /// </summary>
         private void ReadFinished(IAsyncResult result)
         {
-            ReceiveOperation op = (ReceiveOperation)result.AsyncState;
-            int bytesRead = m_socket.EndReceive(result);
-            if(bytesRead == 0)
+            MessageCallback callback = (MessageCallback)result.AsyncState;
+            int bytesReceived = m_socket.EndReceive(result);
+            if(bytesReceived == 0)
             {
                 // connection was closed
-                op.Callback(null);
+                callback(null);
                 return;
             }
-            m_receiveBuffer.Write(op.Buffer, 0, bytesRead);
             
-            Message msg = TryReadMessage();
+            Message msg;
+            lock(m_receiveBuffer)
+            {
+                // the data was written directly by the socket, move the write cursor forward
+                m_receiveBuffer.SkipWrite(bytesReceived);
+                // try to parse one message from the received data
+                msg = TryReadMessage();
+                // move the read cursor forward
+                m_receiveStream.Flush();
+            }
             if(msg == null)
             {
-                // we did not receive enough data to read the message
-                BeginReceiveMessage(op.Callback);
+                // we did not receive enough data to read the message, try again
+                BeginReceiveMessage(callback);
             }
             else
             {
-                op.Callback(msg);
+                // notify the caller that a message was received
+                callback(msg);
             }
         }
         
@@ -118,7 +119,7 @@ namespace BubblesServer
             // Detect the first newline in the buffered data.
             int c;
             bool lineFound = false;
-            m_receiveBuffer.Seek(0, SeekOrigin.Begin);
+            m_receiveStream.Seek(0, SeekOrigin.Begin);
             do
             {
                 c = m_reader.Read();
@@ -136,17 +137,9 @@ namespace BubblesServer
             
             // Read the first line
             string line;
-            m_receiveBuffer.Seek(0, SeekOrigin.Begin);
+            m_receiveStream.Seek(0, SeekOrigin.Begin);
             line = m_reader.ReadLine();
-            
             Console.WriteLine("<< {0}", line);
-            
-            // Remove that line from the reception buffer
-            long bytesLeft = m_receiveBuffer.Length - m_receiveBuffer.Position;
-            byte[] left = new byte[bytesLeft];
-            m_receiveBuffer.Read(left, 0, (int)bytesLeft);
-            m_receiveBuffer = new MemoryStream(left);
-            
             return ParseMessage(line);
         }
         

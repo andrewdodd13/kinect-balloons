@@ -40,6 +40,7 @@
     <Compile Include="PredicateCondition.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="CircularBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />
