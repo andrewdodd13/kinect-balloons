@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -16,6 +17,19 @@ namespace BubblesServer
     public class ScreenConnection : IDisposable
     {
         #region Public interface
+        public Socket Socket
+        {
+            get { return m_socket; }
+        }
+
+        public event EventHandler Connected;
+        public event EventHandler<MessageEventArgs> MessageReceived;
+
+        public ScreenConnection()
+            : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+        {
+        }
+
         public ScreenConnection(Socket socket)
         {
             m_socket = socket;
@@ -29,29 +43,23 @@ namespace BubblesServer
         {
             m_socket.Close();
         }
-        
+
         /// <summary>
-        /// Enqueue the reception of a message from the client (non blocking).
+        /// Connect to the server (non blocking).
         /// </summary>
-        /// <param name='callback'>
-        /// Function to call when a message is received.
-        /// </param>
-        public void BeginReceiveMessage(MessageCallback callback)
+        /// <param name="address"> IP address of the server. </param>
+        /// <param name="port"> Server port. </param>
+        public void Connect(IPAddress address, int port)
         {
-            byte[] buffer;
-            int offset, size;
-            lock(m_receiveBuffer)
-            {
-                buffer = m_receiveBuffer.Buffer;
-                offset = m_receiveBuffer.WriteOffset;
-                size = m_receiveBuffer.ForwardCapacity;
-            }
-            if(size == 0)
-            {
-                throw new InvalidOperationException("ForwardCapacity is nil");
-            }
-            m_socket.BeginReceive(buffer, offset, size,
-                                  SocketFlags.None, ReadFinished, callback);
+            m_socket.BeginConnect(new IPEndPoint(address, port), ConnectedFinished, null);
+        }
+
+        /// <summary>
+        /// Start receiving messages (non blocking).
+        /// </summary>
+        public void StartReceivingMessages()
+        {
+            BeginRead();
         }
         
         /// <summary>
@@ -71,6 +79,37 @@ namespace BubblesServer
         private Stream m_receiveStream;
         private StreamReader m_reader;
         private Encoding m_encoding;
+
+        /// <summary>
+        /// Called when the asynchronous connect operation finishes.
+        /// </summary>
+        private void ConnectedFinished(IAsyncResult result)
+        {
+            m_socket.EndConnect(result);
+            Connected(this, new EventArgs());
+            // Start receiving messages
+            BeginRead();
+        }
+
+        /// <summary>
+        /// Start an asynchronous receive operation.
+        /// </summary>
+        private void BeginRead()
+        {
+            byte[] buffer;
+            int offset, size;
+            lock (m_receiveBuffer)
+            {
+                buffer = m_receiveBuffer.Buffer;
+                offset = m_receiveBuffer.WriteOffset;
+                size = m_receiveBuffer.ForwardCapacity;
+            }
+            if (size == 0)
+            {
+                throw new InvalidOperationException("ForwardCapacity is nil");
+            }
+            m_socket.BeginReceive(buffer, offset, size, SocketFlags.None, ReadFinished, null);
+        }
         
         /// <summary>
         /// Called when the asynchronous receive operation finishes.
@@ -78,12 +117,17 @@ namespace BubblesServer
         private void ReadFinished(IAsyncResult result)
         {
             MessageCallback callback = (MessageCallback)result.AsyncState;
-            int bytesReceived = m_socket.EndReceive(result);
-            if(bytesReceived == 0)
+            SocketError error;
+            int bytesReceived = m_socket.EndReceive(result, out error);
+            if(bytesReceived == 0 || error == SocketError.ConnectionReset || error == SocketError.Disconnecting)
             {
-                // connection was closed
-                callback(null);
+                // connection was closed, don't receive any more message
+                MessageReceived(this, new MessageEventArgs(null));
                 return;
+            }
+            else if(error != SocketError.Success)
+            {
+                throw new SocketException((int)error);
             }
             
             Message msg;
@@ -96,16 +140,16 @@ namespace BubblesServer
                 // move the read cursor forward
                 m_receiveStream.Flush();
             }
-            if(msg == null)
+
+            // did we receive enough data to read the message?
+            if(msg != null)
             {
-                // we did not receive enough data to read the message, try again
-                BeginReceiveMessage(callback);
+                // notify the user that a message was received
+                MessageReceived(this, new MessageEventArgs(msg));
             }
-            else
-            {
-                // notify the caller that a message was received
-                callback(msg);
-            }
+
+            // start receiving more data (end of this message or next message)
+            BeginRead();
         }
         
         /// <summary>
@@ -152,11 +196,23 @@ namespace BubblesServer
             }
             switch(parts[0])
             {
+            case "add":
+                return ParseAddMessage(parts);
             case "change-screen":
                 return ParseChangeScreenMessage(parts);
             default:
                 throw new Exception("Unknown message");
             }
+        }
+
+        private AddMessage ParseAddMessage(string[] parts)
+        {
+            if(parts.Length != 2)
+            {
+                throw new Exception("Invalid message: missing bubble ID");
+            }
+            int bubbleID = Int32.Parse(parts[1]);
+            return new AddMessage(bubbleID);
         }
         
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)

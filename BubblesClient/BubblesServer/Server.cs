@@ -119,6 +119,8 @@ namespace BubblesServer
             {
             case MessageType.Connected:
                 return HandleScreenConnected((ConnectedMessage)msg);
+            case MessageType.Disconnected:
+                return HandleScreenDisconnected((DisconnectedMessage)msg);
             default:
                 // Disconnect when receiving unknown messages
                 return false;
@@ -143,9 +145,8 @@ namespace BubblesServer
         
         private bool HandleScreenDisconnected(DisconnectedMessage msg)
         {
-            // Stop the server after the first client disconnected
             m_screens.Remove(msg.ScreenID);
-            return false;
+            return true;
         }
         
         private void AcceptCompleted(IAsyncResult result)
