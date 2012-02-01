@@ -42,6 +42,22 @@ namespace BubblesServer
         
         private readonly MessageType m_type;
     }
+
+    public class MessageEventArgs : EventArgs
+    {
+        public Message Message
+        {
+            get { return m_message; }
+            set { m_message = value; }
+        }
+
+        public MessageEventArgs(Message message)
+        {
+            m_message = message;
+        }
+
+        private Message m_message;
+    }
     
     public class AddMessage : Message
     {   

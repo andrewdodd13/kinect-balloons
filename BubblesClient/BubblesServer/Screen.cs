@@ -22,6 +22,7 @@ namespace BubblesServer
             m_name = name;
             m_id = id;
             m_connection = connection;
+            m_connection.MessageReceived += (sender, args) => EnqueueMessage(args.Message);
             m_server = server;
             m_bubbles = new Dictionary<int, Bubble>();
             m_queue = new CircularQueue<Message>(64);
@@ -67,7 +68,7 @@ namespace BubblesServer
             Console.WriteLine("Screen connected: {0}", m_id);
             using(m_connection)
             {
-                m_connection.BeginReceiveMessage(MessageReceived);
+                m_connection.StartReceivingMessages();
                 try
                 {
                     while(true)
@@ -117,18 +118,6 @@ namespace BubblesServer
                 // Disconnect when receiving unknown messages
                 return false;
             }
-        }
-        
-        /// <summary>
-        /// Called when a message is received from the client (can run in any thread).
-        /// </summary>
-        private void MessageReceived(Message message)
-        {
-            EnqueueMessage(message);
-            if(message != null)
-            {
-                m_connection.BeginReceiveMessage(MessageReceived);    
-            }            
         }
         #endregion
 	}

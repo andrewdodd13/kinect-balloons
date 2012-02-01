@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using BubblesServer;
@@ -10,7 +9,6 @@ namespace DummyClient
 {
     public class ScreenManager
     {
-        private Socket m_socket;
         private ScreenConnection m_conn;
         private Dictionary<int, Balloon> m_balloons;
 
@@ -23,9 +21,9 @@ namespace DummyClient
 
         public ScreenManager()
         {
-            m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
-                                  ProtocolType.Tcp);
-            m_conn = new ScreenConnection(m_socket);
+            m_conn = new ScreenConnection();
+            m_conn.Connected += OnConnected;
+            m_conn.MessageReceived += OnMessageReceived;
             m_balloons = new Dictionary<int, Balloon>();
         }
 
@@ -36,17 +34,16 @@ namespace DummyClient
 
         public void Connect(IPAddress address, int port)
         {
-            m_socket.BeginConnect(new IPEndPoint(address, port), OnConnected, null);
+            m_conn.Connect(address, port);
         }
 
-        private void OnConnected(IAsyncResult result)
+        private void OnConnected(object sender, EventArgs args)
         {
-            m_socket.EndConnect(result);
-            m_conn.BeginReceiveMessage(OnMessageReceived);
         }
 
-        private void OnMessageReceived(Message msg)
+        private void OnMessageReceived(object sender, MessageEventArgs args)
         {
+            Message msg = args.Message;
             if(msg.Type == MessageType.Add)
             {
                 AddMessage am = (AddMessage)msg;
@@ -56,11 +53,6 @@ namespace DummyClient
                 // TODO synchronize this
                 m_balloons.Add(b.ID, b);
                 BalloonMapChanged(this, new EventArgs());
-            }
-
-            if(msg != null)
-            {
-                m_conn.BeginReceiveMessage(OnMessageReceived);
             }
         }
     }
