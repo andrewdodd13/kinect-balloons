@@ -78,12 +78,17 @@ namespace BubblesServer
         private void ReadFinished(IAsyncResult result)
         {
             MessageCallback callback = (MessageCallback)result.AsyncState;
-            int bytesReceived = m_socket.EndReceive(result);
-            if(bytesReceived == 0)
+            SocketError error;
+            int bytesReceived = m_socket.EndReceive(result, out error);
+            if(bytesReceived == 0 || error == SocketError.ConnectionReset || error == SocketError.Disconnecting)
             {
                 // connection was closed
                 callback(null);
                 return;
+            }
+            else if(error != SocketError.Success)
+            {
+                throw new SocketException((int)error);
             }
             
             Message msg;
@@ -152,11 +157,23 @@ namespace BubblesServer
             }
             switch(parts[0])
             {
+            case "add":
+                return ParseAddMessage(parts);
             case "change-screen":
                 return ParseChangeScreenMessage(parts);
             default:
                 throw new Exception("Unknown message");
             }
+        }
+
+        private AddMessage ParseAddMessage(string[] parts)
+        {
+            if(parts.Length != 2)
+            {
+                throw new Exception("Invalid message: missing bubble ID");
+            }
+            int bubbleID = Int32.Parse(parts[1]);
+            return new AddMessage(bubbleID);
         }
         
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
