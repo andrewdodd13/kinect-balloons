@@ -1,0 +1,106 @@
+body {
+	padding:0px;
+	margin:0px;
+	background-image:url('clouds.jpg');
+}
+
+p {
+	padding:0px;
+	margin:0 0 1em 0;
+}
+
+label {
+	font-weight: bold;
+	float: left;
+	width: 40%;
+	text-align: left;
+	padding:0.5em;
+}
+
+input[type=text], input[type=password] {
+	margin: 0 0 1em 0;
+	border:5px;
+	-moz-border-radius: 1px;
+	-webkit-border-radius: 1px;
+	padding:1em;
+	width:50%;
+}
+
+input[type=file] {
+	margin: 0 0 1em 0;
+	height:3em;
+	width:50%;
+	position:relative;
+	left:-20px;
+}
+
+input[type=submit] {
+	border:none;
+	margin-top:10px;
+	margin-bottom:20px;
+	margin-right:1em;
+	padding:20px 30px 20px 30px;
+	font-size:12pt;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	background-color:#EEEEEE;
+}
+
+input[type=submit]:hover {
+	cursor:pointer;
+	background-color:#DDDDDD;
+}
+
+.form-item {
+	text-align:center;
+	padding:0px;
+	margin:0px;
+}
+
+.errors {
+	font-family: Arial;
+	color:red;
+	font-size:10pt;
+}
+
+#heading {
+	width:700px;
+	height:20%;
+	margin-top:10px;
+	margin-bottom:20px;
+	margin-left:auto;
+	margin-right:auto;
+	-moz-border-radius: 15px;
+	border-radius: 15px;
+	background-color:#99CCFF;
+}
+
+#header h1 {
+	padding:10px 0 20px 0;
+	margin:0;
+	text-align:center;
+	font-family:Arial;
+}
+
+#form_container {
+	height:300px;
+	width:700px;
+	margin-left:auto;
+	margin-right:auto;
+	padding-bottom:40px;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	background-color:#99CCFF;
+}
+
+#form {
+	width:80%;
+	height:150px;
+	margin-left:auto;
+	margin-right:auto;
+	padding: 1em;
+	font-size:20px;
+	font-family:Arial;
+}
+
+
