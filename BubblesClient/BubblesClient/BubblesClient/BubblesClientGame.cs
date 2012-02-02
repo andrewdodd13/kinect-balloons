@@ -28,6 +28,8 @@ namespace BubblesClient
         IInputController _input;
         INetworkEventManager _networkEvents = new MockNetworkManager();
 
+        Texture2D texture;
+
         public BubblesClientGame()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -61,6 +63,8 @@ namespace BubblesClient
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+
+            texture = Content.Load<Texture2D>("tmpCircle");
         }
 
         /// <summary>
@@ -113,7 +117,13 @@ namespace BubblesClient
         {
             GraphicsDevice.Clear(backgroundColour);
 
-            // TODO: Add your drawing code here
+            spriteBatch.Begin();
+            Vector3[] hands = _input.GetHandPositions();
+            for(int i = 0; i < hands.Length; i++) {
+                Vector2 pos = new Vector2(hands[i].X, hands[i].Y);
+                spriteBatch.Draw(texture, pos, Color.White);
+            }
+            spriteBatch.End();
 
             base.Draw(gameTime);
         }

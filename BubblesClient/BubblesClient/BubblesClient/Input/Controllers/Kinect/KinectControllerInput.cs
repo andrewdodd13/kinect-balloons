@@ -32,11 +32,14 @@ namespace BubblesClient.Input.Controllers.Kinect
 
         public Vector3[] GetHandPositions()
         {
+            if (_handPositions == null)
+                return new Vector3[0];
+
             Vector3[] positions = new Vector3[_handPositions.Count];
             for (int i = 0; i < _handPositions.Count; i++)
             {
                 positions[i] = new Vector3(_scaleFactorX * _handPositions[i].X + _scaleFactorX,
-                    _scaleFactorY * _handPositions[i].Y + _scaleFactorY, _handPositions[i].Z);
+                   _scaleFactorY * -(_handPositions[i].Y) + _scaleFactorY, _handPositions[i].Z);
             }
 
             return positions;
@@ -191,17 +194,21 @@ namespace BubblesClient.Input.Controllers.Kinect
 
                     skeletonFrame.CopySkeletonDataTo(_skeletonData);
 
+                    List<SkeletonPoint> positions = new List<SkeletonPoint>();
+
                     foreach (Skeleton skeleton in _skeletonData)
                     {
                         if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
                         {
                             if (skeleton.Joints.Count > 0)
                             {
-                                _handPositions.Add(skeleton.Joints[JointType.HandLeft].Position);
-                                _handPositions.Add(skeleton.Joints[JointType.HandRight].Position);
+                                positions.Add(skeleton.Joints[JointType.HandLeft].Position);
+                                positions.Add(skeleton.Joints[JointType.HandRight].Position);
                             }
                         }
                     }
+
+                    _handPositions = positions;
                 }
             }
         }
