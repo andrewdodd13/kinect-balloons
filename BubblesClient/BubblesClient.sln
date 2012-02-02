@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblesClient", "BubblesClient\BubblesClient\BubblesClient.csproj", "{AA8049AB-BAA0-4366-9CFD-DF4D0C5F118E}"
 EndProject
-Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "BubblesClientContent", "BubblesClient\BubblesClientContent\BubblesClientContent.contentproj", "{F7C24B36-33CE-4041-BFA6-5E916093E959}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblesClientContent", "BubblesClient\BubblesClientContent\BubblesClientContent.contentproj", "{F7C24B36-33CE-4041-BFA6-5E916093E959}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

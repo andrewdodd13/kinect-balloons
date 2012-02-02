@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace BubblesClient.Input.Controllers
 {
@@ -10,8 +11,9 @@ namespace BubblesClient.Input.Controllers
     /// the game. Each Input Method retains a reference to this class, and 
     /// should call the appropriate method when it occurs.
     /// </summary>
-    interface IInputController
+    public interface IInputController
     {
-        void SwipeLeft();
+        void Initialize(Vector2 screenSize);
+        Vector3[] GetHandPositions();
     }
 }

@@ -8,11 +8,11 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using BubblesClient.Input.Manager;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Network;
 using BubblesClient.Model;
 using BubblesClient.Network.Event;
+using BubblesClient.Input.Controllers.Kinect;
 
 namespace BubblesClient
 {
@@ -25,15 +25,15 @@ namespace BubblesClient
         SpriteBatch spriteBatch;
         Color backgroundColour = Color.Blue;
 
-        IInputManager _input;
+        IInputController _input;
         INetworkEventManager _networkEvents = new MockNetworkManager();
 
         public BubblesClientGame()
         {
             graphics = new GraphicsDeviceManager(this);
 
-            _input = new InputManager();
-            _input.Initialise(new KeyboardInputMethod());
+            _input = new KinectControllerInput();
+            _input.Initialize(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
 
             Content.RootDirectory = "Content";
         }
@@ -84,28 +84,23 @@ namespace BubblesClient
                 this.Exit();
 
             // Query the Network Manager for events
-            PerformNetworkEvents();
+            //PerformNetworkEvents();
 
-            // TODO: Add your update logic here
-            _input.BeginFrame();
-
-            if (_input.SwipeLeftControl == ButtonState.Pressed)
-            {
-                if(backgroundColour == Color.Red) 
-                {
-                    backgroundColour = Color.Green;
-                }
-                else if (backgroundColour == Color.Green)
-                {
-                    backgroundColour = Color.Blue;
-                }
-                else
-                {
-                    backgroundColour = Color.Red;
-                }
-            }
-
-            _input.EndFrame();
+            //if (_input.SwipeLeftControl == ButtonState.Pressed)
+            //{
+            //    if(backgroundColour == Color.Red) 
+            //    {
+            //        backgroundColour = Color.Green;
+            //    }
+            //    else if (backgroundColour == Color.Green)
+            //    {
+            //        backgroundColour = Color.Blue;
+            //    }
+            //    else
+            //    {
+            //        backgroundColour = Color.Red;
+            //    }
+            //}
 
             base.Update(gameTime);
         }

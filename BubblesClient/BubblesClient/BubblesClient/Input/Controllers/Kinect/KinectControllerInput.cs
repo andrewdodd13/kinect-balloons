@@ -3,27 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Kinect;
+using BubblesClient.Input.Controllers;
+using Microsoft.Xna.Framework;
 
-namespace KinectInput.Input
+namespace BubblesClient.Input.Controllers.Kinect
 {
-    public class KinectControllerInput
+    public class KinectControllerInput : IInputController
     {
+        private int _scaleFactorX, _scaleFactorY;
+
         private KinectSensor _sensor;
         private bool _sensorConflict = false;
         private Skeleton[] _skeletonData = null;
 
-        private SkeletonPoint _leftHand;
-        public SkeletonPoint LeftHand { get { return _leftHand; } }
-        private SkeletonPoint _rightHand;
-        public SkeletonPoint RightHand { get { return _rightHand; } }
+        private List<SkeletonPoint> _handPositions;
 
-        public void Initialize()
+        public void Initialize(Vector2 screenSize)
         {
+            _scaleFactorX = (int)screenSize.X / 2;
+            _scaleFactorY = (int)screenSize.Y / 2;
+
             KinectSensor.KinectSensors.StatusChanged += this.KinectSensorsStatusChanged;
             if (!this.DiscoverSensor())
             {
-                throw new NoKinectSensorException();
+                this.UpdateStatus(KinectStatus.Disconnected);
             }
+        }
+
+        public Vector3[] GetHandPositions()
+        {
+            Vector3[] positions = new Vector3[_handPositions.Count];
+            for (int i = 0; i < _handPositions.Count; i++)
+            {
+                positions[i] = new Vector3(_scaleFactorX * _handPositions[i].X + _scaleFactorX,
+                    _scaleFactorY * _handPositions[i].Y + _scaleFactorY, _handPositions[i].Z);
+            }
+
+            return positions;
         }
 
         private bool DiscoverSensor()
@@ -168,8 +184,6 @@ namespace KinectInput.Input
             {
                 if (skeletonFrame != null)
                 {
-                    int skeletonSlot = 0;
-
                     if ((_skeletonData == null) || (_skeletonData.Length != skeletonFrame.SkeletonArrayLength))
                     {
                         _skeletonData = new Skeleton[skeletonFrame.SkeletonArrayLength];
@@ -183,12 +197,10 @@ namespace KinectInput.Input
                         {
                             if (skeleton.Joints.Count > 0)
                             {
-                                _leftHand = skeleton.Joints[JointType.HandLeft].Position;
-                                _rightHand = skeleton.Joints[JointType.HandRight].Position;
+                                _handPositions.Add(skeleton.Joints[JointType.HandLeft].Position);
+                                _handPositions.Add(skeleton.Joints[JointType.HandRight].Position);
                             }
                         }
-
-                        skeletonSlot++;
                     }
                 }
             }

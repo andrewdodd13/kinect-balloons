@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KinectInput.Input
+namespace BubblesClient.Input.Controllers.Kinect
 {
     class KinectSensorException : Exception
     {
         private string _message;
-        public string Message { get { return _message; } }
+        
+        public override string Message { get { return _message; } }
 
         private string _moreInfo;
         public string MoreInfo { get { return _moreInfo; } }
