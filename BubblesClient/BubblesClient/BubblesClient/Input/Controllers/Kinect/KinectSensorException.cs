@@ -5,10 +5,13 @@ using System.Text;
 
 namespace BubblesClient.Input.Controllers.Kinect
 {
-    class KinectSensorException : Exception
+    /// <summary>
+    /// Thrown when an exception occurs during polling of the Kinect; usually to indicate that the device has malfunctioned in some way.
+    /// </summary>
+    public class KinectSensorException : Exception
     {
         private string _message;
-        
+
         public override string Message { get { return _message; } }
 
         private string _moreInfo;

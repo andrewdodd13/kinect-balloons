@@ -13,6 +13,7 @@ using BubblesClient.Network;
 using BubblesClient.Model;
 using BubblesClient.Network.Event;
 using BubblesClient.Input.Controllers.Kinect;
+using BubblesClient.Input.Controllers.Mouse;
 
 namespace BubblesClient
 {
@@ -34,7 +35,12 @@ namespace BubblesClient
         {
             graphics = new GraphicsDeviceManager(this);
 
-            _input = new KinectControllerInput();
+            // Use this line to enable the Kinect
+            //_input = new KinectControllerInput();
+
+            // And this one to enable the Mouse (if you use both, Mouse is used)
+            _input = new MouseInput();
+
             _input.Initialize(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
 
             Content.RootDirectory = "Content";

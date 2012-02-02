@@ -111,6 +111,7 @@
     <Compile Include="Input\Controllers\IInputController.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
+    <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
     <Compile Include="Model\Balloon.cs" />
     <Compile Include="Network\Event\NewBalloonEvent.cs" />
     <Compile Include="Network\INetworkEventManager.cs" />
@@ -156,6 +157,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />
   <!--

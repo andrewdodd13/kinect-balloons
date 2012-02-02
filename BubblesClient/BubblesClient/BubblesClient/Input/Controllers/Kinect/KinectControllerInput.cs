@@ -18,6 +18,10 @@ namespace BubblesClient.Input.Controllers.Kinect
 
         private List<SkeletonPoint> _handPositions;
 
+        /// <summary>
+        /// Initialises the Kinect system and causes it to begin polling.
+        /// </summary>
+        /// <param name="screenSize">Dimensions of the screen, used to rationalise the values of the Kinect sensor</param>
         public void Initialize(Vector2 screenSize)
         {
             _scaleFactorX = (int)screenSize.X / 2;
