@@ -14,6 +14,9 @@ using BubblesClient.Model;
 using BubblesClient.Network.Event;
 using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Factories;
+using FarseerPhysics.Dynamics.Joints;
 
 namespace BubblesClient
 {
@@ -22,28 +25,46 @@ namespace BubblesClient
     /// </summary>
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
-        GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Color backgroundColour = Color.Blue;
 
-        IInputController _input;
-        INetworkEventManager _networkEvents = new MockNetworkManager();
+        Texture2D texture, _balloon;
 
-        Texture2D texture;
+        private Body _roofBody, _balloonBody, _cursorBody;
+        private FixedMouseJoint _mouseJoint;
+
+        // XNA Graphics
+        private GraphicsDeviceManager _graphics;
+        private Vector2 _screenDimensions;
+
+        // Input
+        private IInputController _input;
+        private INetworkEventManager _networkEvents = new MockNetworkManager();
+
+        // Physics World
+        private World _world;
+        private const float MeterInPixels = 64f;
 
         public BubblesClientGame()
         {
-            graphics = new GraphicsDeviceManager(this);
+            // Initialise Graphics
+            _graphics = new GraphicsDeviceManager(this);
 
+            _screenDimensions = new Vector2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+
+            // Initialise Input
             // Use this line to enable the Kinect
             //_input = new KinectControllerInput();
 
             // And this one to enable the Mouse (if you use both, Mouse is used)
             _input = new MouseInput();
+            _input.Initialize(_screenDimensions);
 
-            _input.Initialize(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
-
+            // Initialise Content
             Content.RootDirectory = "Content";
+
+            // Initialise Physics
+            _world = new World(new Vector2(0, -2));
         }
 
         /// <summary>
@@ -54,8 +75,7 @@ namespace BubblesClient
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
+            // Initialise base
             base.Initialize();
         }
 
@@ -68,9 +88,29 @@ namespace BubblesClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
-
             texture = Content.Load<Texture2D>("tmpCircle");
+            _balloon = Content.Load<Texture2D>("balloon");
+
+            // Setup a balloon
+            Vector2 balloonPosition = (_screenDimensions / 2) / MeterInPixels;
+            _balloonBody = BodyFactory.CreateCircle(_world, 128f / (2f * MeterInPixels), 1f, PixelToWorld(_screenDimensions / 2));
+            _balloonBody.BodyType = BodyType.Dynamic;
+            _balloonBody.Restitution = 0.3f;
+            _balloonBody.Friction = 0.5f;
+
+            // Lol roof!
+            _roofBody = BodyFactory.CreateRectangle(_world, _screenDimensions.X / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(_screenDimensions.X / 2 / MeterInPixels, 0));
+            _roofBody.IsStatic = true;
+            _roofBody.Restitution = 0.3f;
+            _roofBody.Friction = 0.5f;
+
+            // Setup the cursor [TODO]
+            Vector2 mousePos = new Vector2(_input.GetHandPositions()[0].X, _input.GetHandPositions()[0].Y);
+            _cursorBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, mousePos / MeterInPixels);
+            _cursorBody.BodyType = BodyType.Dynamic;
+            _mouseJoint = new FixedMouseJoint(_cursorBody, _cursorBody.Position);
+            _mouseJoint.MaxForce = 1000f;
+            _world.AddJoint(_mouseJoint);
         }
 
         /// <summary>
@@ -96,21 +136,14 @@ namespace BubblesClient
             // Query the Network Manager for events
             //PerformNetworkEvents();
 
-            //if (_input.SwipeLeftControl == ButtonState.Pressed)
-            //{
-            //    if(backgroundColour == Color.Red) 
-            //    {
-            //        backgroundColour = Color.Green;
-            //    }
-            //    else if (backgroundColour == Color.Green)
-            //    {
-            //        backgroundColour = Color.Blue;
-            //    }
-            //    else
-            //    {
-            //        backgroundColour = Color.Red;
-            //    }
-            //}
+            // Query the Input Library
+
+            // Run Physics
+            _mouseJoint.WorldAnchorB = new Vector2(_input.GetHandPositions()[0].X, _input.GetHandPositions()[0].Y) / MeterInPixels;
+            Console.WriteLine("Setting Position: {0}", _mouseJoint.WorldAnchorB);
+
+            _world.Step((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f);
+            Console.WriteLine("Body: {0}", _cursorBody.Position);
 
             base.Update(gameTime);
         }
@@ -126,9 +159,14 @@ namespace BubblesClient
             spriteBatch.Begin();
             Vector3[] hands = _input.GetHandPositions();
             for(int i = 0; i < hands.Length; i++) {
-                Vector2 pos = new Vector2(hands[i].X, hands[i].Y);
-                spriteBatch.Draw(texture, pos, Color.White);
+                // Vector2 pos = new Vector2(hands[i].X, hands[i].Y);
+
+                Vector2 cursorPos = WorldBodyToPixel(_cursorBody.Position, new Vector2(64, 64));
+                spriteBatch.Draw(texture, cursorPos, Color.White);
             }
+
+            spriteBatch.Draw(_balloon, WorldBodyToPixel(_balloonBody.Position, new Vector2(128, 128)), Color.White);
+
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -171,6 +209,26 @@ namespace BubblesClient
         /// <param name="balloon">The balloon to pop</param>
         protected void PopBalloon(Balloon balloon)
         {
+        }
+
+        private Vector2 WorldToPixel(Vector2 worldPosition)
+        {
+            return worldPosition * MeterInPixels;
+        }
+
+        private Vector2 PixelToWorld(Vector2 pixelPosition)
+        {
+            return pixelPosition / MeterInPixels;
+        }
+
+        private Vector2 WorldBodyToPixel(Vector2 worldPosition, Vector2 pixelOffset)
+        {
+            return worldPosition * MeterInPixels - (pixelOffset / 2);
+        }
+
+        private Vector2 PixelToWorldBody(Vector2 pixelPosition, Vector2 pixelOffset)
+        {
+            return pixelPosition / MeterInPixels + ((pixelOffset / MeterInPixels) / 2);
         }
     }
 }
