@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -37,6 +39,10 @@ namespace BubblesServer
             m_receiveBuffer = new CircularBuffer(4096);
             m_receiveStream = m_receiveBuffer.CreateReadStream();
             m_reader = new StreamReader(m_receiveStream, m_encoding);
+
+            m_parsers = new Dictionary<string, MessageParser>();
+            m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
+            m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreenMessage);
         }
         
         public void Dispose()
@@ -79,6 +85,9 @@ namespace BubblesServer
         private Stream m_receiveStream;
         private StreamReader m_reader;
         private Encoding m_encoding;
+
+        private delegate Message MessageParser(string[] parts);
+        private Dictionary<string, MessageParser> m_parsers;
 
         /// <summary>
         /// Called when the asynchronous connect operation finishes.
@@ -194,25 +203,26 @@ namespace BubblesServer
             {
                 throw new Exception("Invalid message: " + line);
             }
-            switch(parts[0])
+            MessageParser parser;
+            if(!m_parsers.TryGetValue(parts[0], out parser))
             {
-            case "add":
-                return ParseAddMessage(parts);
-            case "change-screen":
-                return ParseChangeScreenMessage(parts);
-            default:
-                throw new Exception("Unknown message");
+                throw new Exception("Unknown message: " + parts[0]);
             }
+            return parser(parts);
         }
 
-        private AddMessage ParseAddMessage(string[] parts)
+        private NewBalloonMessage ParseNewBalloonMessage(string[] parts)
         {
-            if(parts.Length != 2)
+            if(parts.Length != 5)
             {
-                throw new Exception("Invalid message: missing bubble ID");
+                throw new Exception("Invalid message");
             }
-            int bubbleID = Int32.Parse(parts[1]);
-            return new AddMessage(bubbleID);
+            int balloonID = Int32.Parse(parts[1]);
+            ScreenDirection direction = Screen.ParseDirection(parts[2]);
+            Point velocity = new Point();
+            velocity.X = Int32.Parse(parts[3]);
+            velocity.Y = Int32.Parse(parts[4]);
+            return new NewBalloonMessage(balloonID, direction, velocity);
         }
         
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
@@ -221,20 +231,12 @@ namespace BubblesServer
             {
                 throw new Exception("Invalid message: missing bubble ID or direction");
             }
-            int bubbleID = Int32.Parse(parts[1]);
-            ScreenDirection direction = ScreenDirection.Unknown;
-            switch(parts[2])
-            {
-            case "left":
-                direction = ScreenDirection.Left;
-                break;
-            case "right":
-                direction = ScreenDirection.Right;
-                break;
-            default:
-                throw new Exception("Invalid direction: " + parts[2]);
-            }
-            return new ChangeScreenMessage(bubbleID, direction);
+            int BalloonID = Int32.Parse(parts[1]);
+            ScreenDirection direction = Screen.ParseDirection(parts[2]);
+            Point velocity = new Point();
+            velocity.X = Int32.Parse(parts[3]);
+            velocity.Y = Int32.Parse(parts[4]);
+            return new ChangeScreenMessage(BalloonID, direction, velocity);
         }
         #endregion
     }

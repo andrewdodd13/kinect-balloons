@@ -46,6 +46,7 @@
     <Compile Include="CircularBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
     <Reference Include="System" />
   </ItemGroup>

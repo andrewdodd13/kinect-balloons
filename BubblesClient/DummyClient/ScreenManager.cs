@@ -44,12 +44,13 @@ namespace DummyClient
         private void OnMessageReceived(object sender, MessageEventArgs args)
         {
             Message msg = args.Message;
-            if(msg.Type == MessageType.Add)
+            if(msg.Type == MessageType.NewBalloon)
             {
-                AddMessage am = (AddMessage)msg;
+                NewBalloonMessage am = (NewBalloonMessage)msg;
                 Balloon b = new Balloon();
-                b.ID = am.BubbleID;
+                b.ID = am.BalloonID;
                 b.Pos = new Vector2(b.ID * 50, b.ID * 50);
+                b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
                 // TODO synchronize this
                 m_balloons.Add(b.ID, b);
                 BalloonMapChanged(this, new EventArgs());

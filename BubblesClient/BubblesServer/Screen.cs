@@ -9,7 +9,7 @@ namespace BubblesServer
     /// </summary>
     public enum ScreenDirection
     {
-        Unknown,
+        Any,
         Left,
         Right
     }
@@ -38,6 +38,36 @@ namespace BubblesServer
         public string Name
         {
             get { return m_name; }
+        }
+
+        public static string FormatDirection(ScreenDirection direction)
+        {
+            switch (direction)
+            {
+                case ScreenDirection.Left:
+                    return "left";
+                case ScreenDirection.Right:
+                    return "right";
+                case ScreenDirection.Any:
+                    return "any";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public static ScreenDirection ParseDirection(string text)
+        {
+            switch (text)
+            {
+                case "left":
+                    return ScreenDirection.Left;
+                case "right":
+                    return ScreenDirection.Right;
+                case "any":
+                    return ScreenDirection.Any;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
         
         /// <summary>
@@ -102,17 +132,17 @@ namespace BubblesServer
             }
             switch(msg.Type)
             {
-            case MessageType.Add:
-                AddMessage am = (AddMessage)msg;
-                m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
+            case MessageType.NewBalloon:
+                NewBalloonMessage am = (NewBalloonMessage)msg;
+                m_bubbles[am.BalloonID] = m_server.GetBubble(am.BalloonID);
                 m_connection.SendMessage(am);
                 return true;
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
                 Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
-                m_bubbles.Remove(csm.BubbleID);
-                m_server.ChangeScreen(csm.BubbleID, newScreen);
-                newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
+                m_bubbles.Remove(csm.BalloonID);
+                m_server.ChangeScreen(csm.BalloonID, newScreen);
+                newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Velocity));
                 return true;
             default:
                 // Disconnect when receiving unknown messages

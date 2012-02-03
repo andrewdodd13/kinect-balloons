@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Net.Sockets;
 
 namespace BubblesServer
@@ -8,11 +9,20 @@ namespace BubblesServer
     /// </summary>
     public enum MessageType
     {
-        Add,
+        // Messages sent by the server
+        NewBalloon,
+        BalloonContentUpdate,
+
+        // Messages sent by the client
         ChangeScreen,
-        GetInfo,
-        Update,
-        Pop,
+        GetBalloonContent,
+        GetBalloonDecoration,
+
+        // Messages sent by both
+        PopBalloon,
+        BalloonDecorationUpdate,
+
+        // Internal messages
         Connected,
         Disconnected
     }
@@ -29,18 +39,56 @@ namespace BubblesServer
         {
             get { return m_type; }
         }
+
+        /// <summary>
+        /// Text identifier for the type of message.
+        /// </summary>
+        public string Tag
+        {
+            get { return m_tag; }
+        }
         
-        public Message(MessageType type)
+        public Message(MessageType type, string tag)
         {
             m_type = type;
+            m_tag = tag;
         }
         
         /// <summary>
         /// Convert the message to a string that can be sent on the network.
         /// </summary>
-        public abstract string Format();
+        public virtual string Format()
+        {
+            return String.Format("{0} {1}", m_tag, FormatContent());
+        }
+
+        protected virtual string FormatContent()
+        {
+            return "";
+        }
         
         private readonly MessageType m_type;
+        private readonly string m_tag;
+    }
+
+    public class BalloonMessage : Message
+    {
+        public int BalloonID
+        {
+            get { return this.m_balloonID; }
+        }
+
+        public BalloonMessage(MessageType type, string tag, int balloonID) : base(type, tag)
+        {
+            m_balloonID = balloonID;
+        }
+
+        protected override string FormatContent()
+        {
+            return m_balloonID.ToString();
+        }
+
+        private int m_balloonID;
     }
 
     public class MessageEventArgs : EventArgs
@@ -58,107 +106,219 @@ namespace BubblesServer
 
         private Message m_message;
     }
-    
-    public class AddMessage : Message
-    {   
-        public int BubbleID
-        {
-            get { return this.m_bubbleID; }
-            set { m_bubbleID = value; }
-        }
-        
-        public AddMessage(int bubbleID) : base(MessageType.Add)
-        {
-            m_bubbleID = bubbleID;
-        }
-        
-        public override string Format()
-        {
-            return String.Format("add {0}", m_bubbleID);
-        }
-        
-        private int m_bubbleID;
-    }
-    
-    public class ChangeScreenMessage : Message
+
+    #region Messages sent by the server
+    public class NewBalloonMessage : BalloonMessage
     {
+        public static readonly string Tag = "new-ballooon";
+
         public ScreenDirection Direction
         {
             get { return this.m_direction; }
         }
-        
-        public int BubbleID
+
+        public Point Velocity
         {
-            get { return this.m_bubbleID; }
-            set { m_bubbleID = value; }
+            get { return this.m_velocity; }
         }
-        
-        public ChangeScreenMessage(int bubbleID, ScreenDirection direction)
-            : base(MessageType.ChangeScreen)
+
+        public NewBalloonMessage(int balloonID, ScreenDirection direction, Point velocity)
+            : base(MessageType.NewBalloon, Tag, balloonID)
         {
-            m_bubbleID = bubbleID;
             m_direction = direction;
+            m_velocity = velocity;
         }
-        
-        public override string Format()
+
+        protected override string FormatContent()
         {
-            return String.Format("change-screen {0} {1}", m_bubbleID, FormatDirection());
+            return String.Format("{0} {1} {2} {3}",
+                BalloonID, Screen.FormatDirection(m_direction), m_velocity.X, m_velocity.Y);
         }
         
-        private int m_bubbleID;
         private ScreenDirection m_direction;
-        
-        private string FormatDirection()
+        private Point m_velocity;
+    }
+
+    public class BalloonContentUpdateMessage : BalloonMessage
+    {
+        public static readonly string Tag = "balloon-content-update";
+
+        public int BalloonType
         {
-            switch(m_direction)
-            {
-            case ScreenDirection.Left:
-                return "left";
-            case ScreenDirection.Right:
-                return "right";
-            default:
-                throw new ArgumentOutOfRangeException();
-            }
+            get { return this.m_type; }
+        }
+
+        public string Label
+        {
+            get { return this.m_label; }
+        }
+
+        public string Content
+        {
+            get { return this.m_content; }
+        }
+
+        public string Url
+        {
+            get { return this.m_url; }
+        }
+
+        public BalloonContentUpdateMessage(int balloonID, int type, string label, string content, string url)
+            : base(MessageType.BalloonContentUpdate, Tag, balloonID)
+        {
+            m_type = type;
+            m_label = label;
+            m_content = content;
+            m_url = url;
+        }
+
+        protected override string FormatContent()
+        {
+            return String.Format("{0} {1} {2} {3}",
+                BalloonID, m_type, m_label, m_content, m_url);
+        }
+
+        private int m_type;
+        private string m_label;
+        private string m_content;
+        private string m_url;
+    }
+    #endregion
+
+    #region Messages sent by the client
+    public class ChangeScreenMessage : BalloonMessage
+    {
+        public static readonly string Tag = "change-screen";
+
+        public ScreenDirection Direction
+        {
+            get { return this.m_direction; }
+        }
+
+        public Point Velocity
+        {
+            get { return this.m_velocity; }
+        }
+
+        public ChangeScreenMessage(int balloonID, ScreenDirection direction, Point velocity)
+            : base(MessageType.ChangeScreen, Tag, balloonID)
+        {
+            m_direction = direction;
+            m_velocity = velocity;
+        }
+        
+        protected override string FormatContent()
+        {
+            return String.Format("{0} {1} {2} {3}",
+                BalloonID, Screen.FormatDirection(m_direction), m_velocity.X, m_velocity.Y);
+        }
+        
+        private ScreenDirection m_direction;
+        private Point m_velocity;
+    }
+
+    public class GetBalloonContentMessage : BalloonMessage
+    {
+        public static readonly string Tag = "get-balloon-content";
+
+        public GetBalloonContentMessage(int balloonID)
+            : base(MessageType.GetBalloonContent, Tag, balloonID)
+        {
         }
     }
-    
+
+    public class GetBalloonDecorationMessage : BalloonMessage
+    {
+        public static readonly string Tag = "get-balloon-decoration";
+
+        public GetBalloonDecorationMessage(int balloonID)
+            : base(MessageType.GetBalloonDecoration, Tag, balloonID)
+        {
+        }
+    }
+    #endregion
+
+    #region Messages sent by both
+    public class PopBalloonMessage : BalloonMessage
+    {
+        public static readonly string Tag = "pop-balloon";
+
+        public PopBalloonMessage(int balloonID)
+            : base(MessageType.PopBalloon, Tag, balloonID)
+        {
+        }
+    }
+
+    public class BalloonDecorationUpdateMessage : BalloonMessage
+    {
+        public static readonly string Tag = "balloon-decoration-update";
+
+        public int OverlayType
+        {
+            get { return this.m_overlayType; }
+        }
+
+        public Color BackgroundColor
+        {
+            get { return this.m_bgColor; }
+        }
+
+        public BalloonDecorationUpdateMessage(int balloonID, int overlayType, Color bgColor)
+            : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
+        {
+            m_overlayType = overlayType;
+            m_bgColor = bgColor;
+        }
+
+        protected override string FormatContent()
+        {
+            return String.Format("{0} {1} {2} {3}",
+                BalloonID, m_overlayType, m_bgColor.R, m_bgColor.G, m_bgColor.B);
+        }
+
+        private int m_overlayType;
+        private Color m_bgColor;
+    }
+    #endregion
+
+    #region Internal messages
     public class ConnectedMessage : Message
-    {   
+    {
+        public static readonly string Tag = "connected";
+
         public Socket Connection
         {
             get { return this.m_socket; }
         }
         
-        public ConnectedMessage(Socket socket) : base(MessageType.Connected)
+        public ConnectedMessage(Socket socket) : base(MessageType.Connected, Tag)
         {
             m_socket = socket;
-        }
-        
-        public override string Format()
-        {
-            return String.Format("connected");
         }
         
         private Socket m_socket;
     }
     
     public class DisconnectedMessage : Message
-    {   
+    {
+        public static readonly string Tag = "disconnected";
+
         public int ScreenID
         {
             get { return this.m_screenID; }
         }
-        
-        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected)
+
+        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected, Tag)
         {
             m_screenID = screenID;
         }
         
-        public override string Format()
+        protected override string FormatContent()
         {
-            return String.Format("disconnected {0}", m_screenID);
+            return m_screenID.ToString();
         }
         
         private int m_screenID;
     }
+    #endregion
 }

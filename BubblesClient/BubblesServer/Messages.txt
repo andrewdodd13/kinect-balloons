@@ -1,14 +1,14 @@
 Asynchronous messages
 
 server -> client
-  new-balloon <ID> <Left|Right|Any> <velocity vector>
-  pop-balloon <ID>
+  new-balloon <ID> <Left|Right|Any> <velocityX> <velocityY>
   balloon-content-update <ID> <Label> <Content> <URL> <Type>
-  balloon-decoration-update <ID> <OverlayType> <BGColor>
   
 client -> server
-  change-screen <ID> <Left|Right> <Velocity vector>
-  pop-balloon <ID>
+  change-screen <ID> <Left|Right> <velocityX> <velocityY>
   get-balloon-content <ID>
   get-balloon-decoration <ID>
-  balloon-decoration-update <ID> <OverlayType> <BGColor>
+
+both
+  pop-balloon <ID>
+  balloon-decoration-update <ID> <OverlayType> <BGColorR> <BGColorG> <BGColorB>

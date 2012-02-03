@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 
@@ -15,7 +16,7 @@ namespace BubblesServer
                                   ProtocolType.Tcp);
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
-            m_nextBubbleID = 0;
+            m_nextBalloonID = 0;
             m_screens = new Dictionary<int, Screen>();
             m_bubbles = new Dictionary<int, Bubble>();
         }
@@ -70,26 +71,26 @@ namespace BubblesServer
         {
             lock(m_bubbles)
             {
-                int bubbleID = m_nextBubbleID++;
-                Bubble b = new Bubble(bubbleID);
-                m_bubbles[bubbleID] = b;
+                int BalloonID = m_nextBalloonID++;
+                Bubble b = new Bubble(BalloonID);
+                m_bubbles[BalloonID] = b;
                 return b;
             }
         }
         
-        public Bubble GetBubble(int bubbleID)
+        public Bubble GetBubble(int BalloonID)
         {
             lock(m_bubbles)
             {
-                return m_bubbles[bubbleID];
+                return m_bubbles[BalloonID];
             }
         }
         
-        public void ChangeScreen(int bubbleID, Screen newScreen)
+        public void ChangeScreen(int BalloonID, Screen newScreen)
         {
             lock(m_bubbles)
             {
-                Bubble b = GetBubble(bubbleID);
+                Bubble b = GetBubble(BalloonID);
                 b.Screen = newScreen;
             }
         }
@@ -99,7 +100,7 @@ namespace BubblesServer
         private Socket m_socket;
         private CircularQueue<Message> m_queue;
         private int m_nextScreenID;
-        private int m_nextBubbleID;
+        private int m_nextBalloonID;
         private Dictionary<int, Screen> m_screens;
         private Dictionary<int, Bubble> m_bubbles;
         
@@ -135,9 +136,9 @@ namespace BubblesServer
             m_screens.Add(screenID, screen);
             lock(m_bubbles)
             {
-                foreach(int bubbleID in m_bubbles.Keys)
+                foreach(Bubble b in m_bubbles.Values)
                 {
-                    screen.EnqueueMessage(new AddMessage(bubbleID));   
+                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, ScreenDirection.Any, new Point()));   
                 }
             }
             return true;
