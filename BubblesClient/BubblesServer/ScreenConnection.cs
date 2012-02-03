@@ -25,6 +25,7 @@ namespace BubblesServer
         }
 
         public event EventHandler Connected;
+        public event EventHandler ConnectFailed;
         public event EventHandler<MessageEventArgs> MessageReceived;
 
         public ScreenConnection()
@@ -38,7 +39,6 @@ namespace BubblesServer
             m_encoding = new UTF8Encoding();
             m_receiveBuffer = new CircularBuffer(4096);
             m_receiveStream = m_receiveBuffer.CreateReadStream();
-            m_reader = new StreamReader(m_receiveStream, m_encoding);
 
             m_parsers = new Dictionary<string, MessageParser>();
             m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
@@ -83,7 +83,6 @@ namespace BubblesServer
         private Socket m_socket;
         private CircularBuffer m_receiveBuffer;
         private Stream m_receiveStream;
-        private StreamReader m_reader;
         private Encoding m_encoding;
 
         private delegate Message MessageParser(string[] parts);
@@ -94,7 +93,15 @@ namespace BubblesServer
         /// </summary>
         private void ConnectedFinished(IAsyncResult result)
         {
-            m_socket.EndConnect(result);
+            try
+            {
+                m_socket.EndConnect(result);
+            }
+            catch(SocketException)
+            {
+                ConnectFailed(this, new EventArgs());
+                return;
+            }
             Connected(this, new EventArgs());
             // Start receiving messages
             BeginRead();
@@ -138,24 +145,30 @@ namespace BubblesServer
             {
                 throw new SocketException((int)error);
             }
-            
-            Message msg;
+
             lock(m_receiveBuffer)
             {
                 // the data was written directly by the socket, move the write cursor forward
                 m_receiveBuffer.SkipWrite(bytesReceived);
-                // try to parse one message from the received data
-                msg = TryReadMessage();
-                // move the read cursor forward
-                m_receiveStream.Flush();
             }
-
-            // did we receive enough data to read the message?
-            if(msg != null)
+            
+            Message msg;
+            while(true)
             {
+                lock(m_receiveBuffer)
+                {
+                    // try to parse one message from the received data
+                    msg = TryReadMessage();
+                    if(msg == null)
+                    {
+                        break;
+                    }
+                }
+
                 // notify the user that a message was received
                 MessageReceived(this, new MessageEventArgs(msg));
-            }
+            };
+            
 
             // start receiving more data (end of this message or next message)
             BeginRead();
@@ -170,29 +183,36 @@ namespace BubblesServer
         private Message TryReadMessage()
         {
             // Detect the first newline in the buffered data.
-            int c;
+            int c, lineSize = 0;
             bool lineFound = false;
             m_receiveStream.Seek(0, SeekOrigin.Begin);
-            do
+            while(true)
             {
-                c = m_reader.Read();
+                c = m_receiveStream.ReadByte();
+                if(c < 0)
+                {
+                    break;
+                }
+                lineSize++;
                 if((char)c == '\n')
                 {
                     lineFound = true;
                     break;
                 }
-            } while(c >= 0);
-            
+            }
+            m_receiveStream.Seek(0, SeekOrigin.Begin);
+
             if(!lineFound)
             {
                 return null;
             }
             
             // Read the first line
-            string line;
-            m_receiveStream.Seek(0, SeekOrigin.Begin);
-            line = m_reader.ReadLine();
-            Console.WriteLine("<< {0}", line);
+            byte[] messageData = new byte[lineSize];
+            m_receiveStream.Read(messageData, 0, lineSize);
+            m_receiveStream.Flush();
+            string line = m_encoding.GetString(messageData);
+            Console.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
             return ParseMessage(line);
         }
         
