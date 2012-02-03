@@ -211,7 +211,6 @@ namespace BubblesServer
             {
                 newDirection = ScreenDirection.Left;
             }
-            csm.SourceScreen.EnqueueMessage(new PopBalloonMessage(csm.BalloonID));
             newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, newDirection, csm.Y, csm.Velocity));
             return true;
         }

@@ -23,6 +23,12 @@ namespace BubblesServer
             this.m_timer = new Timer(m_interval);
             this.m_timer.Elapsed += new ElapsedEventHandler(HandleTimerEvent);
         }
+
+        private void SendToServer(Message msg)
+        {
+            msg.Source = MessageSource.FeedReader;
+            m_server.EnqueueMessage(msg);
+        }
         
         private void HandleTimerEvent(object source, ElapsedEventArgs e) {
             // Connect to WebServer, gets balloons
@@ -36,7 +42,7 @@ namespace BubblesServer
                 // Check if the bubble need to be keept, or deleted
                 if(!fromFeed.ContainsKey(b.ID)) {
                     // Pop the balloon in the server not present in the feed
-                    m_server.EnqueueMessage(new PopBalloonMessage(b.ID));
+                    SendToServer(new PopBalloonMessage(b.ID));
                 }
             }
             
@@ -44,7 +50,7 @@ namespace BubblesServer
                 Bubble b = i.Value;
                 if(!fromServer.ContainsKey(b.ID)) {
                     // Add the new balloon to the server
-                    m_server.EnqueueMessage(new NewBalloonMessage(b.ID, ScreenDirection.Any, 0.2f, new Point(10, 0)));
+                    SendToServer(new NewBalloonMessage(b.ID, ScreenDirection.Any, 0.2f, new Point(10, 0)));
                 }
             }
         }

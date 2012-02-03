@@ -143,12 +143,19 @@ namespace BubblesServer
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
                 csm.SourceScreen = this;
                 m_bubbles.Remove(csm.BalloonID);
+                m_connection.SendMessage(new PopBalloonMessage(csm.BalloonID));
                 m_server.EnqueueMessage(csm);
                 return true;
             case MessageType.PopBalloon:
-                PopBalloonMessage pbm = (PopBalloonMessage)msg;               
-                m_connection.SendMessage(pbm);  // Notify physical screen
-                m_server.EnqueueMessage(pbm);   // Notify server
+                PopBalloonMessage pbm = (PopBalloonMessage)msg;
+                if(pbm.Source == MessageSource.FeedReader || pbm.Source == MessageSource.Internal)
+                {
+                    m_connection.SendMessage(pbm);  // Notify physical screen
+                }
+                else if(pbm.Source == MessageSource.Connection)
+                {
+                    m_server.EnqueueMessage(pbm);   // Notify server
+                }
                 return true;
             default:
                 // Disconnect when receiving unknown messages

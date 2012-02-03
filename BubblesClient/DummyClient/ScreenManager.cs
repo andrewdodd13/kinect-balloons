@@ -53,7 +53,7 @@ namespace DummyClient
             {
                 dir = ScreenDirection.Left;
             }
-            else if(b.Pos.Y > 1.0f)
+            else if(b.Pos.X > 1.0f)
             {
                 dir = ScreenDirection.Right;
             }

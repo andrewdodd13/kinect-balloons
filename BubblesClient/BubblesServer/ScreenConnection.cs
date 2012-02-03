@@ -220,6 +220,7 @@ namespace BubblesServer
                 }
 
                 // notify the user that a message was received
+                msg.Source = MessageSource.Connection;
                 OnMessageReceived(msg);
             };
             

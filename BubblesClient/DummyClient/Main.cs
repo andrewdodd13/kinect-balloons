@@ -90,7 +90,7 @@ namespace DummyClient
                 b.Pos += b.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                 // detect balloons leaving the screen
-                if(b.Pos.X < 0.0 || b.Pos.X > 1.0f)
+                if(b.Pos.X < 0.0f || b.Pos.X > 1.0f)
                 {
                     screen.MoveBalloonOffscreen(b);
                 }
