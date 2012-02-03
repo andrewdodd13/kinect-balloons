@@ -25,6 +25,7 @@ namespace BubblesServer
         }
 
         public event EventHandler Connected;
+        public event EventHandler ConnectFailed;
         public event EventHandler<MessageEventArgs> MessageReceived;
 
         public ScreenConnection()
@@ -94,7 +95,15 @@ namespace BubblesServer
         /// </summary>
         private void ConnectedFinished(IAsyncResult result)
         {
-            m_socket.EndConnect(result);
+            try
+            {
+                m_socket.EndConnect(result);
+            }
+            catch(SocketException)
+            {
+                ConnectFailed(this, new EventArgs());
+                return;
+            }
             Connected(this, new EventArgs());
             // Start receiving messages
             BeginRead();
@@ -138,24 +147,32 @@ namespace BubblesServer
             {
                 throw new SocketException((int)error);
             }
-            
-            Message msg;
+
             lock(m_receiveBuffer)
             {
                 // the data was written directly by the socket, move the write cursor forward
                 m_receiveBuffer.SkipWrite(bytesReceived);
-                // try to parse one message from the received data
-                msg = TryReadMessage();
-                // move the read cursor forward
-                m_receiveStream.Flush();
             }
-
-            // did we receive enough data to read the message?
-            if(msg != null)
+            
+            Message msg;
+            while(true)
             {
+                lock(m_receiveBuffer)
+                {
+                    // try to parse one message from the received data
+                    msg = TryReadMessage();
+                    if(msg == null)
+                    {
+                        break;
+                    }
+                    // move the read cursor forward
+                    m_receiveStream.Flush();
+                }
+
                 // notify the user that a message was received
                 MessageReceived(this, new MessageEventArgs(msg));
-            }
+            };
+            
 
             // start receiving more data (end of this message or next message)
             BeginRead();
@@ -175,13 +192,14 @@ namespace BubblesServer
             m_receiveStream.Seek(0, SeekOrigin.Begin);
             do
             {
-                c = m_reader.Read();
+                c = m_receiveStream.ReadByte();
                 if((char)c == '\n')
                 {
                     lineFound = true;
                     break;
                 }
             } while(c >= 0);
+            m_receiveStream.Seek(0, SeekOrigin.Begin);
             
             if(!lineFound)
             {
@@ -190,7 +208,6 @@ namespace BubblesServer
             
             // Read the first line
             string line;
-            m_receiveStream.Seek(0, SeekOrigin.Begin);
             line = m_reader.ReadLine();
             Console.WriteLine("<< {0}", line);
             return ParseMessage(line);

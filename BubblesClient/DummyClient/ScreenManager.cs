@@ -23,6 +23,7 @@ namespace DummyClient
         {
             m_conn = new ScreenConnection();
             m_conn.Connected += OnConnected;
+            m_conn.ConnectFailed += OnConnctFailed;
             m_conn.MessageReceived += OnMessageReceived;
             m_balloons = new Dictionary<int, Balloon>();
         }
@@ -39,6 +40,12 @@ namespace DummyClient
 
         private void OnConnected(object sender, EventArgs args)
         {
+        }
+
+        private void OnConnctFailed(object sender, EventArgs args)
+        {
+            Console.WriteLine("Could not connect to the server");
+            Environment.Exit(1);
         }
 
         private void OnMessageReceived(object sender, MessageEventArgs args)
