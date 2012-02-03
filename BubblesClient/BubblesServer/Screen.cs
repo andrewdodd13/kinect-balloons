@@ -136,6 +136,7 @@ namespace BubblesServer
             case MessageType.NewBalloon:
                 NewBalloonMessage am = (NewBalloonMessage)msg;
                 m_bubbles[am.BalloonID] = m_server.GetBubble(am.BalloonID);
+                m_bubbles[am.BalloonID].Screen = this;
                 m_connection.SendMessage(am);
                 return true;
             case MessageType.ChangeScreen:
@@ -143,6 +144,11 @@ namespace BubblesServer
                 csm.SourceScreen = this;
                 m_bubbles.Remove(csm.BalloonID);
                 m_server.EnqueueMessage(csm);
+                return true;
+            case MessageType.PopBalloon:
+                PopBalloonMessage pbm = (PopBalloonMessage)msg;               
+                m_connection.SendMessage(pbm);  // Notify physical screen
+                m_server.EnqueueMessage(pbm);   // Notify server
                 return true;
             default:
                 // Disconnect when receiving unknown messages

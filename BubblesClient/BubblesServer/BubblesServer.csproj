@@ -43,6 +43,7 @@
     <Compile Include="Message.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="CircularBuffer.cs" />
+    <Compile Include="FeedReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Drawing" />

@@ -332,5 +332,6 @@ namespace BubblesServer
         
         private int m_screenID;
     }
+    
     #endregion
 }
