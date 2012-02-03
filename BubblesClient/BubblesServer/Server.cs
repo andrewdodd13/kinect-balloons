@@ -109,7 +109,7 @@ namespace BubblesServer
             int screen_idx = ScreenIndex(s);
             if(screen_idx == -1)
                 return null;
-            screen_idx = screen_idx != m_screens.Count ? screen_idx + 1 : 0;
+            screen_idx = screen_idx != m_screens.Count - 1 ? screen_idx + 1 : 0;
             return m_screens[screen_idx];
         }
         
@@ -196,20 +196,35 @@ namespace BubblesServer
         
         private bool HandleScreenDisconnected(DisconnectedMessage msg)
         {
+            Console.WriteLine("Screen disconnected");
             Screen s = GetScreen(msg.ScreenID);
-            m_screens.Remove(s);
+
+            // Gets screen's balloons
             var balloons = s.GetBalloons();
+            // Gets left and right screens
             Screen left = GetPreviousScreen(s);
             Screen right = GetNextScreen(s);
-            Random r = new Random();
-            foreach(KeyValuePair<int, Bubble> i in balloons) {
-                int random = r.Next(1);
-                if(random == 0) {
-                    i.Value.Screen = left;
-                } else {
-                    i.Value.Screen = right;
+            if(left == s || right == s) {
+                // if next or previous screen are equal to current screen
+                // it means that this is the only screen left
+                // set the balloons' screen to null,
+                // they will be reacffected when a new screen connects
+                foreach(KeyValuePair<int, Bubble> i in balloons) {
+                    i.Value.Screen = null;
+                }
+            } else {
+                Random r = new Random();    // Random object
+                foreach(KeyValuePair<int, Bubble> i in balloons) {
+                    // Choose randomly between left or right screen
+                    int random = r.Next(1);
+                    if(random == 0) {
+                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, new Point(10, 0)));
+                    } else {
+                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, new Point(10, 0)));
+                    }
                 }
             }
+            m_screens.Remove(s);
             return true;
         }
         

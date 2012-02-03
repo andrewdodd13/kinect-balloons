@@ -135,6 +135,7 @@ namespace BubblesServer
             case MessageType.NewBalloon:
                 NewBalloonMessage am = (NewBalloonMessage)msg;
                 m_bubbles[am.BalloonID] = m_server.GetBubble(am.BalloonID);
+                m_bubbles[am.BalloonID].Screen = this;
                 m_connection.SendMessage(am);
                 return true;
             case MessageType.ChangeScreen:
