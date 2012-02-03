@@ -10,5 +10,14 @@ namespace DummyClient
     {
         public int ID;
         public Vector2 Pos;
+        public Vector2 Velocity;
+        
+        public string Label;
+        public string Content;
+        public string Url;
+
+        public int Type;
+        public int OverlayType;
+        public Vector3 BackgroundColor;
     }
 }
