@@ -231,7 +231,17 @@ namespace BubblesServer
         private bool HandleChangeScreen(ChangeScreenMessage csm) {
             Screen newScreen = ChooseNewScreen(csm.SourceScreen, csm.Direction);
             ChangeScreen(csm.BalloonID, newScreen);
-            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Y, csm.Velocity));
+            ScreenDirection newDirection = csm.Direction;
+            if(csm.Direction == ScreenDirection.Left)
+            {
+                newDirection = ScreenDirection.Right;
+            }
+            else if(csm.Direction == ScreenDirection.Right)
+            {
+                newDirection = ScreenDirection.Left;
+            }
+            csm.SourceScreen.EnqueueMessage(new PopBalloonMessage(csm.BalloonID));
+            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, newDirection, csm.Y, csm.Velocity));
             return true;
         }
         

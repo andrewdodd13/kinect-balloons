@@ -26,6 +26,7 @@ namespace BubblesServer
 
         public event EventHandler Connected;
         public event EventHandler ConnectFailed;
+        public event EventHandler Disconnected;
         public event EventHandler<MessageEventArgs> MessageReceived;
 
         public ScreenConnection()
@@ -43,10 +44,15 @@ namespace BubblesServer
             m_parsers = new Dictionary<string, MessageParser>();
             m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
             m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreenMessage);
+            m_parsers.Add(PopBalloonMessage.Tag, ParsePopBalloonMessage);
         }
         
         public void Dispose()
         {
+            lock(m_receiveBuffer)
+            {
+                m_disposed = true;
+            }
             m_socket.Close();
         }
 
@@ -78,9 +84,46 @@ namespace BubblesServer
             byte[] data = m_encoding.GetBytes(line + "\n");
             m_socket.Send(data);
         }
+
+        protected virtual void OnConnected()
+        {
+            EventHandler handler = Connected;
+            if(handler != null)
+            {
+                handler(this, new EventArgs());
+            }
+        }
+
+        protected virtual void OnConnectFailed()
+        {
+            EventHandler handler = ConnectFailed;
+            if(handler != null)
+            {
+                handler(this, new EventArgs());
+            }
+        }
+
+        protected virtual void OnDisconnected()
+        {
+            EventHandler handler = Disconnected;
+            if(handler != null)
+            {
+                handler(this, new EventArgs());
+            }
+        }
+
+        protected virtual void OnMessageReceived(Message msg)
+        {
+            EventHandler<MessageEventArgs> handler = MessageReceived;
+            if(handler != null)
+            {
+                handler(this, new MessageEventArgs(msg));
+            }
+        }
         #endregion
         #region Implementation
         private Socket m_socket;
+        private bool m_disposed;
         private CircularBuffer m_receiveBuffer;
         private Stream m_receiveStream;
         private Encoding m_encoding;
@@ -99,10 +142,10 @@ namespace BubblesServer
             }
             catch(SocketException)
             {
-                ConnectFailed(this, new EventArgs());
+                OnConnectFailed();
                 return;
             }
-            Connected(this, new EventArgs());
+            OnConnected();
             // Start receiving messages
             BeginRead();
         }
@@ -132,13 +175,24 @@ namespace BubblesServer
         /// </summary>
         private void ReadFinished(IAsyncResult result)
         {
-            MessageCallback callback = (MessageCallback)result.AsyncState;
+            bool disposed;
+            lock(m_receiveBuffer)
+            {
+                disposed = m_disposed;
+            }
+            if(disposed)
+            {
+                // connection was closed, don't receive any more message
+                OnDisconnected();
+                return;
+            }
+
             SocketError error;
             int bytesReceived = m_socket.EndReceive(result, out error);
             if(bytesReceived == 0 || error == SocketError.ConnectionReset || error == SocketError.Disconnecting)
             {
                 // connection was closed, don't receive any more message
-                MessageReceived(this, new MessageEventArgs(null));
+                OnDisconnected();
                 return;
             }
             else if(error != SocketError.Success)
@@ -166,7 +220,7 @@ namespace BubblesServer
                 }
 
                 // notify the user that a message was received
-                MessageReceived(this, new MessageEventArgs(msg));
+                OnMessageReceived(msg);
             };
             
 
@@ -250,7 +304,7 @@ namespace BubblesServer
         {
             if(parts.Length != 6)
             {
-                throw new Exception("Invalid message: missing bubble ID or direction");
+                throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
             ScreenDirection direction = Screen.ParseDirection(parts[2]);
@@ -259,6 +313,16 @@ namespace BubblesServer
             velocity.X = Single.Parse(parts[4]);
             velocity.Y = Single.Parse(parts[5]);
             return new ChangeScreenMessage(balloonID, direction, y, velocity);
+        }
+
+        private PopBalloonMessage ParsePopBalloonMessage(string[] parts)
+        {
+            if(parts.Length != 2)
+            {
+                throw new Exception("Invalid message");
+            }
+            int balloonID = Int32.Parse(parts[1]);
+            return new PopBalloonMessage(balloonID);
         }
         #endregion
     }

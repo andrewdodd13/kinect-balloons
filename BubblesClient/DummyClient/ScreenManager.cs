@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Net;
 using System.Threading;
 using Microsoft.Xna.Framework;
@@ -23,7 +24,8 @@ namespace DummyClient
         {
             m_conn = new ScreenConnection();
             m_conn.Connected += OnConnected;
-            m_conn.ConnectFailed += OnConnctFailed;
+            m_conn.ConnectFailed += OnConnectFailed;
+            m_conn.Disconnected += OnDisconnected;
             m_conn.MessageReceived += OnMessageReceived;
             m_balloons = new Dictionary<int, Balloon>();
         }
@@ -38,13 +40,48 @@ namespace DummyClient
             m_conn.Connect(address, port);
         }
 
+        public void MoveBalloonOffscreen(Balloon b)
+        {
+            // Did we already notify the server that the balloon is off-screen?
+            if(b.OffScreen)
+            {
+                return;
+            }
+
+            ScreenDirection dir;
+            if(b.Pos.X < 0.0f)
+            {
+                dir = ScreenDirection.Left;
+            }
+            else if(b.Pos.Y > 1.0f)
+            {
+                dir = ScreenDirection.Right;
+            }
+            else
+            {
+                // balloon still on screen
+                return;
+            }
+
+            // notify the server that the balloon is moving off-screen
+            m_conn.SendMessage(new ChangeScreenMessage(b.ID, dir, b.Pos.Y,
+                new PointF(b.Velocity.X, b.Velocity.Y)));
+            b.OffScreen = true;
+        }
+
         private void OnConnected(object sender, EventArgs args)
         {
         }
 
-        private void OnConnctFailed(object sender, EventArgs args)
+        private void OnConnectFailed(object sender, EventArgs args)
         {
             Console.WriteLine("Could not connect to the server");
+            Environment.Exit(1);
+        }
+
+        private void OnDisconnected(object sender, EventArgs args)
+        {
+            Console.WriteLine("Disconnected from the server");
             Environment.Exit(1);
         }
 

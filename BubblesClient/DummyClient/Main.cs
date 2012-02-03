@@ -88,6 +88,12 @@ namespace DummyClient
             foreach(Balloon b in screen.Balloons.Values)
             {
                 b.Pos += b.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                // detect balloons leaving the screen
+                if(b.Pos.X < 0.0 || b.Pos.X > 1.0f)
+                {
+                    screen.MoveBalloonOffscreen(b);
+                }
             }
             base.Update(gameTime);
         }

@@ -22,6 +22,7 @@ namespace BubblesServer
             m_name = name;
             m_id = id;
             m_connection = connection;
+            m_connection.Disconnected += (sender, args) => EnqueueMessage(null);
             m_connection.MessageReceived += (sender, args) => EnqueueMessage(args.Message);
             m_server = server;
             m_bubbles = new Dictionary<int, Bubble>();
