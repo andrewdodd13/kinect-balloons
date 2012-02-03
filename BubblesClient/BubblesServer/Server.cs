@@ -188,7 +188,22 @@ namespace BubblesServer
             {
                 foreach(Bubble b in m_bubbles.Values)
                 {
-                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, ScreenDirection.Any, new Point()));   
+                    ScreenDirection dir;
+                    float y;
+                    PointF velocity;
+                    if((b.ID % 2) == 0)
+                    {
+                        dir = ScreenDirection.Left;
+                        velocity = new PointF(0.1f, 0.0f);
+                        y = 0.2f;
+                    }
+                    else
+                    {
+                        dir = ScreenDirection.Right;
+                        velocity = new PointF(-0.1f, 0.0f);
+                        y = 0.1f;
+                    }
+                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity));   
                 }
             }
             return true;
@@ -216,7 +231,7 @@ namespace BubblesServer
         private bool HandleChangeScreen(ChangeScreenMessage csm) {
             Screen newScreen = ChooseNewScreen(csm.SourceScreen, csm.Direction);
             ChangeScreen(csm.BalloonID, newScreen);
-            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Velocity));
+            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Y, csm.Velocity));
             return true;
         }
         

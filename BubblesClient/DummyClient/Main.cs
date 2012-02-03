@@ -84,7 +84,11 @@ namespace DummyClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // TODO: Add your update logic here
+            // Update the balloons' positions acording to their current velocity
+            foreach(Balloon b in screen.Balloons.Values)
+            {
+                b.Pos += b.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
             base.Update(gameTime);
         }
 
@@ -97,9 +101,14 @@ namespace DummyClient
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin();
+            Vector2 screenSize = new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            Vector2 texSize = new Vector2(balloonTexture.Width, balloonTexture.Height);
             foreach(Balloon b in screen.Balloons.Values)
             {
-                spriteBatch.Draw(balloonTexture, b.Pos, null, Color.White, 0,
+                // transform the balloon position to screen coordinates
+                // offset the position by half the texture size (at the center of the balloon)
+                Vector2 balloonPos = (b.Pos * screenSize) - (texSize * balloonScale * 0.5f);
+                spriteBatch.Draw(balloonTexture, balloonPos, null, Color.White, 0,
                     new Vector2(), balloonScale, SpriteEffects.None, 0);
             }
             spriteBatch.End();

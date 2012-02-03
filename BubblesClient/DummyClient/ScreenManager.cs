@@ -56,7 +56,18 @@ namespace DummyClient
                 NewBalloonMessage am = (NewBalloonMessage)msg;
                 Balloon b = new Balloon();
                 b.ID = am.BalloonID;
-                b.Pos = new Vector2(b.ID * 50, b.ID * 50);
+                switch(am.Direction)
+                {
+                case ScreenDirection.Any:
+                    b.Pos = new Vector2(b.ID * 50, b.ID * 50);
+                    break;
+                case ScreenDirection.Left:
+                    b.Pos = new Vector2(0.0f, am.Y);
+                    break;
+                case ScreenDirection.Right:
+                    b.Pos = new Vector2(1.0f, am.Y);
+                    break;
+                }
                 b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
                 // TODO synchronize this
                 m_balloons.Add(b.ID, b);

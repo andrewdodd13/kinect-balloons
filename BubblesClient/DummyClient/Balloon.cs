@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace DummyClient
 {
-    public struct Balloon
+    public class Balloon
     {
         public int ID;
         public Vector2 Pos;

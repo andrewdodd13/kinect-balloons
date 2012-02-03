@@ -233,30 +233,32 @@ namespace BubblesServer
 
         private NewBalloonMessage ParseNewBalloonMessage(string[] parts)
         {
-            if(parts.Length != 5)
+            if(parts.Length != 6)
             {
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
             ScreenDirection direction = Screen.ParseDirection(parts[2]);
-            Point velocity = new Point();
-            velocity.X = Int32.Parse(parts[3]);
-            velocity.Y = Int32.Parse(parts[4]);
-            return new NewBalloonMessage(balloonID, direction, velocity);
+            float y = Single.Parse(parts[3]);
+            PointF velocity = new PointF();
+            velocity.X = Single.Parse(parts[4]);
+            velocity.Y = Single.Parse(parts[5]);
+            return new NewBalloonMessage(balloonID, direction, y, velocity);
         }
         
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
         {
-            if(parts.Length != 5)
+            if(parts.Length != 6)
             {
                 throw new Exception("Invalid message: missing bubble ID or direction");
             }
-            int BalloonID = Int32.Parse(parts[1]);
+            int balloonID = Int32.Parse(parts[1]);
             ScreenDirection direction = Screen.ParseDirection(parts[2]);
-            Point velocity = new Point();
-            velocity.X = Int32.Parse(parts[3]);
-            velocity.Y = Int32.Parse(parts[4]);
-            return new ChangeScreenMessage(BalloonID, direction, velocity);
+            float y = Single.Parse(parts[3]);
+            PointF velocity = new PointF();
+            velocity.X = Single.Parse(parts[4]);
+            velocity.Y = Single.Parse(parts[5]);
+            return new ChangeScreenMessage(balloonID, direction, y, velocity);
         }
         #endregion
     }

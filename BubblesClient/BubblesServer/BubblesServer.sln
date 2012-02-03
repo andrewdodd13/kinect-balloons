@@ -11,13 +11,17 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Debug|x86.ActiveCfg = Debug|x86
-		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Release|x86.ActiveCfg = Release|x86
-		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Release|x86.Build.0 = Release|x86
 		{D3BB913E-8F95-4196-ADA5-C736D89DA844}.Debug|x86.ActiveCfg = Debug|x86
 		{D3BB913E-8F95-4196-ADA5-C736D89DA844}.Debug|x86.Build.0 = Debug|x86
 		{D3BB913E-8F95-4196-ADA5-C736D89DA844}.Release|x86.ActiveCfg = Release|x86
 		{D3BB913E-8F95-4196-ADA5-C736D89DA844}.Release|x86.Build.0 = Release|x86
+		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Debug|x86.ActiveCfg = Debug|x86
+		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Debug|x86.Build.0 = Debug|x86
+		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Release|x86.ActiveCfg = Release|x86
+		{160812C3-6CF7-4EFD-9057-F7202B6E5DB9}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = BubblesServer.csproj
@@ -61,8 +65,5 @@ Global
 		$7.MessageStyle = $8
 		$8.LineAlign = 0
 		$7.inheritsSet = Mono
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

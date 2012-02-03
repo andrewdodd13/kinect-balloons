@@ -109,26 +109,33 @@ namespace BubblesServer
             get { return this.m_direction; }
         }
 
-        public Point Velocity
+        public float Y
+        {
+            get { return this.m_y; }
+        }
+
+        public PointF Velocity
         {
             get { return this.m_velocity; }
         }
 
-        public NewBalloonMessage(int balloonID, ScreenDirection direction, Point velocity)
+        public NewBalloonMessage(int balloonID, ScreenDirection direction, float y, PointF velocity)
             : base(MessageType.NewBalloon, Tag, balloonID)
         {
             m_direction = direction;
+            m_y = y;
             m_velocity = velocity;
         }
 
         protected override string FormatContent()
         {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, Screen.FormatDirection(m_direction), m_velocity.X, m_velocity.Y);
+            return String.Format("{0} {1} {2} {3} {4}",
+                BalloonID, Screen.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
         private ScreenDirection m_direction;
-        private Point m_velocity;
+        private PointF m_velocity;
+        private float m_y;
     }
 
     public class BalloonContentUpdateMessage : BalloonMessage
@@ -187,7 +194,12 @@ namespace BubblesServer
             get { return this.m_direction; }
         }
 
-        public Point Velocity
+        public float Y
+        {
+            get { return this.m_y; }
+        }
+
+        public PointF Velocity
         {
             get { return this.m_velocity; }
         }
@@ -197,22 +209,24 @@ namespace BubblesServer
             set { m_screen = value; }
         }
 
-        public ChangeScreenMessage(int balloonID, ScreenDirection direction, Point velocity)
+        public ChangeScreenMessage(int balloonID, ScreenDirection direction, float y, PointF velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
+            m_y = y;
             m_velocity = velocity;
         }
         
         protected override string FormatContent()
         {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, Screen.FormatDirection(m_direction), m_velocity.X, m_velocity.Y);
+            return String.Format("{0} {1} {2} {3} {4}",
+                BalloonID, Screen.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
         private Screen m_screen;
         private ScreenDirection m_direction;
-        private Point m_velocity;
+        private PointF m_velocity;
+        private float m_y;
     }
 
     public class GetBalloonContentMessage : BalloonMessage
