@@ -88,28 +88,43 @@ namespace DummyClient
         private void OnMessageReceived(object sender, MessageEventArgs args)
         {
             Message msg = args.Message;
-            if(msg.Type == MessageType.NewBalloon)
+            switch(msg.Type)
             {
-                NewBalloonMessage am = (NewBalloonMessage)msg;
-                Balloon b = new Balloon();
-                b.ID = am.BalloonID;
-                switch(am.Direction)
-                {
-                case ScreenDirection.Any:
-                    b.Pos = new Vector2(b.ID * 50, b.ID * 50);
-                    break;
-                case ScreenDirection.Left:
-                    b.Pos = new Vector2(0.0f, am.Y);
-                    break;
-                case ScreenDirection.Right:
-                    b.Pos = new Vector2(1.0f, am.Y);
-                    break;
-                }
-                b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
-                // TODO synchronize this
-                m_balloons.Add(b.ID, b);
-                BalloonMapChanged(this, new EventArgs());
+            case MessageType.NewBalloon:
+                HandleNewBalloon((NewBalloonMessage)msg);
+                break;
+            case MessageType.PopBalloon:
+                HandlePopBalloon((PopBalloonMessage)msg);
+                break;
             }
+        }
+
+        private void HandleNewBalloon(NewBalloonMessage am)
+        {
+            Balloon b = new Balloon();
+            b.ID = am.BalloonID;
+            switch(am.Direction)
+            {
+            case ScreenDirection.Any:
+                b.Pos = new Vector2(b.ID * 50, b.ID * 50);
+                break;
+            case ScreenDirection.Left:
+                b.Pos = new Vector2(0.0f, am.Y);
+                break;
+            case ScreenDirection.Right:
+                b.Pos = new Vector2(1.0f, am.Y);
+                break;
+            }
+            b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
+            // TODO synchronize this
+            m_balloons.Add(b.ID, b);
+            BalloonMapChanged(this, new EventArgs());
+        }
+
+        private void HandlePopBalloon(PopBalloonMessage pbm)
+        {
+            m_balloons.Remove(pbm.BalloonID);
+            BalloonMapChanged(this, new EventArgs());
         }
     }
 }
