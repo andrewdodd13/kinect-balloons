@@ -17,7 +17,7 @@ namespace BubblesServer
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
             m_nextBalloonID = 0;
-            m_screens = new Dictionary<int, Screen>();
+            m_screens = new List<Screen>();
             m_bubbles = new Dictionary<int, Bubble>();
         }
         
@@ -64,7 +64,15 @@ namespace BubblesServer
         
         public Screen ChooseNewScreen(Screen oldScreen, ScreenDirection direction)
         {
-            return oldScreen;
+            lock(m_screens) {
+                if(direction == ScreenDirection.Left) {
+                    return GetPreviousScreen(oldScreen);
+                } else if(direction == ScreenDirection.Right) {
+                    return GetNextScreen(oldScreen);
+                } else {
+                    return null;
+                }
+            }
         }
         
         public Bubble CreateBubble()
@@ -86,6 +94,46 @@ namespace BubblesServer
             }
         }
         
+        private Screen GetScreen(int screenID) {
+            lock(m_screens) {
+                foreach(Screen v in m_screens) {
+                    if(screenID == v.ID) {
+                        return v;
+                    }
+                }
+                return null;
+            }
+        }
+        
+        private Screen GetNextScreen(Screen s) {
+            int screen_idx = ScreenIndex(s);
+            if(screen_idx == -1)
+                return null;
+            screen_idx = screen_idx != m_screens.Count ? screen_idx + 1 : 0;
+            return m_screens[screen_idx];
+        }
+        
+        private Screen GetPreviousScreen(Screen s) {
+            int screen_idx = ScreenIndex(s);
+            if(screen_idx == -1)
+                return null;
+            screen_idx = screen_idx != 0 ? screen_idx - 1 : m_screens.Count -1;
+            return m_screens[screen_idx];
+        }
+        
+        private int ScreenIndex(Screen s) {
+            lock(m_screens) {
+                int i = 0;
+                foreach(Screen v in m_screens) {
+                    if(s.ID == v.ID) {
+                        return i;
+                    }
+                    i++;
+                }
+                return -1;
+            }
+        }
+        
         public void ChangeScreen(int BalloonID, Screen newScreen)
         {
             lock(m_bubbles)
@@ -101,7 +149,7 @@ namespace BubblesServer
         private CircularQueue<Message> m_queue;
         private int m_nextScreenID;
         private int m_nextBalloonID;
-        private Dictionary<int, Screen> m_screens;
+        private List<Screen> m_screens;      
         private Dictionary<int, Bubble> m_bubbles;
         
         /// <summary>
@@ -122,6 +170,8 @@ namespace BubblesServer
                 return HandleScreenConnected((ConnectedMessage)msg);
             case MessageType.Disconnected:
                 return HandleScreenDisconnected((DisconnectedMessage)msg);
+            case MessageType.ChangeScreen:
+                return HandleChangeScreen((ChangeScreenMessage)msg);
             default:
                 // Disconnect when receiving unknown messages
                 return false;
@@ -133,7 +183,7 @@ namespace BubblesServer
             ScreenConnection screenConn = new ScreenConnection(msg.Connection);
             int screenID = m_nextScreenID++;
             Screen screen = new Screen("Screen-" + screenID, screenID, screenConn, this);
-            m_screens.Add(screenID, screen);
+            m_screens.Add( screen);
             lock(m_bubbles)
             {
                 foreach(Bubble b in m_bubbles.Values)
@@ -146,7 +196,27 @@ namespace BubblesServer
         
         private bool HandleScreenDisconnected(DisconnectedMessage msg)
         {
-            m_screens.Remove(msg.ScreenID);
+            Screen s = GetScreen(msg.ScreenID);
+            m_screens.Remove(s);
+            var balloons = s.GetBalloons();
+            Screen left = GetPreviousScreen(s);
+            Screen right = GetNextScreen(s);
+            Random r = new Random();
+            foreach(KeyValuePair<int, Bubble> i in balloons) {
+                int random = r.Next(1);
+                if(random == 0) {
+                    i.Value.Screen = left;
+                } else {
+                    i.Value.Screen = right;
+                }
+            }
+            return true;
+        }
+        
+        private bool HandleChangeScreen(ChangeScreenMessage csm) {
+            Screen newScreen = ChooseNewScreen(csm.SourceScreen, csm.Direction);
+            ChangeScreen(csm.BalloonID, newScreen);
+            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Velocity));
             return true;
         }
         

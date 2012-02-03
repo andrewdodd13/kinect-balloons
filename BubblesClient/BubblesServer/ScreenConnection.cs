@@ -227,7 +227,7 @@ namespace BubblesServer
         
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
         {
-            if(parts.Length != 3)
+            if(parts.Length != 5)
             {
                 throw new Exception("Invalid message: missing bubble ID or direction");
             }

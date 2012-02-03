@@ -39,14 +39,6 @@ namespace BubblesServer
         {
             get { return m_type; }
         }
-
-        /// <summary>
-        /// Text identifier for the type of message.
-        /// </summary>
-        public string Tag
-        {
-            get { return m_tag; }
-        }
         
         public Message(MessageType type, string tag)
         {
@@ -199,6 +191,11 @@ namespace BubblesServer
         {
             get { return this.m_velocity; }
         }
+        
+        public Screen SourceScreen {
+            get { return this.m_screen; }
+            set { m_screen = value; }
+        }
 
         public ChangeScreenMessage(int balloonID, ScreenDirection direction, Point velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
@@ -213,6 +210,7 @@ namespace BubblesServer
                 BalloonID, Screen.FormatDirection(m_direction), m_velocity.X, m_velocity.Y);
         }
         
+        private Screen m_screen;
         private ScreenDirection m_direction;
         private Point m_velocity;
     }

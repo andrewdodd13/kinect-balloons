@@ -139,14 +139,23 @@ namespace BubblesServer
                 return true;
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-                Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
+                csm.SourceScreen = this;
                 m_bubbles.Remove(csm.BalloonID);
-                m_server.ChangeScreen(csm.BalloonID, newScreen);
-                newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, csm.Direction, csm.Velocity));
+                m_server.EnqueueMessage(csm);
                 return true;
             default:
                 // Disconnect when receiving unknown messages
                 return false;
+            }
+        }
+        
+        public int Size() {
+            return m_bubbles.Count;
+        }
+        
+        public Dictionary<int, Bubble> GetBalloons() {
+            lock(m_bubbles) {
+                return m_bubbles;
             }
         }
         #endregion
