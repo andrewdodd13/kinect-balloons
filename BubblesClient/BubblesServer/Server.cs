@@ -36,7 +36,7 @@ namespace BubblesServer
             // Create some bubbles
             for(int i = 0; i < 2; i++)
             {
-                CreateBubble();
+                CreateBalloon();
             }
             
 
@@ -189,9 +189,9 @@ namespace BubblesServer
                     // Choose randomly between left or right screen
                     int random = m_random.Next(1);
                     if(random == 0) {
-                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, new Point(10, 0)));
+                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, 0.1f, new Point(10, 0)));
                     } else {
-                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, new Point(10, 0)));
+                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, ScreenDirection.Right, 0.1f, new Point(10, 0)));
                     }
                 }
             }
