@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using XnaMouse = Microsoft.Xna.Framework.Input.Mouse;
 
 namespace BubblesClient.Input.Controllers.Mouse
 {
@@ -24,7 +25,7 @@ namespace BubblesClient.Input.Controllers.Mouse
         /// <returns></returns>
         public Vector3[] GetHandPositions()
         {
-            MouseState ms = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            MouseState ms = XnaMouse.GetState();
 
             return new Vector3[] { new Vector3(ms.X, ms.Y, 0) };
         }
