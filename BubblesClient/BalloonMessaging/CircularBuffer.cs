@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace BubblesServer
+namespace Balloons.Messaging
 {
     /// <summary>
     /// Unsynchronized circular buffers of bytes.

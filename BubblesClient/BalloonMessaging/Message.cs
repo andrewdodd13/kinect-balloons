@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Net.Sockets;
 
-namespace BubblesServer
+namespace Balloons.Messaging
 {
     /// <summary>
     /// List of possible sources of messages.
@@ -67,6 +67,15 @@ namespace BubblesServer
             get { return m_source;  }
             set { m_source = value; }
         }
+
+        /// <summary>
+        /// Object that sent this message.
+        /// </summary>
+        public object Sender
+        {
+            get { return m_sender; }
+            set { m_sender = value; }
+        }
         
         public Message(MessageType type, string tag)
         {
@@ -90,6 +99,7 @@ namespace BubblesServer
         private readonly MessageType m_type;
         private readonly string m_tag;
         private MessageSource m_source;
+        private object m_sender;
     }
 
     public class BalloonMessage : Message
@@ -133,7 +143,7 @@ namespace BubblesServer
     {
         public static readonly string Tag = "new-ballooon";
 
-        public ScreenDirection Direction
+        public Direction Direction
         {
             get { return this.m_direction; }
         }
@@ -148,7 +158,7 @@ namespace BubblesServer
             get { return this.m_velocity; }
         }
 
-        public NewBalloonMessage(int balloonID, ScreenDirection direction, float y, PointF velocity)
+        public NewBalloonMessage(int balloonID, Direction direction, float y, PointF velocity)
             : base(MessageType.NewBalloon, Tag, balloonID)
         {
             m_direction = direction;
@@ -159,10 +169,10 @@ namespace BubblesServer
         protected override string FormatContent()
         {
             return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Screen.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
+                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
-        private ScreenDirection m_direction;
+        private Direction m_direction;
         private PointF m_velocity;
         private float m_y;
     }
@@ -218,7 +228,7 @@ namespace BubblesServer
     {
         public static readonly string Tag = "change-screen";
 
-        public ScreenDirection Direction
+        public Direction Direction
         {
             get { return this.m_direction; }
         }
@@ -232,13 +242,8 @@ namespace BubblesServer
         {
             get { return this.m_velocity; }
         }
-        
-        public Screen SourceScreen {
-            get { return this.m_screen; }
-            set { m_screen = value; }
-        }
 
-        public ChangeScreenMessage(int balloonID, ScreenDirection direction, float y, PointF velocity)
+        public ChangeScreenMessage(int balloonID, Direction direction, float y, PointF velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
@@ -249,11 +254,10 @@ namespace BubblesServer
         protected override string FormatContent()
         {
             return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Screen.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
+                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
-        private Screen m_screen;
-        private ScreenDirection m_direction;
+        private Direction m_direction;
         private PointF m_velocity;
         private float m_y;
     }

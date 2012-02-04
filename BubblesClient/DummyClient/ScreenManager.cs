@@ -4,18 +4,18 @@ using System.Drawing;
 using System.Net;
 using System.Threading;
 using Microsoft.Xna.Framework;
-using BubblesServer;
+using Balloons.Messaging;
 
-namespace DummyClient
+namespace Balloons.DummyClient
 {
     public class ScreenManager
     {
         private ScreenConnection m_conn;
-        private Dictionary<int, Balloon> m_balloons;
+        private Dictionary<int, ClientBalloon> m_balloons;
 
         public event EventHandler BalloonMapChanged;
 
-        public Dictionary<int, Balloon> Balloons
+        public Dictionary<int, ClientBalloon> Balloons
         {
             get { return m_balloons; }
         }
@@ -27,7 +27,7 @@ namespace DummyClient
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
             m_conn.MessageReceived += OnMessageReceived;
-            m_balloons = new Dictionary<int, Balloon>();
+            m_balloons = new Dictionary<int, ClientBalloon>();
         }
 
         public void Dispose()
@@ -40,7 +40,7 @@ namespace DummyClient
             m_conn.Connect(address, port);
         }
 
-        public void MoveBalloonOffscreen(Balloon b)
+        public void MoveBalloonOffscreen(ClientBalloon b)
         {
             // Did we already notify the server that the balloon is off-screen?
             if(b.OffScreen)
@@ -48,14 +48,14 @@ namespace DummyClient
                 return;
             }
 
-            ScreenDirection dir;
+            Direction dir;
             if(b.Pos.X < 0.0f)
             {
-                dir = ScreenDirection.Left;
+                dir = Direction.Left;
             }
             else if(b.Pos.X > 1.0f)
             {
-                dir = ScreenDirection.Right;
+                dir = Direction.Right;
             }
             else
             {
@@ -101,17 +101,16 @@ namespace DummyClient
 
         private void HandleNewBalloon(NewBalloonMessage am)
         {
-            Balloon b = new Balloon();
-            b.ID = am.BalloonID;
+            ClientBalloon b = new ClientBalloon(am.BalloonID);
             switch(am.Direction)
             {
-            case ScreenDirection.Any:
+            case Direction.Any:
                 b.Pos = new Vector2(b.ID * 50, b.ID * 50);
                 break;
-            case ScreenDirection.Left:
+            case Direction.Left:
                 b.Pos = new Vector2(0.0f, am.Y);
                 break;
-            case ScreenDirection.Right:
+            case Direction.Right:
                 b.Pos = new Vector2(1.0f, am.Y);
                 break;
             }

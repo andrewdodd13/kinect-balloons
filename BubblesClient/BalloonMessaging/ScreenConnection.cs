@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace BubblesServer
+namespace Balloons.Messaging
 {
     /// <summary>
     /// Function that can be used to receive messages.
@@ -221,6 +221,7 @@ namespace BubblesServer
 
                 // notify the user that a message was received
                 msg.Source = MessageSource.Connection;
+                msg.Sender = this;
                 OnMessageReceived(msg);
             };
             
@@ -293,7 +294,7 @@ namespace BubblesServer
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
-            ScreenDirection direction = Screen.ParseDirection(parts[2]);
+            Direction direction = Balloon.ParseDirection(parts[2]);
             float y = Single.Parse(parts[3]);
             PointF velocity = new PointF();
             velocity.X = Single.Parse(parts[4]);
@@ -308,7 +309,7 @@ namespace BubblesServer
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
-            ScreenDirection direction = Screen.ParseDirection(parts[2]);
+            Direction direction = Balloon.ParseDirection(parts[2]);
             float y = Single.Parse(parts[3]);
             PointF velocity = new PointF();
             velocity.X = Single.Parse(parts[4]);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace BubblesServer
+namespace Balloons.Messaging
 {
     /// <summary>
     /// Fixed-size buffer that can be used to synchronize data between producers and consumers.

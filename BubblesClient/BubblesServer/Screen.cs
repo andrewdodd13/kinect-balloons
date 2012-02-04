@@ -1,19 +1,11 @@
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using Balloons;
+using Balloons.Messaging;
 
-namespace BubblesServer
+namespace Balloons.Server
 {
-    /// <summary>
-    /// Used to describe the direction taken by a bubble when it leaves a screen.
-    /// </summary>
-    public enum ScreenDirection
-    {
-        Any,
-        Left,
-        Right
-    }
-    
 	public class Screen
 	{
         #region Public interface
@@ -25,7 +17,7 @@ namespace BubblesServer
             m_connection.Disconnected += (sender, args) => EnqueueMessage(null);
             m_connection.MessageReceived += (sender, args) => EnqueueMessage(args.Message);
             m_server = server;
-            m_bubbles = new Dictionary<int, Bubble>();
+            m_bubbles = new Dictionary<int, ServerBalloon>();
             m_queue = new CircularQueue<Message>(64);
             m_thread = new Thread(Run);
             m_thread.Start();
@@ -39,36 +31,6 @@ namespace BubblesServer
         public string Name
         {
             get { return m_name; }
-        }
-
-        public static string FormatDirection(ScreenDirection direction)
-        {
-            switch (direction)
-            {
-                case ScreenDirection.Left:
-                    return "left";
-                case ScreenDirection.Right:
-                    return "right";
-                case ScreenDirection.Any:
-                    return "any";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public static ScreenDirection ParseDirection(string text)
-        {
-            switch (text)
-            {
-                case "left":
-                    return ScreenDirection.Left;
-                case "right":
-                    return ScreenDirection.Right;
-                case "any":
-                    return ScreenDirection.Any;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
         
         /// <summary>
@@ -87,8 +49,8 @@ namespace BubblesServer
         private Server m_server;
 		private ScreenConnection m_connection;
 		private Thread m_thread;
-		
-        private Dictionary<int, Bubble> m_bubbles;
+
+        private Dictionary<int, ServerBalloon> m_bubbles;
         private CircularQueue<Message> m_queue;
         
         /// <summary>
@@ -141,7 +103,7 @@ namespace BubblesServer
                 return true;
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-                csm.SourceScreen = this;
+                csm.Sender = this;
                 m_bubbles.Remove(csm.BalloonID);
                 m_connection.SendMessage(new PopBalloonMessage(csm.BalloonID));
                 m_server.EnqueueMessage(csm);
@@ -166,8 +128,9 @@ namespace BubblesServer
         public int Size() {
             return m_bubbles.Count;
         }
-        
-        public Dictionary<int, Bubble> GetBalloons() {
+
+        public Dictionary<int, ServerBalloon> GetBalloons()
+        {
             lock(m_bubbles) {
                 return m_bubbles;
             }

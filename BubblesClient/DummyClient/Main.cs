@@ -7,9 +7,9 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using BubblesServer;
+//using Balloons.Messaging;
 
-namespace DummyClient
+namespace Balloons.DummyClient
 {
     public class DummyClient : Game
     {
@@ -94,7 +94,7 @@ namespace DummyClient
         protected override void Update(GameTime gameTime)
         {
             // Update the balloons' positions acording to their current velocity
-            foreach(Balloon b in screen.Balloons.Values)
+            foreach(ClientBalloon b in screen.Balloons.Values)
             {
                 b.Pos += b.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -118,7 +118,7 @@ namespace DummyClient
             spriteBatch.Begin();
             Vector2 screenSize = new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             Vector2 texSize = new Vector2(balloonTexture.Width, balloonTexture.Height);
-            foreach(Balloon b in screen.Balloons.Values)
+            foreach(ClientBalloon b in screen.Balloons.Values)
             {
                 // transform the balloon position to screen coordinates
                 // offset the position by half the texture size (at the center of the balloon)

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Balloons;
 
-namespace DummyClient
+namespace Balloons.DummyClient
 {
-    public class Balloon
+    public class ClientBalloon : Balloon
     {
-        public int ID;
         public Vector2 Pos;
         public Vector2 Velocity;
         /// <summary>
@@ -16,13 +16,10 @@ namespace DummyClient
         /// the server has been notified of it.
         /// </summary>
         public bool OffScreen;
-        
-        public string Label;
-        public string Content;
-        public string Url;
 
-        public int Type;
-        public int OverlayType;
-        public Vector3 BackgroundColor;
+        public ClientBalloon(int balloonID)
+            : base(balloonID)
+        {
+        }
     }
 }
