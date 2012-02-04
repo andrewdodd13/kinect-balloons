@@ -62,10 +62,22 @@ namespace Balloons.Server
         }
         
         /// <summary>
-        /// Send a message to the screen. It will be handled in the server's thread.
+        /// Send a message to the server. It will be handled in the server's thread.
         /// </summary>
         public void EnqueueMessage(Message message)
         {
+            m_queue.Enqueue(message);
+        }
+
+        /// <summary>
+        /// Send a message to the server, changing its sender. It will be handled in the server's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message, object sender)
+        {
+            if(message != null && sender != null)
+            {
+                message.Sender = sender;
+            }
             m_queue.Enqueue(message);
         }
 
@@ -163,7 +175,7 @@ namespace Balloons.Server
                         velocity = new PointF(-0.1f, 0.0f);
                         y = 0.1f;
                     }
-                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity));   
+                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
                 }
             }
             return true;
@@ -194,9 +206,9 @@ namespace Balloons.Server
                     // Choose randomly between left or right screen
                     int random = m_random.Next(1);
                     if(random == 0) {
-                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)));
+                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)), this);
                     } else {
-                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)));
+                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)), this);
                     }
                 }
             }
@@ -217,7 +229,7 @@ namespace Balloons.Server
             {
                 newDirection = Direction.Left;
             }
-            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, newDirection, csm.Y, csm.Velocity));
+            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, newDirection, csm.Y, csm.Velocity), this);
             return true;
         }
         
@@ -235,7 +247,7 @@ namespace Balloons.Server
                 
                 int screen_idx = m_random.Next(m_screens.Count);
                 m_bubbles[nbm.BalloonID] = new ServerBalloon(nbm.BalloonID);
-                m_screens[screen_idx].EnqueueMessage(nbm);
+                m_screens[screen_idx].EnqueueMessage(nbm, this);
             }
             return true;
         }
@@ -244,7 +256,7 @@ namespace Balloons.Server
             lock(m_bubbles) {
                 ServerBalloon b = GetBubble(pbm.BalloonID);
                 if(m_bubbles.Remove(pbm.BalloonID) && b.Screen != null) {
-                    b.Screen.EnqueueMessage(pbm); // Notify Screen
+                    b.Screen.EnqueueMessage(pbm, this); // Notify Screen
                 }
             }
             return true;

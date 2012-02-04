@@ -220,7 +220,6 @@ namespace Balloons.Messaging
                 }
 
                 // notify the user that a message was received
-                msg.Source = MessageSource.Connection;
                 msg.Sender = this;
                 OnMessageReceived(msg);
             };

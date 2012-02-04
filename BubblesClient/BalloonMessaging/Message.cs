@@ -5,25 +5,6 @@ using System.Net.Sockets;
 namespace Balloons.Messaging
 {
     /// <summary>
-    /// List of possible sources of messages.
-    /// </summary>
-    public enum MessageSource
-    {
-        /// <summary>
-        /// The message is internal to the server.
-        /// </summary>
-        Internal,
-        /// <summary>
-        /// The message was received from the client/server connection.
-        /// </summary>
-        Connection,
-        /// <summary>
-        /// The message was sent by the feed reader.
-        /// </summary>
-        FeedReader
-    }
-
-    /// <summary>
     /// List of all message types.
     /// </summary>
     public enum MessageType
@@ -60,15 +41,6 @@ namespace Balloons.Messaging
         }
 
         /// <summary>
-        /// Identifies the source of the message.
-        /// </summary>
-        public MessageSource Source
-        {
-            get { return m_source;  }
-            set { m_source = value; }
-        }
-
-        /// <summary>
         /// Object that sent this message.
         /// </summary>
         public object Sender
@@ -98,7 +70,6 @@ namespace Balloons.Messaging
         
         private readonly MessageType m_type;
         private readonly string m_tag;
-        private MessageSource m_source;
         private object m_sender;
     }
 

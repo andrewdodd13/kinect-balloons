@@ -40,6 +40,18 @@ namespace Balloons.Server
         {
             m_queue.Enqueue(message);
         }
+
+        /// <summary>
+        /// Send a message to the screen, changing its sender. It will be handled in the screen's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message, object sender)
+        {
+            if(message != null && sender != null)
+            {
+                message.Sender = sender;
+            }
+            m_queue.Enqueue(message);
+        }
         #endregion
         #region Implementation
 		// Memebers
@@ -78,7 +90,7 @@ namespace Balloons.Server
                 }
             }
             Console.WriteLine("Screen disconnected: {0}", m_id);
-            m_server.EnqueueMessage(new DisconnectedMessage(m_id));
+            m_server.EnqueueMessage(new DisconnectedMessage(m_id), this);
         }
         
         /// <summary>
@@ -103,20 +115,19 @@ namespace Balloons.Server
                 return true;
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-                csm.Sender = this;
                 m_bubbles.Remove(csm.BalloonID);
                 m_connection.SendMessage(new PopBalloonMessage(csm.BalloonID));
-                m_server.EnqueueMessage(csm);
+                m_server.EnqueueMessage(csm, this);
                 return true;
             case MessageType.PopBalloon:
                 PopBalloonMessage pbm = (PopBalloonMessage)msg;
-                if(pbm.Source == MessageSource.FeedReader || pbm.Source == MessageSource.Internal)
-                {
-                    m_connection.SendMessage(pbm);  // Notify physical screen
-                }
-                else if(pbm.Source == MessageSource.Connection)
+                if(pbm.Sender is ScreenConnection)
                 {
                     m_server.EnqueueMessage(pbm);   // Notify server
+                }
+                else
+                {
+                    m_connection.SendMessage(pbm);  // Notify physical screen
                 }
                 return true;
             default:
