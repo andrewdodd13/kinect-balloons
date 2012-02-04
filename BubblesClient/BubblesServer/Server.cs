@@ -20,7 +20,7 @@ namespace BubblesServer
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<int, Bubble>();
             m_reader = new FeedReader(this, "http://localhost", 1000);
-            m_reader.Start();
+            //m_reader.Start();
             
             m_random = new Random();
         }

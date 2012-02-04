@@ -56,12 +56,21 @@ namespace DummyClient
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            balloonTexture = LoadTexture("../../Balloon.jpg");
-            balloonScale = 0.1f;
+            balloonTexture = LoadTexture("Balloon.png");
+            balloonScale = 0.5f;
         }
 
         private Texture2D LoadTexture(string path)
         {
+            if(!File.Exists(path))
+            {
+                // when debugging, executables are copied to bin/Debug
+                path = Path.Combine("../..", path);
+                if(!File.Exists(path))
+                {
+                    return null;
+                }
+            }
             using (FileStream fs = new FileStream(path, FileMode.Open))
             {
                 return Texture2D.FromStream(graphics.GraphicsDevice, fs);
