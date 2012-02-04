@@ -16,7 +16,7 @@ namespace BubblesClient.Input.Controllers.Kinect
         private bool _sensorConflict = false;
         private Skeleton[] _skeletonData = null;
 
-        private List<SkeletonPoint> _handPositions;
+        private Dictionary<Skeleton, Hand[]> _handPositions = new Dictionary<Skeleton,Hand[]>();
 
         /// <summary>
         /// Initialises the Kinect system and causes it to begin polling.
@@ -34,21 +34,58 @@ namespace BubblesClient.Input.Controllers.Kinect
             }
         }
 
-        public Vector3[] GetHandPositions()
+        public Hand[] GetHandPositions()
         {
-            if (_handPositions == null)
-                return new Vector3[0];
-
-            Vector3[] positions = new Vector3[_handPositions.Count];
-            for (int i = 0; i < _handPositions.Count; i++)
+            Hand[] returnValue = new Hand[_handPositions.Count * 2];
+            int i = 0;
+            foreach (Hand[] hands in _handPositions.Values)
             {
-                positions[i] = new Vector3(_scaleFactorX * _handPositions[i].X + _scaleFactorX,
-                   _scaleFactorY * -(_handPositions[i].Y) + _scaleFactorY, _handPositions[i].Z);
+                returnValue[i] = hands[0];
+                returnValue[i + 1] = hands[1];
+                i += 2;
             }
 
-            return positions;
+            return returnValue;
         }
 
+
+        private void SkeletonsReady(object sender, SkeletonFrameReadyEventArgs e)
+        {
+            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+            {
+                if (skeletonFrame != null)
+                {
+                    if ((_skeletonData == null) || (_skeletonData.Length != skeletonFrame.SkeletonArrayLength))
+                    {
+                        _skeletonData = new Skeleton[skeletonFrame.SkeletonArrayLength];
+                    }
+
+                    skeletonFrame.CopySkeletonDataTo(_skeletonData);
+
+                    foreach (Skeleton skeleton in _skeletonData)
+                    {
+                        if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
+                        {
+                            if (skeleton.Joints.Count > 0)
+                            {
+                                if (!_handPositions.ContainsKey(skeleton)) {
+                                    _handPositions.Add(skeleton, new Hand[2]);
+                                }
+
+                                Hand[] hands = _handPositions[skeleton];
+                                SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
+                                hands[0] = new Hand() { Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z) };
+
+                                SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
+                                hands[1] = new Hand() { Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z) };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #region "Kinect Boilerplate Code"
         private bool DiscoverSensor()
         {
             foreach (KinectSensor sensor in KinectSensor.KinectSensors)
@@ -184,37 +221,6 @@ namespace BubblesClient.Input.Controllers.Kinect
                 return;
             }
         }
-
-        private void SkeletonsReady(object sender, SkeletonFrameReadyEventArgs e)
-        {
-            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
-            {
-                if (skeletonFrame != null)
-                {
-                    if ((_skeletonData == null) || (_skeletonData.Length != skeletonFrame.SkeletonArrayLength))
-                    {
-                        _skeletonData = new Skeleton[skeletonFrame.SkeletonArrayLength];
-                    }
-
-                    skeletonFrame.CopySkeletonDataTo(_skeletonData);
-
-                    List<SkeletonPoint> positions = new List<SkeletonPoint>();
-
-                    foreach (Skeleton skeleton in _skeletonData)
-                    {
-                        if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
-                        {
-                            if (skeleton.Joints.Count > 0)
-                            {
-                                positions.Add(skeleton.Joints[JointType.HandLeft].Position);
-                                positions.Add(skeleton.Joints[JointType.HandRight].Position);
-                            }
-                        }
-                    }
-
-                    _handPositions = positions;
-                }
-            }
-        }
+        #endregion
     }
 }

@@ -13,6 +13,8 @@ namespace BubblesClient.Input.Controllers.Mouse
     /// </summary>
     public class MouseInput : IInputController
     {
+        private Hand _hand = new Hand();
+
         /// <summary>
         /// Does nothing; Mouse input is handled by XNA for us
         /// </summary>
@@ -23,11 +25,13 @@ namespace BubblesClient.Input.Controllers.Mouse
         /// Returns one hand position with the position of the mouse
         /// </summary>
         /// <returns></returns>
-        public Vector3[] GetHandPositions()
+        public Hand[] GetHandPositions()
         {
             MouseState ms = XnaMouse.GetState();
 
-            return new Vector3[] { new Vector3(ms.X, ms.Y, 0) };
+            _hand.Position = new Vector3(ms.X, ms.Y, 0);
+
+            return new Hand[] { _hand };
         }
     }
 }

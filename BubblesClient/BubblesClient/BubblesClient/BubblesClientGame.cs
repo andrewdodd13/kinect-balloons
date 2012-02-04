@@ -25,13 +25,18 @@ namespace BubblesClient
     /// </summary>
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
+        private class BodyJointPair
+        {
+            public Body Body { get; set; }
+            public Joint Joint { get; set; }
+        }
+
         SpriteBatch spriteBatch;
         Color backgroundColour = Color.Blue;
 
         Texture2D texture, _balloon;
 
-        private Body _roofBody, _balloonBody, _cursorBody;
-        private FixedMouseJoint _mouseJoint;
+        private Body _roofBody, _balloonBody;
 
         // XNA Graphics
         private GraphicsDeviceManager _graphics;
@@ -39,6 +44,8 @@ namespace BubblesClient
 
         // Input
         private IInputController _input;
+        private Dictionary<Hand, BodyJointPair> _handBodies = new Dictionary<Hand, BodyJointPair>();
+
         private INetworkEventManager _networkEvents = new MockNetworkManager();
 
         // Physics World
@@ -103,14 +110,6 @@ namespace BubblesClient
             _roofBody.IsStatic = true;
             _roofBody.Restitution = 0.3f;
             _roofBody.Friction = 0.5f;
-
-            // Setup the cursor [TODO]
-            Vector2 mousePos = new Vector2(_input.GetHandPositions()[0].X, _input.GetHandPositions()[0].Y);
-            _cursorBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, mousePos / MeterInPixels);
-            _cursorBody.BodyType = BodyType.Dynamic;
-            _mouseJoint = new FixedMouseJoint(_cursorBody, _cursorBody.Position);
-            _mouseJoint.MaxForce = 1000f;
-            _world.AddJoint(_mouseJoint);
         }
 
         /// <summary>
@@ -137,13 +136,9 @@ namespace BubblesClient
             //PerformNetworkEvents();
 
             // Query the Input Library
-
-            // Run Physics
-            _mouseJoint.WorldAnchorB = new Vector2(_input.GetHandPositions()[0].X, _input.GetHandPositions()[0].Y) / MeterInPixels;
-            Console.WriteLine("Setting Position: {0}", _mouseJoint.WorldAnchorB);
+            this.HandleInput();
 
             _world.Step((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f);
-            Console.WriteLine("Body: {0}", _cursorBody.Position);
 
             base.Update(gameTime);
         }
@@ -157,11 +152,11 @@ namespace BubblesClient
             GraphicsDevice.Clear(backgroundColour);
 
             spriteBatch.Begin();
-            Vector3[] hands = _input.GetHandPositions();
-            for(int i = 0; i < hands.Length; i++) {
-                // Vector2 pos = new Vector2(hands[i].X, hands[i].Y);
 
-                Vector2 cursorPos = WorldBodyToPixel(_cursorBody.Position, new Vector2(64, 64));
+            // Update the position of all the registered hands
+            foreach (KeyValuePair<Hand, BodyJointPair> handBody in _handBodies)
+            {
+                Vector2 cursorPos = WorldBodyToPixel(handBody.Value.Body.Position, new Vector2(64, 64));
                 spriteBatch.Draw(texture, cursorPos, Color.White);
             }
 
@@ -170,6 +165,53 @@ namespace BubblesClient
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void HandleInput()
+        {
+            Hand[] hands = _input.GetHandPositions();
+
+            // Go through the hands array looking for new hands, if we find any, register them
+            foreach (Hand hand in hands)
+            {
+                if (!_handBodies.ContainsKey(hand))
+                {
+                    this.CreateHandFixture(hand);
+                }
+            }
+
+            // Deregister any hands which aren't there any more
+            foreach (Hand hand in _handBodies.Keys.Except(hands))
+            {
+                this.RemoveHandFixture(hand);
+            }
+
+            // Move joint parts
+            foreach (KeyValuePair<Hand, BodyJointPair> handBody in _handBodies)
+            {
+                handBody.Value.Joint.WorldAnchorB = new Vector2(handBody.Key.Position.X, handBody.Key.Position.Y) / MeterInPixels;
+            }
+        }
+
+        private void CreateHandFixture(Hand hand)
+        {
+            Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
+            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels);
+            handBody.BodyType = BodyType.Dynamic;
+            FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
+            handJoint.MaxForce = 1000f;
+
+            _handBodies.Add(hand, new BodyJointPair() { Body = handBody, Joint = handJoint });
+
+            _world.AddJoint(handJoint);
+        }
+
+        private void RemoveHandFixture(Hand hand)
+        {
+            BodyJointPair bodyJoint = _handBodies[hand];
+            _world.RemoveJoint(bodyJoint.Joint);
+            _world.RemoveBody(bodyJoint.Body);
+            _handBodies.Remove(hand);
         }
 
         /// <summary>
