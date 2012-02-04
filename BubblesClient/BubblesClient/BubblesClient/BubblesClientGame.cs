@@ -36,7 +36,7 @@ namespace BubblesClient
 
         Texture2D texture, _balloon;
 
-        private Body _roofBody, _balloonBody;
+        private Body _balloonBody;
 
         // XNA Graphics
         private GraphicsDeviceManager _graphics;
@@ -56,6 +56,8 @@ namespace BubblesClient
         {
             // Initialise Graphics
             _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferHeight = 768;
+            _graphics.PreferredBackBufferWidth = 1366;
 
             _screenDimensions = new Vector2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
@@ -106,10 +108,26 @@ namespace BubblesClient
             _balloonBody.Friction = 0.5f;
 
             // Lol roof!
+            Body _roofBody;
             _roofBody = BodyFactory.CreateRectangle(_world, _screenDimensions.X / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(_screenDimensions.X / 2 / MeterInPixels, 0));
             _roofBody.IsStatic = true;
             _roofBody.Restitution = 0.3f;
-            _roofBody.Friction = 0.5f;
+            _roofBody.Friction = 1f;
+
+            _roofBody = BodyFactory.CreateRectangle(_world, _screenDimensions.X / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(_screenDimensions.X / 2 / MeterInPixels, _screenDimensions.Y / MeterInPixels));
+            _roofBody.IsStatic = true;
+            _roofBody.Restitution = 0.3f;
+            _roofBody.Friction = 1f;
+
+            _roofBody = BodyFactory.CreateRectangle(_world, 1 / MeterInPixels, _screenDimensions.Y / MeterInPixels, 1f, new Vector2(0, _screenDimensions.Y / 2 / MeterInPixels));
+            _roofBody.IsStatic = true;
+            _roofBody.Restitution = 0.3f;
+            _roofBody.Friction = 1f;
+
+            _roofBody = BodyFactory.CreateRectangle(_world, 1 / MeterInPixels, _screenDimensions.Y / MeterInPixels, 1f, new Vector2(_screenDimensions.X / MeterInPixels, _screenDimensions.Y / 2 / MeterInPixels));
+            _roofBody.IsStatic = true;
+            _roofBody.Restitution = 0.3f;
+            _roofBody.Friction = 1f;
         }
 
         /// <summary>
@@ -128,10 +146,6 @@ namespace BubblesClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
-
             // Query the Network Manager for events
             //PerformNetworkEvents();
 
