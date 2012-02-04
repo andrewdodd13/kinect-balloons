@@ -35,13 +35,6 @@ namespace Balloons.Server
         
         public void Run()
         {
-            // Create some bubbles
-            for(int i = 0; i < 2; i++)
-            {
-                CreateBalloon();
-            }
-            
-
             using(m_socket)
             {
                 // Listen on the given port
@@ -158,25 +151,24 @@ namespace Balloons.Server
             m_screens.Add( screen);
             lock(m_bubbles)
             {
-                foreach(ServerBalloon b in m_bubbles.Values)
+                // Create a new balloon for the screen
+                ServerBalloon b = CreateBalloon();
+                Direction dir;
+                float y;
+                PointF velocity;
+                if((b.ID % 2) == 0)
                 {
-                    Direction dir;
-                    float y;
-                    PointF velocity;
-                    if((b.ID % 2) == 0)
-                    {
-                        dir = Direction.Left;
-                        velocity = new PointF(0.1f, 0.0f);
-                        y = 0.2f;
-                    }
-                    else
-                    {
-                        dir = Direction.Right;
-                        velocity = new PointF(-0.1f, 0.0f);
-                        y = 0.1f;
-                    }
-                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
+                    dir = Direction.Left;
+                    velocity = ServerBalloon.VelocityRight;
+                    y = 0.2f;
                 }
+                else
+                {
+                    dir = Direction.Right;
+                    velocity = ServerBalloon.VelocityLeft;
+                    y = 0.1f;
+                }
+                screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
             }
             return true;
         }
@@ -206,9 +198,9 @@ namespace Balloons.Server
                     // Choose randomly between left or right screen
                     int random = m_random.Next(1);
                     if(random == 0) {
-                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)), this);
+                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, ServerBalloon.VelocityLeft), this);
                     } else {
-                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, new PointF(10, 0)), this);
+                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Left, 0.1f, ServerBalloon.VelocityRight), this);
                     }
                 }
             }

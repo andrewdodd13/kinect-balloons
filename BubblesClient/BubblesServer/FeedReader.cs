@@ -48,7 +48,7 @@ namespace Balloons.Server
                 ServerBalloon b = i.Value;
                 if(!fromServer.ContainsKey(b.ID)) {
                     // Add the new balloon to the server
-                    m_server.EnqueueMessage(new NewBalloonMessage(b.ID, Direction.Any, 0.2f, new Point(10, 0)), this);
+                    m_server.EnqueueMessage(new NewBalloonMessage(b.ID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
                 }
             }
         }

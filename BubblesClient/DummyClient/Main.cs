@@ -19,17 +19,37 @@ namespace Balloons.DummyClient
         Texture2D balloonTexture;
         float balloonScale;
 
-        public static void Main(String[] args)
+        public static int Main(String[] args)
         {
-            DummyClient c = new DummyClient();
+            IPAddress serverAddress = IPAddress.Loopback;
+            int serverPort = 4000;
+            if(args.Length > 0)
+            {
+                if(!IPAddress.TryParse(args[0], out serverAddress))
+                {
+                    Console.WriteLine("Invalid IP address: {0}", args[0]);
+                    return 1;
+                }
+            }
+            if(args.Length > 1)
+            {
+                if(!Int32.TryParse(args[1], out serverPort))
+                {
+                    Console.WriteLine("Invalid port: {0}", args[1]);
+                    return 1;
+                }
+            }
+
+            DummyClient c = new DummyClient(serverAddress, serverPort);
             c.Run();
+            return 0;
         }
 
-        public DummyClient()
+        public DummyClient(IPAddress serverAddress, int serverPort)
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            screen = new ScreenManager();
+            screen = new ScreenManager(serverAddress, serverPort);
             screen.BalloonMapChanged += screen_BalloonMapChanged;
         }
 
@@ -45,7 +65,7 @@ namespace Balloons.DummyClient
         /// </summary>
         protected override void Initialize()
         {
-            screen.Connect(IPAddress.Loopback, 4000);
+            screen.Connect();
             base.Initialize();
         }
 

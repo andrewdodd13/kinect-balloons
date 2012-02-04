@@ -11,6 +11,8 @@ namespace Balloons.DummyClient
     public class ScreenManager
     {
         private ScreenConnection m_conn;
+        private IPAddress m_serverAddress;
+        private int m_serverPort;
         private Dictionary<int, ClientBalloon> m_balloons;
 
         public event EventHandler BalloonMapChanged;
@@ -20,8 +22,10 @@ namespace Balloons.DummyClient
             get { return m_balloons; }
         }
 
-        public ScreenManager()
+        public ScreenManager(IPAddress serverAddress, int serverPort)
         {
+            m_serverAddress = serverAddress;
+            m_serverPort = serverPort;
             m_conn = new ScreenConnection();
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
@@ -35,9 +39,9 @@ namespace Balloons.DummyClient
             m_conn.Dispose();
         }
 
-        public void Connect(IPAddress address, int port)
+        public void Connect()
         {
-            m_conn.Connect(address, port);
+            m_conn.Connect(m_serverAddress, m_serverPort);
         }
 
         public void MoveBalloonOffscreen(ClientBalloon b)
@@ -105,7 +109,7 @@ namespace Balloons.DummyClient
             switch(am.Direction)
             {
             case Direction.Any:
-                b.Pos = new Vector2(b.ID * 50, b.ID * 50);
+                b.Pos = new Vector2(0.5f, 0.2f);
                 break;
             case Direction.Left:
                 b.Pos = new Vector2(0.0f, am.Y);
