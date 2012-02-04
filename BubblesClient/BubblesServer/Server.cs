@@ -237,7 +237,7 @@ namespace BubblesServer
         private bool HandlePopBalloon(PopBalloonMessage pbm) {
             lock(m_bubbles) {
                 Bubble b = GetBubble(pbm.BalloonID);
-                if(m_bubbles.Remove(pbm.BalloonID)) {
+                if(m_bubbles.Remove(pbm.BalloonID) && b.Screen != null) {
                     b.Screen.EnqueueMessage(pbm); // Notify Screen
                 }
             }
