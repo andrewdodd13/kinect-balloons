@@ -3,6 +3,7 @@
 	<head>
 		<title>MACS news server</title>
 		<link rel="stylesheet" href="<?php echo base_url(); ?>css/login.css" type="text/css" />
+		<script type="text/javascript" src="<?php echo base_url(); ?>css/jscolor/jscolor.js"></script>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 	</head>
 	
@@ -22,6 +23,7 @@
 				<div class="form-item"><label for="name">Article Name:</label><input name="name" type="text" value="Article Name" onclick="this.value=''" /></div>
 				<div class="form-item"><label for="url">Article URL:</label><input name="url" type="text" value="Article URL" onclick="this.value=''" /></div>
 				<div class="form-item"><label for="image">Article Image:</label><input name="image" type="file" value="Article Image" /></div>
+				<div class="form-item"><label for="colour">Balloon Colour:</label><input class="color" name="colour" type="text" value="#FFFFFF" /></div>
 				<div class="form-item"><input name="submit" type="submit" value="Submit" /></div>
 				</form>
 			</div>
