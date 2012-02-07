@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -8,7 +8,7 @@
     <ProjectGuid>{36056455-8842-463D-95B3-691BE9299DCA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BalloonMessaging</RootNamespace>
+    <RootNamespace>Balloons.Messaging</RootNamespace>
     <AssemblyName>BalloonMessaging</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -31,13 +31,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Balloon.cs" />
+    <Compile Include="Model\Balloon.cs" />
     <Compile Include="CircularBuffer.cs" />
     <Compile Include="CircularQueue.cs" />
-    <Compile Include="Message.cs" />
+    <Compile Include="Model\Colour.cs" />
+    <Compile Include="Model\Message.cs" />
+    <Compile Include="Model\Vector2D.cs" />
     <Compile Include="ScreenConnection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

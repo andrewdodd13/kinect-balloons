@@ -12,19 +12,19 @@ namespace Balloons.Messaging
         /// <summary>
         /// Buffer.
         /// </summary>
-		protected readonly T[] buffer;
-		/// <summary>
-		/// Taille du buffer.
-		/// </summary>
+        protected readonly T[] buffer;
+        /// <summary>
+        /// Taille du buffer.
+        /// </summary>
         protected readonly int size;
         /// <summary>
-		/// Nombre d'éléments pouvant être écrit dans le buffer.
-		/// </summary>
-		protected int capacity;
-		/// <summary>
-		/// Nombre d'éléments pouvant être lus depuis le buffer.
-		/// </summary>
-		protected int available;
+        /// Nombre d'éléments pouvant être écrit dans le buffer.
+        /// </summary>
+        protected int capacity;
+        /// <summary>
+        /// Nombre d'éléments pouvant être lus depuis le buffer.
+        /// </summary>
+        protected int available;
         /// <summary>
         /// Position de lecture dans le buffer (prochain élément à être lu).
         /// </summary>
@@ -55,7 +55,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                lock( syncExcl )
+                lock (syncExcl)
                 {
                     return available;
                 }
@@ -68,7 +68,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                lock( syncExcl )
+                lock (syncExcl)
                 {
                     return (capacity == 0);
                 }
@@ -81,7 +81,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                lock( syncExcl )
+                lock (syncExcl)
                 {
                     return (available == 0);
                 }
@@ -93,20 +93,20 @@ namespace Balloons.Messaging
         /// Crée un nouveau buffer circulaire avec la taille spécifiée.
         /// </summary>
         /// <param name="size"> Taille du buffer. </param>
-        public CircularQueue( int size )
+        public CircularQueue(int size)
         {
-            if( size < 0 )
+            if (size < 0)
             {
-                throw new ArgumentOutOfRangeException( "size"  );
+                throw new ArgumentOutOfRangeException("size");
             }
             else
             {
                 this.size = size;
-                this.buffer = new T[ size ];
-                InitBuffer( size, true );
+                this.buffer = new T[size];
+                InitBuffer(size, true);
             }
-            canRead = new PredicateCondition( delegate() { return available != 0; }, syncExcl );
-            canWrite = new PredicateCondition( delegate() { return capacity != 0; }, syncExcl );
+            canRead = new PredicateCondition(delegate() { return available != 0; }, syncExcl);
+            canWrite = new PredicateCondition(delegate() { return capacity != 0; }, syncExcl);
         }
         /// <summary>
         /// Crée un nouveau buffer circulaire à partir des éléments présents dans un tableau.
@@ -115,35 +115,35 @@ namespace Balloons.Messaging
         /// <param name="ownsArray"> Indique si le buffer utilise directement le tableau (true) ou copie son contenu dans un nouveau tableau (false). </param>
         /// <param name="empty"> Indique si le buffer doit être considéré comme vide ou plein à sa création. </param>
         /// <remarks> Si ownsArray vaut false, le tableau est copié dans le buffer en une opération rapide qui ne met pas en jeu de verrou. </remarks>
-        public CircularQueue( T[] array, bool ownsArray, bool empty )
+        public CircularQueue(T[] array, bool ownsArray, bool empty)
         {
-            if( array == null )
+            if (array == null)
             {
-                throw new ArgumentNullException( "array" );
+                throw new ArgumentNullException("array");
             }
             else
             {
                 this.size = array.Length;
-                if( ownsArray )
+                if (ownsArray)
                 {
                     this.buffer = array;
-                    InitBuffer( this.size, empty );
+                    InitBuffer(this.size, empty);
                 }
                 else
                 {
-                    this.buffer = new T[ this.size ];
-                    Array.Copy( array, 0, buffer, 0, size );
-                    InitBuffer( this.size, empty );
+                    this.buffer = new T[this.size];
+                    Array.Copy(array, 0, buffer, 0, size);
+                    InitBuffer(this.size, empty);
                 }
             }
-            canRead = new PredicateCondition( delegate() { return available != 0; }, syncExcl );
-            canWrite = new PredicateCondition( delegate() { return capacity != 0; }, syncExcl );
+            canRead = new PredicateCondition(delegate() { return available != 0; }, syncExcl);
+            canWrite = new PredicateCondition(delegate() { return capacity != 0; }, syncExcl);
         }
         #endregion
         #region Implémentation
-        private void InitBuffer( int size, bool empty )
+        private void InitBuffer(int size, bool empty)
         {
-            if( empty )
+            if (empty)
             {
                 //tout le buffer pour écrire, rien à lire
                 this.capacity = this.size;
@@ -164,19 +164,19 @@ namespace Balloons.Messaging
         /// Ajoute une valeur à la fin du buffer circulaire.
         /// </summary>
         /// <param name="value"> Valeur à ajouter. </param>
-        public virtual void Enqueue( T value )
+        public virtual void Enqueue(T value)
         {
-            lock( syncExcl )
+            lock (syncExcl)
             {
                 //attend qu'il y ait de la place dans le buffer
                 canWrite.Wait();
-    
+
                 --capacity;
-                EnqueueCore( value );
+                EnqueueCore(value);
                 ++available;
-    
+
                 //avertir les threads attendant pour la lecture
-                canRead.SignalAll();                
+                canRead.SignalAll();
             }
         }
         /// <summary>
@@ -187,17 +187,17 @@ namespace Balloons.Messaging
         {
             T temp;
 
-            lock( syncExcl )
+            lock (syncExcl)
             {
                 //attend qu'il y ait des valeurs à lire
                 canRead.Wait();
-    
+
                 --available;
                 temp = DequeueCore();
                 ++capacity;
-    
+
                 //avertir les threads attendant pour l'écriture
-                canWrite.SignalAll();                
+                canWrite.SignalAll();
                 return temp;
             }
         }
@@ -205,10 +205,10 @@ namespace Balloons.Messaging
         /// Copie une valeur dans le buffer à la position actuelle d'écriture et incrémente cette position.
         /// </summary>
         /// <param name="value"> Valeur à ajouter au buffer. </param>
-        protected virtual void EnqueueCore( T value )
+        protected virtual void EnqueueCore(T value)
         {
             //copie l'élément dans le buffer
-            buffer[ writePosition ] = value;
+            buffer[writePosition] = value;
             //puis on avance dans le buffer
             writePosition = (++writePosition % Size);
         }
@@ -221,9 +221,9 @@ namespace Balloons.Messaging
             T value;
 
             //lit l'élément depuis le buffer
-            value = buffer[ readPosition ];
+            value = buffer[readPosition];
             //réinitialise l'élément
-            buffer[ readPosition ] = default( T );
+            buffer[readPosition] = default(T);
             //puis on avance dans le buffer
             readPosition = (++readPosition % Size);
             return value;
@@ -234,13 +234,13 @@ namespace Balloons.Messaging
         /// <returns> Valeur lue. </returns>
         public virtual T Peek()
         {
-            lock( syncExcl )
+            lock (syncExcl)
             {
                 //attend qu'il y ait des blocs à lire
                 canRead.Wait();
 
                 //récupère le bloc depuis le buffer
-                return buffer[ readPosition ];
+                return buffer[readPosition];
             }
         }
         /// <summary>
@@ -248,38 +248,38 @@ namespace Balloons.Messaging
         /// </summary>
         /// <param name="value"> Valeur retirée en cas de succès. </param>
         /// <returns> true si une valeur a été retirée, false sinon. </returns>
-        public virtual bool TryDequeue( out T value )
+        public virtual bool TryDequeue(out T value)
         {
-            if( Monitor.TryEnter( syncExcl ) )
+            if (Monitor.TryEnter(syncExcl))
             {
                 try
                 {
                     //regarde s'il y a une valeur à lire
-                    if( available > 0 )
+                    if (available > 0)
                     {
                         value = Dequeue();
                         return true;
                     }
                     else
                     {
-                        value = default( T );
+                        value = default(T);
                         return false;
                     }
                 }
                 finally
                 {
-                    Monitor.Exit( syncExcl );
+                    Monitor.Exit(syncExcl);
                 }
             }
             else
             {
-                value = default( T );
+                value = default(T);
                 return false;
             }
         }
         #endregion
     }
-    
+
     /// <summary>
     /// Représente une condition utilisant un délégué pour vérifier si elle est vérifiée ou non.
     /// </summary>
@@ -297,7 +297,8 @@ namespace Balloons.Messaging
         /// <remarks>
         /// Le verrou sur l'objet de synchronisation interne est acquis pendant l'appel du délégué.
         /// </remarks>
-        public PredicateCondition( ConditionPredicate predicate ) : this( predicate, new object() )
+        public PredicateCondition(ConditionPredicate predicate)
+            : this(predicate, new object())
         {
         }
         /// <summary>
@@ -308,15 +309,15 @@ namespace Balloons.Messaging
         /// <remarks>
         /// Le verrou sur <paramref name="conditionLock"/> est acquis pendant l'appel du délégué.
         /// </remarks>
-        public PredicateCondition( ConditionPredicate predicate, object conditionLock )
+        public PredicateCondition(ConditionPredicate predicate, object conditionLock)
         {
-            if( predicate == null )
+            if (predicate == null)
             {
-                throw new ArgumentNullException( "predicate" );
+                throw new ArgumentNullException("predicate");
             }
-            else if( conditionLock == null )
+            else if (conditionLock == null)
             {
-                throw new ArgumentNullException( "conditionLock" );
+                throw new ArgumentNullException("conditionLock");
             }
             this.predicate = predicate;
             this.conditionLock = conditionLock;
@@ -328,11 +329,11 @@ namespace Balloons.Messaging
         /// </summary>
         public void Wait()
         {
-            lock( conditionLock )
+            lock (conditionLock)
             {
-                while( !predicate() )
+                while (!predicate())
                 {
-                    Monitor.Wait( conditionLock );
+                    Monitor.Wait(conditionLock);
                 }
             }
         }
@@ -341,11 +342,11 @@ namespace Balloons.Messaging
         /// </summary>
         public void Signal()
         {
-            lock( conditionLock )
+            lock (conditionLock)
             {
-                if( predicate() )
+                if (predicate())
                 {
-                    Monitor.Pulse( conditionLock );
+                    Monitor.Pulse(conditionLock);
                 }
             }
         }
@@ -354,17 +355,17 @@ namespace Balloons.Messaging
         /// </summary>
         public void SignalAll()
         {
-            lock( conditionLock )
+            lock (conditionLock)
             {
-                if( predicate() )
+                if (predicate())
                 {
-                    Monitor.PulseAll( conditionLock );
+                    Monitor.PulseAll(conditionLock);
                 }
             }
         }
         #endregion
     }
-    
+
     /// <summary>
     /// Délégué indiquant si une condition est vérifiée ou non.
     /// </summary>

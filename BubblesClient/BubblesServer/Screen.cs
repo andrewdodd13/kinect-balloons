@@ -3,6 +3,7 @@ using System.Threading;
 using System.Collections.Generic;
 using Balloons;
 using Balloons.Messaging;
+using Balloons.Messaging.Model;
 
 namespace Balloons.Server
 {

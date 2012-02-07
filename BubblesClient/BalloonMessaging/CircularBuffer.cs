@@ -58,7 +58,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                return (size - Math.Max( capacity, readOffset ));
+                return (size - Math.Max(capacity, readOffset));
             }
         }
         /// <summary>
@@ -68,7 +68,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                return Math.Max( 0, readOffset - capacity );
+                return Math.Max(0, readOffset - capacity);
             }
         }
         /// <summary>
@@ -88,7 +88,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                return Math.Min( capacity, size - writeOffset );
+                return Math.Min(capacity, size - writeOffset);
             }
         }
         /// <summary>
@@ -98,7 +98,7 @@ namespace Balloons.Messaging
         {
             get
             {
-                return Math.Max( 0, capacity - size + writeOffset );
+                return Math.Max(0, capacity - size + writeOffset);
             }
         }
         /// <summary>
@@ -134,34 +134,34 @@ namespace Balloons.Messaging
         #endregion
         #region Constructor
         /// <summary>
-		/// Create a new circular buffer with the given size in bytes.
-		/// </summary>
-		/// <param name="size"> Buffer size. </param>
-		public CircularBuffer( int size )
-		{
-			if( size >= 0 )
-			{
-				buffer = new byte[ size ];
-				this.size = size;
-			}
-			else
-			{
-				throw new ArgumentOutOfRangeException( "size" );
-			}
+        /// Create a new circular buffer with the given size in bytes.
+        /// </summary>
+        /// <param name="size"> Buffer size. </param>
+        public CircularBuffer(int size)
+        {
+            if (size >= 0)
+            {
+                buffer = new byte[size];
+                this.size = size;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException("size");
+            }
             readOffset = 0;
-			writeOffset = 0;
+            writeOffset = 0;
             capacity = size;
-		}
+        }
         #endregion
         #region Implementation
-        private static void GetChunks( int offset, int bufferSize, int size, out int firstChunk, out int lastChunk )
+        private static void GetChunks(int offset, int bufferSize, int size, out int firstChunk, out int lastChunk)
         {
-            if( offset >= bufferSize )
+            if (offset >= bufferSize)
             {
                 firstChunk = 0;
                 lastChunk = size;
             }
-            else if( (offset + size) > bufferSize )
+            else if ((offset + size) > bufferSize)
             {
                 firstChunk = (bufferSize - offset);
                 lastChunk = (size - firstChunk);
@@ -179,39 +179,39 @@ namespace Balloons.Messaging
         /// <param name="srcOffset"> Read position in the array. </param>
         /// <param name="dstOffset"> Write position in the buffer. </param>
         /// <param name="count"> How many bytes to copy. </param>
-        protected void FromBuffer( byte[] src, int srcOffset, int dstOffset, int count )
+        protected void FromBuffer(byte[] src, int srcOffset, int dstOffset, int count)
         {
             int firstChunk;
             int lastChunk;
 
-            if( src == null )
+            if (src == null)
             {
-                throw new ArgumentNullException( "src" );
+                throw new ArgumentNullException("src");
             }
-            else if( count < 0 )
+            else if (count < 0)
             {
-                throw new ArgumentOutOfRangeException( "count" );
+                throw new ArgumentOutOfRangeException("count");
             }
-            else if( (srcOffset < 0) || ((srcOffset + count) > src.Length) )
+            else if ((srcOffset < 0) || ((srcOffset + count) > src.Length))
             {
-                throw new ArgumentOutOfRangeException( "srcOffset" );
+                throw new ArgumentOutOfRangeException("srcOffset");
             }
-            else if( (dstOffset < 0) || (dstOffset >= this.size) )
+            else if ((dstOffset < 0) || (dstOffset >= this.size))
             {
-                throw new ArgumentOutOfRangeException( "dstOffset" );
+                throw new ArgumentOutOfRangeException("dstOffset");
             }
 
-            if( count > 0 )
+            if (count > 0)
             {
-                GetChunks( dstOffset, this.size, count, out firstChunk, out lastChunk );
-                if( lastChunk > 0 )
+                GetChunks(dstOffset, this.size, count, out firstChunk, out lastChunk);
+                if (lastChunk > 0)
                 {
-                    System.Buffer.BlockCopy( src, srcOffset, this.buffer, dstOffset, firstChunk );
-                    System.Buffer.BlockCopy( src, srcOffset + firstChunk, this.buffer, 0, lastChunk );
+                    System.Buffer.BlockCopy(src, srcOffset, this.buffer, dstOffset, firstChunk);
+                    System.Buffer.BlockCopy(src, srcOffset + firstChunk, this.buffer, 0, lastChunk);
                 }
                 else
                 {
-                    System.Buffer.BlockCopy( src, srcOffset, this.buffer, dstOffset, count );
+                    System.Buffer.BlockCopy(src, srcOffset, this.buffer, dstOffset, count);
                 }
             }
         }
@@ -222,43 +222,43 @@ namespace Balloons.Messaging
         /// <param name="dstOffset"> Write position in the array. </param>
         /// <param name="srcOffset"> Read position in the buffer. </param>
         /// <param name="count"> How many bytes to copy. </param>
-        protected void ToBuffer( byte[] dst, int dstOffset, int srcOffset, int count )
+        protected void ToBuffer(byte[] dst, int dstOffset, int srcOffset, int count)
         {
             int firstChunk;
             int lastChunk;
 
-            if( dst == null )
+            if (dst == null)
             {
-                throw new ArgumentNullException( "dst" );
+                throw new ArgumentNullException("dst");
             }
-            else if( count < 0 )
+            else if (count < 0)
             {
-                throw new ArgumentOutOfRangeException( "count" );
+                throw new ArgumentOutOfRangeException("count");
             }
-            else if( (dstOffset < 0) || ((dstOffset + count) > dst.Length) )
+            else if ((dstOffset < 0) || ((dstOffset + count) > dst.Length))
             {
-                throw new ArgumentOutOfRangeException( "dstOffset" );
+                throw new ArgumentOutOfRangeException("dstOffset");
             }
-            else if( (srcOffset < 0) || (srcOffset >= this.size) )
+            else if ((srcOffset < 0) || (srcOffset >= this.size))
             {
-                throw new ArgumentOutOfRangeException( "srcOffset" );
+                throw new ArgumentOutOfRangeException("srcOffset");
             }
 
-            if( count > 0 )
+            if (count > 0)
             {
-                GetChunks( srcOffset, this.size, count, out firstChunk, out lastChunk );
-                if( (lastChunk != 0) && (firstChunk != 0) )
+                GetChunks(srcOffset, this.size, count, out firstChunk, out lastChunk);
+                if ((lastChunk != 0) && (firstChunk != 0))
                 {
-                    System.Buffer.BlockCopy( this.buffer, srcOffset, dst, dstOffset, firstChunk );
-                    System.Buffer.BlockCopy( this.buffer, 0, dst, dstOffset + firstChunk, lastChunk );
+                    System.Buffer.BlockCopy(this.buffer, srcOffset, dst, dstOffset, firstChunk);
+                    System.Buffer.BlockCopy(this.buffer, 0, dst, dstOffset + firstChunk, lastChunk);
                 }
-                else if( firstChunk == 0 )
+                else if (firstChunk == 0)
                 {
-                    System.Buffer.BlockCopy( this.buffer, (srcOffset % this.size), dst, dstOffset, lastChunk );
+                    System.Buffer.BlockCopy(this.buffer, (srcOffset % this.size), dst, dstOffset, lastChunk);
                 }
                 else
                 {
-                    System.Buffer.BlockCopy( this.buffer, srcOffset, dst, dstOffset, count );
+                    System.Buffer.BlockCopy(this.buffer, srcOffset, dst, dstOffset, count);
                 }
             }
         }
@@ -268,17 +268,17 @@ namespace Balloons.Messaging
         /// <param name="buffer"> Byte array where the read data should be copied to. </param>
         /// <param name="offset"> Write position in the array </param>
         /// <param name="count"> How many bytes to read. </param>
-        public void Read( byte[] buffer, int offset, int count )
+        public void Read(byte[] buffer, int offset, int count)
         {
-            if( buffer == null )
+            if (buffer == null)
             {
-                throw new ArgumentNullException( "buffer" );
+                throw new ArgumentNullException("buffer");
             }
-            else if( (offset < 0) || ((offset + count) > buffer.Length) )
+            else if ((offset < 0) || ((offset + count) > buffer.Length))
             {
-                throw new ArgumentOutOfRangeException( "offset" );
+                throw new ArgumentOutOfRangeException("offset");
             }
-            else if((count < 0) || (count > Available))
+            else if ((count < 0) || (count > Available))
             {
                 throw new ArgumentOutOfRangeException("count");
             }
@@ -291,17 +291,17 @@ namespace Balloons.Messaging
         /// <param name="buffer"> Byte array where the data to write should be copied from. </param>
         /// <param name="offset"> Where to start copying data from. </param>
         /// <param name="count"> How many bytes to write. </param>
-        public void Write( byte[] buffer, int offset, int count )
+        public void Write(byte[] buffer, int offset, int count)
         {
-            if( buffer == null )
+            if (buffer == null)
             {
-                throw new ArgumentNullException( "buffer" );
+                throw new ArgumentNullException("buffer");
             }
-            else if( (offset < 0) || ((offset + count) > buffer.Length) )
+            else if ((offset < 0) || ((offset + count) > buffer.Length))
             {
-                throw new ArgumentOutOfRangeException( "offset" );
+                throw new ArgumentOutOfRangeException("offset");
             }
-            else if((count < 0) || (count > Capacity))
+            else if ((count < 0) || (count > Capacity))
             {
                 throw new ArgumentOutOfRangeException("count");
             }
@@ -329,12 +329,12 @@ namespace Balloons.Messaging
         /// </summary>
         public byte PeekByte(int offset)
         {
-            if(offset >= Available)
+            if (offset >= Available)
             {
                 throw new InvalidOperationException();
             }
             int pos = readOffset + offset;
-            while(pos >= size)
+            while (pos >= size)
             {
                 pos -= size;
             }
@@ -344,9 +344,9 @@ namespace Balloons.Messaging
         /// Write a byte to the buffer.
         /// </summary>
         /// <param name="data"> Byte to write. </param>
-        public void WriteByte( byte data )
+        public void WriteByte(byte data)
         {
-            if(Capacity == 0)
+            if (Capacity == 0)
             {
                 throw new InvalidOperationException();
             }
@@ -359,7 +359,7 @@ namespace Balloons.Messaging
         /// <param name="count"> How many bytes to move the current position forward. </param>
         public void SkipRead(int count)
         {
-            if((count < 0) || (count > Available))
+            if ((count < 0) || (count > Available))
             {
                 throw new ArgumentOutOfRangeException("count");
             }
@@ -374,7 +374,7 @@ namespace Balloons.Messaging
         /// <param name="count"> How many bytes to move the current position forward. </param>
         public void SkipWrite(int count)
         {
-            if((count < 0) || (count > Capacity))
+            if ((count < 0) || (count > Capacity))
             {
                 throw new ArgumentOutOfRangeException("count");
             }

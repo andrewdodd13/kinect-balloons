@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using Balloons;
 using Balloons.Messaging;
+using Balloons.Messaging.Model;
 
 namespace Balloons.Server
 {
@@ -155,7 +155,7 @@ namespace Balloons.Server
                 ServerBalloon b = CreateBalloon();
                 Direction dir;
                 float y;
-                PointF velocity;
+                Vector2D velocity;
                 if((b.ID % 2) == 0)
                 {
                     dir = Direction.Left;

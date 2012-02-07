@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Drawing;
-using Balloons;
+using Balloons.Messaging.Model;
 
 namespace Balloons.Server
 {
     public class ServerBalloon : Balloon
     {
-        public static readonly PointF VelocityLeft = new PointF(-0.1f, 0.0f);
-        public static readonly PointF VelocityRight = new PointF(0.1f, 0.0f);
+        public static readonly Vector2D VelocityLeft = new Vector2D(-0.1f, 0.0f);
+        public static readonly Vector2D VelocityRight = new Vector2D(0.1f, 0.0f);
 
         private Screen m_screen;
 

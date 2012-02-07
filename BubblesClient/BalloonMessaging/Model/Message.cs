@@ -1,8 +1,7 @@
 using System;
-using System.Drawing;
 using System.Net.Sockets;
 
-namespace Balloons.Messaging
+namespace Balloons.Messaging.Model
 {
     /// <summary>
     /// List of all message types.
@@ -124,12 +123,12 @@ namespace Balloons.Messaging
             get { return this.m_y; }
         }
 
-        public PointF Velocity
+        public Vector2D Velocity
         {
             get { return this.m_velocity; }
         }
 
-        public NewBalloonMessage(int balloonID, Direction direction, float y, PointF velocity)
+        public NewBalloonMessage(int balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.NewBalloon, Tag, balloonID)
         {
             m_direction = direction;
@@ -144,7 +143,7 @@ namespace Balloons.Messaging
         }
         
         private Direction m_direction;
-        private PointF m_velocity;
+        private Vector2D m_velocity;
         private float m_y;
     }
 
@@ -209,12 +208,12 @@ namespace Balloons.Messaging
             get { return this.m_y; }
         }
 
-        public PointF Velocity
+        public Vector2D Velocity
         {
             get { return this.m_velocity; }
         }
 
-        public ChangeScreenMessage(int balloonID, Direction direction, float y, PointF velocity)
+        public ChangeScreenMessage(int balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
@@ -229,7 +228,7 @@ namespace Balloons.Messaging
         }
         
         private Direction m_direction;
-        private PointF m_velocity;
+        private Vector2D m_velocity;
         private float m_y;
     }
 
@@ -274,12 +273,12 @@ namespace Balloons.Messaging
             get { return this.m_overlayType; }
         }
 
-        public Color BackgroundColor
+        public Colour BackgroundColor
         {
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(int balloonID, int overlayType, Color bgColor)
+        public BalloonDecorationUpdateMessage(int balloonID, int overlayType, Colour bgColor)
             : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;
@@ -289,11 +288,11 @@ namespace Balloons.Messaging
         protected override string FormatContent()
         {
             return String.Format("{0} {1} {2} {3}",
-                BalloonID, m_overlayType, m_bgColor.R, m_bgColor.G, m_bgColor.B);
+                BalloonID, m_overlayType, m_bgColor.Red, m_bgColor.Green, m_bgColor.Blue);
         }
 
         private int m_overlayType;
-        private Color m_bgColor;
+        private Colour m_bgColor;
     }
     #endregion
 

@@ -1,7 +1,6 @@
 using System;
-using System.Drawing;
 
-namespace Balloons
+namespace Balloons.Messaging.Model
 {
     /// <summary>
     /// Used to describe the direction taken by a bubble when it leaves a screen.
@@ -22,7 +21,7 @@ namespace Balloons
 
         public int Type;
         public int OverlayType;
-        public Color BackgroundColor;
+        public Colour BackgroundColor;
 
         public int ID
         {

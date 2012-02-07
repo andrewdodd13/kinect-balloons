@@ -1,37 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Net;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Balloons.Messaging;
+using Balloons.Messaging.Model;
 
 namespace Balloons.DummyClient
 {
-    public class ScreenManager
+    public class ScreenManager : IDisposable
     {
         private ScreenConnection m_conn;
-        private IPAddress m_serverAddress;
-        private int m_serverPort;
-        private Dictionary<int, ClientBalloon> m_balloons;
-
+        private IPAddress serverAddress;
+        private int serverPort;
+        
         public event EventHandler BalloonMapChanged;
 
-        public Dictionary<int, ClientBalloon> Balloons
-        {
-            get { return m_balloons; }
-        }
+        public Dictionary<int, ClientBalloon> Balloons { get; private set; }
 
         public ScreenManager(IPAddress serverAddress, int serverPort)
         {
-            m_serverAddress = serverAddress;
-            m_serverPort = serverPort;
+            this.serverAddress = serverAddress;
+            this.serverPort = serverPort;
             m_conn = new ScreenConnection();
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
             m_conn.MessageReceived += OnMessageReceived;
-            m_balloons = new Dictionary<int, ClientBalloon>();
+            this.Balloons = new Dictionary<int, ClientBalloon>();
         }
 
         public void Dispose()
@@ -41,7 +37,7 @@ namespace Balloons.DummyClient
 
         public void Connect()
         {
-            m_conn.Connect(m_serverAddress, m_serverPort);
+            m_conn.Connect(serverAddress, serverPort);
         }
 
         public void MoveBalloonOffscreen(ClientBalloon b)
@@ -69,7 +65,7 @@ namespace Balloons.DummyClient
 
             // notify the server that the balloon is moving off-screen
             m_conn.SendMessage(new ChangeScreenMessage(b.ID, dir, b.Pos.Y,
-                new PointF(b.Velocity.X, b.Velocity.Y)));
+                new Vector2D(b.Velocity.X, b.Velocity.Y)));
             b.OffScreen = true;
         }
 
@@ -120,14 +116,14 @@ namespace Balloons.DummyClient
             }
             b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
             // TODO synchronize this
-            m_balloons.Add(b.ID, b);
-            BalloonMapChanged(this, new EventArgs());
+            this.Balloons.Add(b.ID, b);
+            this.BalloonMapChanged(this, new EventArgs());
         }
 
         private void HandlePopBalloon(PopBalloonMessage pbm)
         {
-            m_balloons.Remove(pbm.BalloonID);
-            BalloonMapChanged(this, new EventArgs());
+            this.Balloons.Remove(pbm.BalloonID);
+            this.BalloonMapChanged(this, new EventArgs());
         }
     }
 }

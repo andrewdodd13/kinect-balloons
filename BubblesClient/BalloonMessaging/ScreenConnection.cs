@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Balloons.Messaging.Model;
 
 namespace Balloons.Messaging
 {
@@ -12,7 +12,7 @@ namespace Balloons.Messaging
     /// Function that can be used to receive messages.
     /// </summary>
     public delegate void MessageCallback(Message msg);
-    
+
     /// <summary>
     /// Represents a connection between a screen and the bubble server.
     /// </summary>
@@ -45,10 +45,10 @@ namespace Balloons.Messaging
             m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreenMessage);
             m_parsers.Add(PopBalloonMessage.Tag, ParsePopBalloonMessage);
         }
-        
+
         public void Dispose()
         {
-            lock(m_receiveBuffer)
+            lock (m_receiveBuffer)
             {
                 m_disposed = true;
             }
@@ -72,7 +72,7 @@ namespace Balloons.Messaging
         {
             BeginRead();
         }
-        
+
         /// <summary>
         /// Send a message to the client (blocking).
         /// </summary>
@@ -87,7 +87,7 @@ namespace Balloons.Messaging
         protected virtual void OnConnected()
         {
             EventHandler handler = Connected;
-            if(handler != null)
+            if (handler != null)
             {
                 handler(this, new EventArgs());
             }
@@ -96,7 +96,7 @@ namespace Balloons.Messaging
         protected virtual void OnConnectFailed()
         {
             EventHandler handler = ConnectFailed;
-            if(handler != null)
+            if (handler != null)
             {
                 handler(this, new EventArgs());
             }
@@ -105,7 +105,7 @@ namespace Balloons.Messaging
         protected virtual void OnDisconnected()
         {
             EventHandler handler = Disconnected;
-            if(handler != null)
+            if (handler != null)
             {
                 handler(this, new EventArgs());
             }
@@ -114,7 +114,7 @@ namespace Balloons.Messaging
         protected virtual void OnMessageReceived(Message msg)
         {
             EventHandler<MessageEventArgs> handler = MessageReceived;
-            if(handler != null)
+            if (handler != null)
             {
                 handler(this, new MessageEventArgs(msg));
             }
@@ -138,7 +138,7 @@ namespace Balloons.Messaging
             {
                 m_socket.EndConnect(result);
             }
-            catch(SocketException)
+            catch (SocketException)
             {
                 OnConnectFailed();
                 return;
@@ -167,18 +167,18 @@ namespace Balloons.Messaging
             }
             m_socket.BeginReceive(buffer, offset, size, SocketFlags.None, ReadFinished, null);
         }
-        
+
         /// <summary>
         /// Called when the asynchronous receive operation finishes.
         /// </summary>
         private void ReadFinished(IAsyncResult result)
         {
             bool disposed;
-            lock(m_receiveBuffer)
+            lock (m_receiveBuffer)
             {
                 disposed = m_disposed;
             }
-            if(disposed)
+            if (disposed)
             {
                 // connection was closed, don't receive any more message
                 OnDisconnected();
@@ -187,31 +187,31 @@ namespace Balloons.Messaging
 
             SocketError error;
             int bytesReceived = m_socket.EndReceive(result, out error);
-            if(bytesReceived == 0 || error == SocketError.ConnectionReset || error == SocketError.Disconnecting)
+            if (bytesReceived == 0 || error == SocketError.ConnectionReset || error == SocketError.Disconnecting)
             {
                 // connection was closed, don't receive any more message
                 OnDisconnected();
                 return;
             }
-            else if(error != SocketError.Success)
+            else if (error != SocketError.Success)
             {
                 throw new SocketException((int)error);
             }
 
-            lock(m_receiveBuffer)
+            lock (m_receiveBuffer)
             {
                 // the data was written directly by the socket, move the write cursor forward
                 m_receiveBuffer.SkipWrite(bytesReceived);
             }
-            
+
             Message msg;
-            while(true)
+            while (true)
             {
-                lock(m_receiveBuffer)
+                lock (m_receiveBuffer)
                 {
                     // try to parse one message from the received data
                     msg = TryReadMessage();
-                    if(msg == null)
+                    if (msg == null)
                     {
                         break;
                     }
@@ -221,12 +221,12 @@ namespace Balloons.Messaging
                 msg.Sender = this;
                 OnMessageReceived(msg);
             };
-            
+
 
             // start receiving more data (end of this message or next message)
             BeginRead();
         }
-        
+
         /// <summary>
         /// Tries to read a message from the current buffered data.
         /// </summary>
@@ -238,22 +238,22 @@ namespace Balloons.Messaging
             // Detect the first newline in the buffered data.
             int lineSize = 0;
             bool lineFound = false;
-            while(lineSize < m_receiveBuffer.Available)
+            while (lineSize < m_receiveBuffer.Available)
             {
                 byte c = m_receiveBuffer.PeekByte(lineSize);
                 lineSize++;
-                if((char)c == '\n')
+                if ((char)c == '\n')
                 {
                     lineFound = true;
                     break;
                 }
             }
 
-            if(!lineFound)
+            if (!lineFound)
             {
                 return null;
             }
-            
+
             // Read the first line
             byte[] messageData = new byte[lineSize];
             m_receiveBuffer.Read(messageData, 0, lineSize);
@@ -261,16 +261,16 @@ namespace Balloons.Messaging
             Console.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
             return ParseMessage(line);
         }
-        
+
         private Message ParseMessage(string line)
         {
             string[] parts = line.Split(' ');
-            if(parts.Length < 1)
+            if (parts.Length < 1)
             {
                 throw new Exception("Invalid message: " + line);
             }
             MessageParser parser;
-            if(!m_parsers.TryGetValue(parts[0], out parser))
+            if (!m_parsers.TryGetValue(parts[0], out parser))
             {
                 throw new Exception("Unknown message: " + parts[0]);
             }
@@ -279,37 +279,33 @@ namespace Balloons.Messaging
 
         private NewBalloonMessage ParseNewBalloonMessage(string[] parts)
         {
-            if(parts.Length != 6)
+            if (parts.Length != 6)
             {
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
             Direction direction = Balloon.ParseDirection(parts[2]);
             float y = Single.Parse(parts[3]);
-            PointF velocity = new PointF();
-            velocity.X = Single.Parse(parts[4]);
-            velocity.Y = Single.Parse(parts[5]);
+            Vector2D velocity = new Vector2D(Single.Parse(parts[4]), Single.Parse(parts[5]));
             return new NewBalloonMessage(balloonID, direction, y, velocity);
         }
-        
+
         private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
         {
-            if(parts.Length != 6)
+            if (parts.Length != 6)
             {
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
             Direction direction = Balloon.ParseDirection(parts[2]);
             float y = Single.Parse(parts[3]);
-            PointF velocity = new PointF();
-            velocity.X = Single.Parse(parts[4]);
-            velocity.Y = Single.Parse(parts[5]);
+            Vector2D velocity = new Vector2D(Single.Parse(parts[4]), Single.Parse(parts[5]));
             return new ChangeScreenMessage(balloonID, direction, y, velocity);
         }
 
         private PopBalloonMessage ParsePopBalloonMessage(string[] parts)
         {
-            if(parts.Length != 2)
+            if (parts.Length != 2)
             {
                 throw new Exception("Invalid message");
             }

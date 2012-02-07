@@ -42,7 +42,6 @@
     <Compile Include="FeedReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Drawing" />
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>

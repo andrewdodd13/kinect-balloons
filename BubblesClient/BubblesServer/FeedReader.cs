@@ -1,9 +1,9 @@
 using System;
 using System.Timers;
 using System.Collections.Generic;
-using System.Drawing;
 using Balloons;
 using Balloons.Messaging;
+using Balloons.Messaging.Model;
 
 namespace Balloons.Server
 {

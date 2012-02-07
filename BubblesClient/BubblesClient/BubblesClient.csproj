@@ -116,10 +116,8 @@
     <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
     <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
-    <Compile Include="Model\Balloon.cs" />
-    <Compile Include="Network\Event\NewBalloonEvent.cs" />
-    <Compile Include="Network\INetworkEventManager.cs" />
-    <Compile Include="Network\MockNetworkManager.cs" />
+    <Compile Include="Model\ClientBalloon.cs" />
+    <Compile Include="Network\ScreenManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />
@@ -129,6 +127,10 @@
     <Content Include="GameThumbnail.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BalloonMessaging\BalloonMessaging.csproj">
+      <Project>{36056455-8842-463D-95B3-691BE9299DCA}</Project>
+      <Name>BalloonMessaging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\BubblesClientContent\BubblesClientContent.contentproj">
       <Name>BubblesClientContent</Name>
       <XnaReferenceType>Content</XnaReferenceType>

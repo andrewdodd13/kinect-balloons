@@ -9,14 +9,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using BubblesClient.Input.Controllers;
-using BubblesClient.Network;
-using BubblesClient.Model;
-using BubblesClient.Network.Event;
 using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics.Joints;
+using Balloons.DummyClient;
 
 namespace BubblesClient
 {
@@ -38,6 +36,9 @@ namespace BubblesClient
 
         private Body _balloonBody;
 
+        // Network
+        public ScreenManager ScreenManager { get; private set; }
+
         // XNA Graphics
         private GraphicsDeviceManager _graphics;
         private Vector2 _screenDimensions;
@@ -46,13 +47,11 @@ namespace BubblesClient
         private IInputController _input;
         private Dictionary<Hand, BodyJointPair> _handBodies = new Dictionary<Hand, BodyJointPair>();
 
-        private INetworkEventManager _networkEvents = new MockNetworkManager();
-
         // Physics World
         private World _world;
         private const float MeterInPixels = 64f;
 
-        public BubblesClientGame()
+        public BubblesClientGame(ScreenManager screenManager)
         {
             // Initialise Graphics
             _graphics = new GraphicsDeviceManager(this);
@@ -60,6 +59,11 @@ namespace BubblesClient
             _graphics.PreferredBackBufferWidth = 1366;
 
             _screenDimensions = new Vector2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+
+            // Initialise network
+            this.ScreenManager = screenManager;
+            ScreenManager.BalloonMapChanged += OnBalloonMapChanged;
+            screenManager.Connect();
 
             // Initialise Input
             // Use this line to enable the Kinect
@@ -74,6 +78,11 @@ namespace BubblesClient
 
             // Initialise Physics
             _world = new World(new Vector2(0, -2));
+        }
+
+        public void OnBalloonMapChanged(object sender, EventArgs e)
+        {
+            Console.WriteLine("Network Event: WOAH!");
         }
 
         /// <summary>
@@ -227,45 +236,6 @@ namespace BubblesClient
             _world.RemoveJoint(bodyJoint.Joint);
             _world.RemoveBody(bodyJoint.Body);
             _handBodies.Remove(hand);
-        }
-
-        /// <summary>
-        /// Helper method to perform actions for any network events which have
-        /// occurred since the last frame. This involves destroying balloons 
-        /// which the server has decided are too old, and adding any new 
-        /// balloons we have been sent.
-        /// </summary>
-        protected void PerformNetworkEvents()
-        {
-            // Firstly, pop any balloons that need to be popped
-            List<Balloon> poppedBalloons = _networkEvents.GetPoppedBalloons();
-            poppedBalloons.ForEach(x => PopBalloon(x));
-
-            // Then add any new balloons that we have been sent
-            List<NewBalloonEvent> newBalloons = _networkEvents.GetNewBalloons();
-            newBalloons.ForEach(x => AddBalloon(x));
-        }
-
-        /// <summary>
-        /// Adds a new balloon to the screen. The New Balloon Event describes
-        /// details of the balloon and also the initial position and velocity
-        /// of the balloon.
-        /// </summary>
-        /// <param name="newBalloonEvent">The New Balloon Event describing the
-        /// Balloon to add.</param>
-        protected void AddBalloon(NewBalloonEvent newBalloonEvent)
-        {
-
-        }
-
-        /// <summary>
-        /// Pops the specified Balloon. This will cause an animation to be 
-        /// started and remove the Balloon from the internal list of balloons 
-        /// on this client.
-        /// </summary>
-        /// <param name="balloon">The balloon to pop</param>
-        protected void PopBalloon(Balloon balloon)
-        {
         }
 
         private Vector2 WorldToPixel(Vector2 worldPosition)
