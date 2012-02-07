@@ -462,7 +462,12 @@ namespace Balloons.Messaging
             {
                 throw new InvalidOperationException();
             }
-            byte data = buffer[ readOffset + offset ];
+            int pos = readOffset + offset;
+            while(pos >= size)
+            {
+                pos -= size;
+            }
+            byte data = buffer[ pos ];
 
             if( changePos )
             {
