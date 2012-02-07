@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -9,6 +9,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>BubblesServer</RootNamespace>
     <AssemblyName>BubblesServer</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,16 +36,19 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="ServerBalloon.cs" />
     <Compile Include="Screen.cs" />
-    <Compile Include="ScreenConnection.cs" />
-    <Compile Include="Bubble.cs" />
-    <Compile Include="CircularQueue.cs" />
-    <Compile Include="Message.cs" />
     <Compile Include="Server.cs" />
-    <Compile Include="CircularBuffer.cs" />
+    <Compile Include="FeedReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Net" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BalloonMessaging\BalloonMessaging.csproj">
+      <Project>{36056455-8842-463D-95B3-691BE9299DCA}</Project>
+      <Name>BalloonMessaging</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

@@ -1,19 +1,11 @@
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using Balloons;
+using Balloons.Messaging;
 
-namespace BubblesServer
+namespace Balloons.Server
 {
-    /// <summary>
-    /// Used to describe the direction taken by a bubble when it leaves a screen.
-    /// </summary>
-    public enum ScreenDirection
-    {
-        Unknown,
-        Left,
-        Right
-    }
-    
 	public class Screen
 	{
         #region Public interface
@@ -22,8 +14,10 @@ namespace BubblesServer
             m_name = name;
             m_id = id;
             m_connection = connection;
+            m_connection.Disconnected += (sender, args) => EnqueueMessage(null);
+            m_connection.MessageReceived += (sender, args) => EnqueueMessage(args.Message);
             m_server = server;
-            m_bubbles = new Dictionary<int, Bubble>();
+            m_bubbles = new Dictionary<int, ServerBalloon>();
             m_queue = new CircularQueue<Message>(64);
             m_thread = new Thread(Run);
             m_thread.Start();
@@ -46,6 +40,18 @@ namespace BubblesServer
         {
             m_queue.Enqueue(message);
         }
+
+        /// <summary>
+        /// Send a message to the screen, changing its sender. It will be handled in the screen's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message, object sender)
+        {
+            if(message != null && sender != null)
+            {
+                message.Sender = sender;
+            }
+            m_queue.Enqueue(message);
+        }
         #endregion
         #region Implementation
 		// Memebers
@@ -55,8 +61,8 @@ namespace BubblesServer
         private Server m_server;
 		private ScreenConnection m_connection;
 		private Thread m_thread;
-		
-        private Dictionary<int, Bubble> m_bubbles;
+
+        private Dictionary<int, ServerBalloon> m_bubbles;
         private CircularQueue<Message> m_queue;
         
         /// <summary>
@@ -67,7 +73,7 @@ namespace BubblesServer
             Console.WriteLine("Screen connected: {0}", m_id);
             using(m_connection)
             {
-                m_connection.BeginReceiveMessage(MessageReceived);
+                m_connection.StartReceivingMessages();
                 try
                 {
                     while(true)
@@ -84,7 +90,7 @@ namespace BubblesServer
                 }
             }
             Console.WriteLine("Screen disconnected: {0}", m_id);
-            m_server.EnqueueMessage(new DisconnectedMessage(m_id));
+            m_server.EnqueueMessage(new DisconnectedMessage(m_id), this);
         }
         
         /// <summary>
@@ -101,17 +107,28 @@ namespace BubblesServer
             }
             switch(msg.Type)
             {
-            case MessageType.Add:
-                AddMessage am = (AddMessage)msg;
-                m_bubbles[am.BubbleID] = m_server.GetBubble(am.BubbleID);
+            case MessageType.NewBalloon:
+                NewBalloonMessage am = (NewBalloonMessage)msg;
+                m_bubbles[am.BalloonID] = m_server.GetBubble(am.BalloonID);
+                m_bubbles[am.BalloonID].Screen = this;
                 m_connection.SendMessage(am);
                 return true;
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-                Screen newScreen = m_server.ChooseNewScreen(this, csm.Direction);
-                m_bubbles.Remove(csm.BubbleID);
-                m_server.ChangeScreen(csm.BubbleID, newScreen);
-                newScreen.EnqueueMessage(new AddMessage(csm.BubbleID));
+                m_bubbles.Remove(csm.BalloonID);
+                m_connection.SendMessage(new PopBalloonMessage(csm.BalloonID));
+                m_server.EnqueueMessage(csm, this);
+                return true;
+            case MessageType.PopBalloon:
+                PopBalloonMessage pbm = (PopBalloonMessage)msg;
+                if(pbm.Sender is ScreenConnection)
+                {
+                    m_server.EnqueueMessage(pbm);   // Notify server
+                }
+                else
+                {
+                    m_connection.SendMessage(pbm);  // Notify physical screen
+                }
                 return true;
             default:
                 // Disconnect when receiving unknown messages
@@ -119,16 +136,15 @@ namespace BubblesServer
             }
         }
         
-        /// <summary>
-        /// Called when a message is received from the client (can run in any thread).
-        /// </summary>
-        private void MessageReceived(Message message)
+        public int Size() {
+            return m_bubbles.Count;
+        }
+
+        public Dictionary<int, ServerBalloon> GetBalloons()
         {
-            EnqueueMessage(message);
-            if(message != null)
-            {
-                m_connection.BeginReceiveMessage(MessageReceived);    
-            }            
+            lock(m_bubbles) {
+                return m_bubbles;
+            }
         }
         #endregion
 	}
