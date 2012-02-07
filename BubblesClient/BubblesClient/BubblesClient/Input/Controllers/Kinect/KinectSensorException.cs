@@ -10,21 +10,15 @@ namespace BubblesClient.Input.Controllers.Kinect
     /// </summary>
     public class KinectSensorException : Exception
     {
-        private string _message;
-
-        public override string Message { get { return _message; } }
-
-        private string _moreInfo;
-        public string MoreInfo { get { return _moreInfo; } }
-
-        private Uri _moreInfoUri;
-        public Uri MoreInfoUri { get { return _moreInfoUri; } }
+        public string ErrorMessage { get; private set; }
+        public string MoreInfo { get ; private set; }
+        public Uri MoreInfoUri { get; private set; }
 
         public KinectSensorException(string message, string moreInfo, Uri moreInfoUri)
         {
-            _message = message;
-            _moreInfo = moreInfo;
-            _moreInfoUri = moreInfoUri;
+            ErrorMessage = message;
+            MoreInfo = moreInfo;
+            MoreInfoUri = moreInfoUri;
         }
     }
 }

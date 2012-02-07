@@ -36,13 +36,19 @@ namespace BubblesClient.Input.Controllers.Kinect
 
         public Hand[] GetHandPositions()
         {
-            Hand[] returnValue = new Hand[_handPositions.Count * 2];
-            int i = 0;
-            foreach (Hand[] hands in _handPositions.Values)
+            Hand[] returnValue;
+
+            // Lock the hand positions map so we don't get concurrency issues
+            lock (_handPositions)
             {
-                returnValue[i] = hands[0];
-                returnValue[i + 1] = hands[1];
-                i += 2;
+                returnValue = new Hand[_handPositions.Count * 2];
+                int i = 0;
+                foreach (Hand[] hands in _handPositions.Values)
+                {
+                    returnValue[i] = hands[0];
+                    returnValue[i + 1] = hands[1];
+                    i += 2;
+                }
             }
 
             return returnValue;
@@ -62,22 +68,27 @@ namespace BubblesClient.Input.Controllers.Kinect
 
                     skeletonFrame.CopySkeletonDataTo(_skeletonData);
 
-                    foreach (Skeleton skeleton in _skeletonData)
+                    lock (_handPositions)
                     {
-                        if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
+                        _handPositions.Clear();
+                        foreach (Skeleton skeleton in _skeletonData)
                         {
-                            if (skeleton.Joints.Count > 0)
+                            if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
                             {
-                                if (!_handPositions.ContainsKey(skeleton)) {
-                                    _handPositions.Add(skeleton, new Hand[2]);
+                                if (skeleton.Joints.Count > 0)
+                                {
+                                    if (!_handPositions.ContainsKey(skeleton))
+                                    {
+                                        _handPositions.Add(skeleton, new Hand[2]);
+                                    }
+
+                                    Hand[] hands = _handPositions[skeleton];
+                                    SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
+                                    hands[0] = new Hand() { Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z) };
+
+                                    SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
+                                    hands[1] = new Hand() { Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z) };
                                 }
-
-                                Hand[] hands = _handPositions[skeleton];
-                                SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
-                                hands[0] = new Hand() { Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z) };
-
-                                SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
-                                hands[1] = new Hand() { Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z) };
                             }
                         }
                     }

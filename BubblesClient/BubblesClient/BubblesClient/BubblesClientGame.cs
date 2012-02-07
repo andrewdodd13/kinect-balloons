@@ -195,7 +195,8 @@ namespace BubblesClient
             }
 
             // Deregister any hands which aren't there any more
-            foreach (Hand hand in _handBodies.Keys.Except(hands))
+            List<Hand> _removals = new List<Hand>(_handBodies.Keys.Except(hands));
+            foreach (Hand hand in _removals)
             {
                 this.RemoveHandFixture(hand);
             }
@@ -279,12 +280,12 @@ namespace BubblesClient
 
         private Vector2 WorldBodyToPixel(Vector2 worldPosition, Vector2 pixelOffset)
         {
-            return worldPosition * MeterInPixels - (pixelOffset / 2);
+            return (worldPosition * MeterInPixels) - (pixelOffset / 2);
         }
 
         private Vector2 PixelToWorldBody(Vector2 pixelPosition, Vector2 pixelOffset)
         {
-            return pixelPosition / MeterInPixels + ((pixelOffset / MeterInPixels) / 2);
+            return (pixelPosition / MeterInPixels) + ((pixelOffset / MeterInPixels) / 2);
         }
     }
 }
