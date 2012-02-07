@@ -39,7 +39,6 @@ namespace Balloons.Messaging
             m_socket = socket;
             m_encoding = new UTF8Encoding();
             m_receiveBuffer = new CircularBuffer(4096);
-            m_receiveStream = m_receiveBuffer.CreateReadStream();
 
             m_parsers = new Dictionary<string, MessageParser>();
             m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
@@ -125,7 +124,6 @@ namespace Balloons.Messaging
         private Socket m_socket;
         private bool m_disposed;
         private CircularBuffer m_receiveBuffer;
-        private Stream m_receiveStream;
         private Encoding m_encoding;
 
         private delegate Message MessageParser(string[] parts);
@@ -238,16 +236,11 @@ namespace Balloons.Messaging
         private Message TryReadMessage()
         {
             // Detect the first newline in the buffered data.
-            int c, lineSize = 0;
+            int lineSize = 0;
             bool lineFound = false;
-            m_receiveStream.Seek(0, SeekOrigin.Begin);
-            while(true)
+            while(lineSize < m_receiveBuffer.Available)
             {
-                c = m_receiveStream.ReadByte();
-                if(c < 0)
-                {
-                    break;
-                }
+                byte c = m_receiveBuffer.PeekByte(lineSize);
                 lineSize++;
                 if((char)c == '\n')
                 {
@@ -255,7 +248,6 @@ namespace Balloons.Messaging
                     break;
                 }
             }
-            m_receiveStream.Seek(0, SeekOrigin.Begin);
 
             if(!lineFound)
             {
@@ -264,8 +256,7 @@ namespace Balloons.Messaging
             
             // Read the first line
             byte[] messageData = new byte[lineSize];
-            m_receiveStream.Read(messageData, 0, lineSize);
-            m_receiveStream.Flush();
+            m_receiveBuffer.Read(messageData, 0, lineSize);
             string line = m_encoding.GetString(messageData);
             Console.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
             return ParseMessage(line);
