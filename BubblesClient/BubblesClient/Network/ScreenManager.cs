@@ -13,21 +13,20 @@ namespace Balloons.DummyClient
         private ScreenConnection m_conn;
         private IPAddress serverAddress;
         private int serverPort;
-        
-        public event EventHandler BalloonMapChanged;
 
-        public Dictionary<int, ClientBalloon> Balloons { get; private set; }
+        public event EventHandler NewBalloonEvent;
+        public event EventHandler PopBalloonEvent;
 
         public ScreenManager(IPAddress serverAddress, int serverPort)
         {
             this.serverAddress = serverAddress;
             this.serverPort = serverPort;
+
             m_conn = new ScreenConnection();
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
             m_conn.MessageReceived += OnMessageReceived;
-            this.Balloons = new Dictionary<int, ClientBalloon>();
         }
 
         public void Dispose()
@@ -40,33 +39,18 @@ namespace Balloons.DummyClient
             m_conn.Connect(serverAddress, serverPort);
         }
 
-        public void MoveBalloonOffscreen(ClientBalloon b)
+        public void MoveBalloonOffscreen(ClientBalloon balloon, Direction direction, float exitHeight, Vector2 velocity)
         {
+            Console.WriteLine("Sending balloon away!");
             // Did we already notify the server that the balloon is off-screen?
-            if(b.OffScreen)
+            if (balloon.OffScreen)
             {
-                return;
-            }
-
-            Direction dir;
-            if(b.Pos.X < 0.0f)
-            {
-                dir = Direction.Left;
-            }
-            else if(b.Pos.X > 1.0f)
-            {
-                dir = Direction.Right;
-            }
-            else
-            {
-                // balloon still on screen
                 return;
             }
 
             // notify the server that the balloon is moving off-screen
-            m_conn.SendMessage(new ChangeScreenMessage(b.ID, dir, b.Pos.Y,
-                new Vector2D(b.Velocity.X, b.Velocity.Y)));
-            b.OffScreen = true;
+            m_conn.SendMessage(new ChangeScreenMessage(balloon.ID, direction, exitHeight, new Vector2D(velocity.X, velocity.Y)));
+            balloon.OffScreen = true;
         }
 
         private void OnConnected(object sender, EventArgs args)
@@ -88,42 +72,15 @@ namespace Balloons.DummyClient
         private void OnMessageReceived(object sender, MessageEventArgs args)
         {
             Message msg = args.Message;
-            switch(msg.Type)
+            switch (msg.Type)
             {
-            case MessageType.NewBalloon:
-                HandleNewBalloon((NewBalloonMessage)msg);
-                break;
-            case MessageType.PopBalloon:
-                HandlePopBalloon((PopBalloonMessage)msg);
-                break;
+                case MessageType.NewBalloon:
+                    if (NewBalloonEvent != null) { NewBalloonEvent(this, args); }
+                    break;
+                case MessageType.PopBalloon:
+                    if (PopBalloonEvent != null) { PopBalloonEvent(this, args); }
+                    break;
             }
-        }
-
-        private void HandleNewBalloon(NewBalloonMessage am)
-        {
-            ClientBalloon b = new ClientBalloon(am.BalloonID);
-            switch(am.Direction)
-            {
-            case Direction.Any:
-                b.Pos = new Vector2(0.5f, 0.2f);
-                break;
-            case Direction.Left:
-                b.Pos = new Vector2(0.0f, am.Y);
-                break;
-            case Direction.Right:
-                b.Pos = new Vector2(1.0f, am.Y);
-                break;
-            }
-            b.Velocity = new Vector2(am.Velocity.X, am.Velocity.Y);
-            // TODO synchronize this
-            this.Balloons.Add(b.ID, b);
-            this.BalloonMapChanged(this, new EventArgs());
-        }
-
-        private void HandlePopBalloon(PopBalloonMessage pbm)
-        {
-            this.Balloons.Remove(pbm.BalloonID);
-            this.BalloonMapChanged(this, new EventArgs());
         }
     }
 }
