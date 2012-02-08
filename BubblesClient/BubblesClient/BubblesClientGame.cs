@@ -79,10 +79,9 @@ namespace BubblesClient
             ScreenManager.PopBalloonEvent += this.OnPopBalloon;
         }
 
-        public void OnNewBalloon(object sender, EventArgs e)
+        public void OnNewBalloon(object sender, MessageEventArgs e)
         {
-            // Cast out the message because I'm too lazy to properly make a delegate
-            NewBalloonMessage m = (NewBalloonMessage)((MessageEventArgs)e).Message;
+            NewBalloonMessage m = (NewBalloonMessage)e.Message;
 
             // Choose where to place the balloon
             Vector2 position = new Vector2();
@@ -117,9 +116,9 @@ namespace BubblesClient
             balloons.Add(b.ID, b);
         }
 
-        public void OnPopBalloon(object sender, EventArgs e)
+        public void OnPopBalloon(object sender, MessageEventArgs e)
         {
-            PopBalloonMessage m = (PopBalloonMessage)((MessageEventArgs)e).Message;
+            PopBalloonMessage m = (PopBalloonMessage)e.Message;
             Console.WriteLine("Pop balloon!");
         }
 
