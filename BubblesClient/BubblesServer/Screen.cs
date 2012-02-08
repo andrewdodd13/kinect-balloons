@@ -117,7 +117,6 @@ namespace Balloons.Server
             case MessageType.ChangeScreen:
                 ChangeScreenMessage csm = (ChangeScreenMessage)msg;
                 m_bubbles.Remove(csm.BalloonID);
-                m_connection.SendMessage(new PopBalloonMessage(csm.BalloonID));
                 m_server.EnqueueMessage(csm, this);
                 return true;
             case MessageType.PopBalloon:

@@ -15,6 +15,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics.Joints;
 using Balloons.DummyClient;
+using Balloons.Messaging;
 using Balloons.Messaging.Model;
 
 namespace BubblesClient
@@ -75,14 +76,27 @@ namespace BubblesClient
 
             // Initialise network
             this.ScreenManager = screenManager;
-            ScreenManager.NewBalloonEvent += this.OnNewBalloon;
-            ScreenManager.PopBalloonEvent += this.OnPopBalloon;
         }
 
-        public void OnNewBalloon(object sender, MessageEventArgs e)
+        public void ProcessNetworkMessages()
         {
-            NewBalloonMessage m = (NewBalloonMessage)e.Message;
+            Message msg;
+            while(ScreenManager.MessageQueue.TryDequeue(out msg))
+            {
+                switch(msg.Type)
+                {
+                case MessageType.NewBalloon:
+                    OnNewBalloon((NewBalloonMessage)msg);
+                    break;
+                case MessageType.PopBalloon:
+                    OnPopBalloon((PopBalloonMessage)msg);
+                    break;
+                }
+            }
+        }
 
+        public void OnNewBalloon(NewBalloonMessage m)
+        {
             // Choose where to place the balloon
             Vector2 position = new Vector2();
             switch (m.Direction)
@@ -116,9 +130,8 @@ namespace BubblesClient
             balloons.Add(b.ID, b);
         }
 
-        public void OnPopBalloon(object sender, MessageEventArgs e)
+        public void OnPopBalloon(PopBalloonMessage m)
         {
-            PopBalloonMessage m = (PopBalloonMessage)e.Message;
             Console.WriteLine("Pop balloon!");
         }
 
@@ -179,7 +192,7 @@ namespace BubblesClient
         protected override void Update(GameTime gameTime)
         {
             // Query the Network Manager for events
-            //PerformNetworkEvents();
+            ProcessNetworkMessages();
 
             // Query the Input Library
             this.HandleInput();
