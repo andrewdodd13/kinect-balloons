@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Balloons.Messaging;
 using Balloons.Messaging.Model;
 
-namespace Balloons.Messaging
+namespace Balloons.Serialization
 {
     /// <summary>
     /// Handles the conversion of messages to and from array of bytes.
     /// </summary>
-    public class TextMessageSerializer
+    public class TextMessageSerializer : IMessageSerializer
     {
         private Encoding m_encoding;
         private delegate Message MessageParser(string[] parts);
@@ -31,12 +32,6 @@ namespace Balloons.Messaging
             return m_encoding.GetBytes(line + "\n");
         }
 
-        /// <summary>
-        /// Tries to read a message from the current buffered data.
-        /// </summary>
-        /// <returns>
-        /// Message read or null if there is not enough data for a complete message.
-        /// </returns>
         public Message Deserialize(CircularBuffer buffer)
         {
             // Detect the first newline in the buffered data.

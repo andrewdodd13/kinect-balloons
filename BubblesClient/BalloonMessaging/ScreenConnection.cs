@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Balloons.Messaging.Model;
+using Balloons.Serialization;
 
 namespace Balloons.Messaging
 {
@@ -143,7 +144,7 @@ namespace Balloons.Messaging
         private Socket m_socket;
         private bool m_disposed;
         private CircularBuffer m_receiveBuffer;
-        private TextMessageSerializer m_serializer;
+        private IMessageSerializer m_serializer;
         private readonly CircularQueue<Message> m_receiveQueue;
 
         /// <summary>
