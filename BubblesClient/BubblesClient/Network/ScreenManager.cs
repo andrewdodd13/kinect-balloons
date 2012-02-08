@@ -23,11 +23,10 @@ namespace Balloons.DummyClient
 
             this.MessageQueue = new CircularQueue<Message>(64);
 
-            m_conn = new ScreenConnection();
+            m_conn = new ScreenConnection(this.MessageQueue);
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
-            m_conn.MessageReceived += (sender, args) => MessageQueue.Enqueue(args.Message);
         }
 
         public void Dispose()

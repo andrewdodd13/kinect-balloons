@@ -30,16 +30,33 @@ namespace Balloons.Messaging
         public event EventHandler Disconnected;
         public event EventHandler<MessageEventArgs> MessageReceived;
 
-        public ScreenConnection()
-            : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+        /// <summary>
+        /// Create a new message connection between screen and server.
+        /// </summary>
+        public ScreenConnection() : this(null)
         {
         }
 
-        public ScreenConnection(Socket socket)
+        /// <summary>
+        /// Create a new message connection between screen and server.
+        /// </summary>
+        /// <param name="receiveQueue"> Temporary queue used to store received messages. </param>
+        public ScreenConnection(CircularQueue<Message> receiveQueue) : this(receiveQueue,
+            new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+        {
+        }
+
+        /// <summary>
+        /// Create a new message connection between screen and server.
+        /// </summary>
+        /// <param name="receiveQueue"> Temporary queue used to store received messages. </param>
+        /// <param name="socket"> Socket to use to send and receive messages. </param>
+        public ScreenConnection(CircularQueue<Message> receiveQueue, Socket socket)
         {
             m_socket = socket;
             m_encoding = new UTF8Encoding();
             m_receiveBuffer = new CircularBuffer(4096);
+            m_receiveQueue = receiveQueue;
 
             m_parsers = new Dictionary<string, MessageParser>();
             m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
@@ -105,6 +122,11 @@ namespace Balloons.Messaging
 
         protected virtual void OnDisconnected()
         {
+            if(m_receiveQueue != null)
+            {
+                m_receiveQueue.Enqueue(null);
+            }
+
             EventHandler handler = Disconnected;
             if (handler != null)
             {
@@ -114,6 +136,11 @@ namespace Balloons.Messaging
 
         protected virtual void OnMessageReceived(Message msg)
         {
+            if(m_receiveQueue != null)
+            {
+                m_receiveQueue.Enqueue(msg);
+            }
+
             EventHandler<MessageEventArgs> handler = MessageReceived;
             if (handler != null)
             {
@@ -126,6 +153,7 @@ namespace Balloons.Messaging
         private bool m_disposed;
         private CircularBuffer m_receiveBuffer;
         private Encoding m_encoding;
+        private readonly CircularQueue<Message> m_receiveQueue;
 
         private delegate Message MessageParser(string[] parts);
         private Dictionary<string, MessageParser> m_parsers;

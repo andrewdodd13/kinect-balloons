@@ -145,9 +145,8 @@ namespace Balloons.Server
         
         private bool HandleScreenConnected(ConnectedMessage msg)
         {
-            ScreenConnection screenConn = new ScreenConnection(msg.Connection);
             int screenID = m_nextScreenID++;
-            Screen screen = new Screen("Screen-" + screenID, screenID, screenConn, this);
+            Screen screen = new Screen("Screen-" + screenID, screenID, msg.Connection, this);
             m_screens.Add( screen);
             lock(m_bubbles)
             {

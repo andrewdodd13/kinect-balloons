@@ -83,6 +83,12 @@ namespace BubblesClient
             List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
             foreach(Message msg in messages)
             {
+                if(msg == null)
+                {
+                    // the connection to the server was closed
+                    break;
+                }
+
                 switch(msg.Type)
                 {
                 case MessageType.NewBalloon:

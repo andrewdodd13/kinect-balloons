@@ -1,4 +1,5 @@
 using System;
+using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Generic;
 using Balloons;
@@ -10,16 +11,14 @@ namespace Balloons.Server
 	public class Screen
 	{
         #region Public interface
-        public Screen(string name, int id, ScreenConnection connection, Server server)
+        public Screen(string name, int id, Socket socket, Server server)
         {
             m_name = name;
             m_id = id;
-            m_connection = connection;
-            m_connection.Disconnected += (sender, args) => EnqueueMessage(null);
-            m_connection.MessageReceived += (sender, args) => EnqueueMessage(args.Message);
             m_server = server;
             m_bubbles = new Dictionary<int, ServerBalloon>();
             m_queue = new CircularQueue<Message>(64);
+            m_connection = new ScreenConnection(m_queue, socket);
             m_thread = new Thread(Run);
             m_thread.Start();
         }
