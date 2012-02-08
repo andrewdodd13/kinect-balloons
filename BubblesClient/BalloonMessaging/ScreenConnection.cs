@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -79,7 +80,7 @@ namespace Balloons.Messaging
         public void SendMessage(Message message)
         {
             string line = message.Format();
-            Console.WriteLine(">> {0}", line);
+            Debug.WriteLine(">> {0}", line);
             byte[] data = m_encoding.GetBytes(line + "\n");
             m_socket.Send(data);
         }
@@ -258,7 +259,7 @@ namespace Balloons.Messaging
             byte[] messageData = new byte[lineSize];
             m_receiveBuffer.Read(messageData, 0, lineSize);
             string line = m_encoding.GetString(messageData);
-            Console.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
+            Debug.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
             return ParseMessage(line);
         }
 

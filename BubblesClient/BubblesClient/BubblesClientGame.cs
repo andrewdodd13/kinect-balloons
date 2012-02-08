@@ -248,7 +248,7 @@ namespace BubblesClient
             foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
             {
                 spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)), Color.White);
-                Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
+                //Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
             }
 
             spriteBatch.End();

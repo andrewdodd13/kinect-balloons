@@ -151,24 +151,27 @@ namespace Balloons.Server
             m_screens.Add( screen);
             lock(m_bubbles)
             {
-                // Create a new balloon for the screen
-                ServerBalloon b = CreateBalloon();
-                Direction dir;
-                float y;
-                Vector2D velocity;
-                if((b.ID % 2) == 0)
+                for(int i = 0; i < ServerBalloon.NewBalloonsForScreen; i++)
                 {
-                    dir = Direction.Left;
-                    velocity = ServerBalloon.VelocityRight;
-                    y = 0.2f;
+                    // Create a new balloon for the screen
+                    ServerBalloon b = CreateBalloon();
+                    Direction dir;
+                    float y;
+                    Vector2D velocity;
+                    if((b.ID % 2) == 0)
+                    {
+                        dir = Direction.Left;
+                        velocity = ServerBalloon.VelocityRight;
+                        y = 0.2f;
+                    }
+                    else
+                    {
+                        dir = Direction.Right;
+                        velocity = ServerBalloon.VelocityLeft;
+                        y = 0.1f;
+                    }
+                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
                 }
-                else
-                {
-                    dir = Direction.Right;
-                    velocity = ServerBalloon.VelocityLeft;
-                    y = 0.1f;
-                }
-                screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
             }
             return true;
         }
