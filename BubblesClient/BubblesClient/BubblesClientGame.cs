@@ -80,8 +80,8 @@ namespace BubblesClient
 
         public void ProcessNetworkMessages()
         {
-            Message msg;
-            while(ScreenManager.MessageQueue.TryDequeue(out msg))
+            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
+            foreach(Message msg in messages)
             {
                 switch(msg.Type)
                 {
