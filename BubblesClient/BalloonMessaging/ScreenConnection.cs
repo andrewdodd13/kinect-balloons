@@ -57,6 +57,7 @@ namespace Balloons.Messaging
             m_receiveQueue = receiveQueue;
             m_receiveBuffer = new CircularBuffer(4096);
             m_serializer = new TextMessageSerializer();
+            //m_serializer = new BinaryMessageSerializer();
         }
 
         public void Dispose()

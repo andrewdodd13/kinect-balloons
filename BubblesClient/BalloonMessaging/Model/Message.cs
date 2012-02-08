@@ -111,7 +111,7 @@ namespace Balloons.Messaging.Model
     #region Messages sent by the server
     public class NewBalloonMessage : BalloonMessage
     {
-        public static readonly string Tag = "new-ballooon";
+        public static readonly string Tag = "new-balloon";
 
         public Direction Direction
         {
