@@ -16,7 +16,7 @@ namespace BubblesClient.Input.Controllers.Kinect
         private bool _sensorConflict = false;
         private Skeleton[] _skeletonData = null;
 
-        private Dictionary<Skeleton, Hand[]> _handPositions = new Dictionary<Skeleton,Hand[]>();
+        private Dictionary<Skeleton, Hand[]> _handPositions = new Dictionary<Skeleton, Hand[]>();
 
         /// <summary>
         /// Initialises the Kinect system and causes it to begin polling.
@@ -70,27 +70,40 @@ namespace BubblesClient.Input.Controllers.Kinect
 
                     lock (_handPositions)
                     {
-                        _handPositions.Clear();
+                        List<Skeleton> matched = new List<Skeleton>();
                         foreach (Skeleton skeleton in _skeletonData)
                         {
                             if (SkeletonTrackingState.Tracked == skeleton.TrackingState)
                             {
                                 if (skeleton.Joints.Count > 0)
                                 {
+                                    // Check to see if we're already tracking this skeleton
+                                    Hand[] hands;
                                     if (!_handPositions.ContainsKey(skeleton))
                                     {
-                                        _handPositions.Add(skeleton, new Hand[2]);
+                                        // If not, add new hand objects to the list
+                                        _handPositions.Add(skeleton, new Hand[2] { new Hand(), new Hand() });
                                     }
 
-                                    Hand[] hands = _handPositions[skeleton];
+                                    // Set the hands positions
+                                    hands = _handPositions[skeleton];
                                     SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
-                                    hands[0] = new Hand() { Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z) };
+                                    hands[0].Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z);
 
                                     SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
-                                    hands[1] = new Hand() { Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z) };
+                                    hands[1].Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z);
+
+                                    // Add this skeleton to the list of skeletons matched this frame
+                                    matched.Add(skeleton);
                                 }
                             }
                         }
+
+                        // Make a new list with all the hands found this frame
+                        Dictionary<Skeleton, Hand[]> newHands = new Dictionary<Skeleton, Hand[]>();
+                        matched.ForEach(s => newHands.Add(s, _handPositions[s]));
+
+                        _handPositions = newHands;
                     }
                 }
             }
