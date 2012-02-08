@@ -79,10 +79,9 @@ namespace BubblesClient
             ScreenManager.PopBalloonEvent += this.OnPopBalloon;
         }
 
-        public void OnNewBalloon(object sender, EventArgs e)
+        public void OnNewBalloon(object sender, MessageEventArgs e)
         {
-            // Cast out the message because I'm too lazy to properly make a delegate
-            NewBalloonMessage m = (NewBalloonMessage)((MessageEventArgs)e).Message;
+            NewBalloonMessage m = (NewBalloonMessage)e.Message;
 
             // Choose where to place the balloon
             Vector2 position = new Vector2();
@@ -110,16 +109,16 @@ namespace BubblesClient
             balloonBody.Friction = 0.5f;
             balloonBody.LinearDamping = 1.0f;
 
-            Vector2 velocity = new Vector2(m.Velocity.X, 0);
+            Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             balloonBody.ApplyLinearImpulse(velocity * balloonBody.Mass);
 
             ClientBalloon b = new ClientBalloon(m.BalloonID, balloonBody);
             balloons.Add(b.ID, b);
         }
 
-        public void OnPopBalloon(object sender, EventArgs e)
+        public void OnPopBalloon(object sender, MessageEventArgs e)
         {
-            PopBalloonMessage m = (PopBalloonMessage)((MessageEventArgs)e).Message;
+            PopBalloonMessage m = (PopBalloonMessage)e.Message;
             Console.WriteLine("Pop balloon!");
         }
 
@@ -188,29 +187,29 @@ namespace BubblesClient
             _world.Step((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f);
 
             // Check if any of the balloons have buggered off
-            List<int> removals = new List<int>();
+            List<ClientBalloon> removals = new List<ClientBalloon>();
 
-            foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
+            foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = balloon.Value.Body.Position;
+                Vector2 balloonPosition = balloon.Body.Position;
 
                 // 1.5 width for that extra bit of margin
                 if (balloonPosition.X < (balloonTexture.Width * -1.5) / MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon.Value, Direction.Left, exitHeight, balloon.Value.Body.LinearVelocity);
-                    removals.Add(balloon.Key);
+                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloon.Body.LinearVelocity);
+                    removals.Add(balloon);
                 }
                 else if (balloonPosition.X > (balloonTexture.Width * 1.5 + screenDimensions.X) / MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon.Value, Direction.Right, exitHeight, balloon.Value.Body.LinearVelocity);
-                    removals.Add(balloon.Key);
-                    _world.RemoveBody(balloon.Value.Body);
+                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloon.Body.LinearVelocity);
+                    removals.Add(balloon);
                 }
             }
 
-            removals.ForEach(x => balloons.Remove(x));
+            removals.ForEach(x => balloons.Remove(x.ID));
+            removals.ForEach(x => _world.RemoveBody(x.Body));
 
             base.Update(gameTime);
         }

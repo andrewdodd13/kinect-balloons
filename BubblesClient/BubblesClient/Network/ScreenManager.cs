@@ -14,8 +14,8 @@ namespace Balloons.DummyClient
         private IPAddress serverAddress;
         private int serverPort;
 
-        public event EventHandler NewBalloonEvent;
-        public event EventHandler PopBalloonEvent;
+        public event EventHandler<MessageEventArgs> NewBalloonEvent;
+        public event EventHandler<MessageEventArgs> PopBalloonEvent;
 
         public ScreenManager(IPAddress serverAddress, int serverPort)
         {
