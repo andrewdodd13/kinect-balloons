@@ -30,8 +30,15 @@ namespace BubblesClient
             public Joint Joint { get; set; }
         }
 
+        private class Bucket
+        {
+            public int ID;
+            public Vector2 position, size;
+            public Body physicalBody;
+        }
+
         // Textures
-        private Texture2D handTexture, balloonTexture;
+        private Texture2D handTexture, balloonTexture, bucketTexture;
 
         // Network
         public ScreenManager ScreenManager { get; private set; }
@@ -49,6 +56,9 @@ namespace BubblesClient
         private World _world;
         private const float MeterInPixels = 64f;
         private Dictionary<int, ClientBalloon> balloons = new Dictionary<int, ClientBalloon>();
+        private List<Bucket> buckets = new List<Bucket>();
+
+        public int temp = 0;
 
         public BubblesClientGame(ScreenManager screenManager)
         {
@@ -148,6 +158,7 @@ namespace BubblesClient
 
             handTexture = Content.Load<Texture2D>("tmpCircle");
             balloonTexture = Content.Load<Texture2D>("balloon");
+            bucketTexture = Content.Load<Texture2D>("tmpBucket");
 
             // Lol roof!
             Body _roofBody;
@@ -160,6 +171,44 @@ namespace BubblesClient
             _roofBody.IsStatic = true;
             _roofBody.Restitution = 0.3f;
             _roofBody.Friction = 1f;
+
+            //Load buckets
+            //Note to self: Prettify - William
+            for (int i = 0; i < 4; i++)
+            {
+                Bucket b = new Bucket();
+                b.ID = i;
+                b.position = new Vector2(3+5*i, PixelToWorld(new Vector2(0, 800)).Y);
+                b.size = PixelToWorld(new Vector2(bucketTexture.Width, bucketTexture.Height));
+                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position);
+                buckets.Add(b);
+                b.physicalBody.OnCollision += new OnCollisionEventHandler(bucketCollision);
+            }
+        }
+
+        bool bucketCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
+        {
+            //I assume that fixtureA is always the bucket object (which is detecting the collision)
+            Bucket _bucket = null;
+            foreach (Bucket b in buckets)
+            {
+                if (fixtureA.Body == b.physicalBody)
+                {
+                    _bucket = b;
+                    break;
+                }
+            }
+            //Try to find fixtureB in the balloons
+            foreach (ClientBalloon b in balloons.Values)
+            {
+                if (fixtureB.Body == b.Body)
+                {
+                    ApplyBucketToBalloon(_bucket, b);
+                    return true; //set this to false to allow the ballon to pass through the bucket
+                }
+            }
+            
+            return false; //let hand objects pass through
         }
 
         /// <summary>
@@ -235,7 +284,13 @@ namespace BubblesClient
             foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
             {
                 spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)), Color.White);
-                Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
+                //Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
+            }
+
+            //Draw all buckets
+            foreach (Bucket bucket in buckets)
+            {
+                spriteBatch.Draw(bucketTexture, WorldBodyToPixel(bucket.position, WorldToPixel(bucket.size)), Color.White);
             }
 
             spriteBatch.End();
@@ -309,6 +364,12 @@ namespace BubblesClient
         private Vector2 PixelToWorldBody(Vector2 pixelPosition, Vector2 pixelOffset)
         {
             return (pixelPosition / MeterInPixels) + ((pixelOffset / MeterInPixels) / 2);
+        }
+
+        private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)
+        {
+            //Note to Lauren: Place your balloon bucket stuff here (in case the name wasn't descriptive enough :P)
+            Console.WriteLine("Bucket {0} collided with ballon {1}", bucket.ID, balloon.ID);
         }
     }
 }
