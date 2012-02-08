@@ -33,6 +33,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TextMessageSerializer.cs" />
     <Compile Include="Model\Balloon.cs" />
     <Compile Include="CircularBuffer.cs" />
     <Compile Include="CircularQueue.cs" />
