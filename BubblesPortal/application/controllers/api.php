@@ -11,8 +11,6 @@ class Api extends CI_Controller {
         $recent = $ugc->get_recent($limit);
 
         foreach ($recent as $r) {
-            unset($r->Image);
-            $r->ImageURL = '';
             $r->TimeCreated = strtotime($r->TimeCreated);
             $r->Type = FeedContentTypes::USER_CONTENT;
         }
