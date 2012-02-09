@@ -2,12 +2,13 @@
 
 class Content_model extends CI_Model {
 	
-	public function insert_content($name, $url, $image, $user) {
+	public function insert_content($name, $url, $image, $user, $colour) {
 		$data = array(
 			'Title' => $name,
 			'SubmittedBy' => $user,
 			'URL' => $url,
-			'Image' => $image
+			'ImageURL' => $image,
+			'BalloonColour' => $colour
 		);
 		
 		$this->db->insert('usercontent', $data);
