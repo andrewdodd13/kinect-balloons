@@ -54,17 +54,14 @@ class Submit_content extends CI_Controller {
 			else {
 				// file has uploaded
 				// enter information into database
-				// get file data
+				// get file url
 				$fileInfo = $this->upload->data();
-				$filename = $fileInfo['full_path'];
-				$fh = fopen($filename, 'r');
-				$imageData = fread($fh, filesize($filename));
-				fclose($fh);
+				$imageURL = base_url()."uploads/".$fileInfo['file_name'];
 				
 				// load the model
 				$this->load->model('content_model');
 				// use insert content method
-				$this->content_model->insert_content($name, $url, $imageData, $this->session->userdata('username'), $colour);
+				$this->content_model->insert_content($name, $url, $imageURL, $this->session->userdata('username'), $colour);
 				$this->upload_successful();
 			}
 		}

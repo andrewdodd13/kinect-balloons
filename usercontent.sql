@@ -4,7 +4,7 @@ CREATE TABLE usercontent (
   SubmittedBy VARCHAR(10),
   URL VARCHAR(255),
   Excerpt TEXT,
-  Image BLOB,
+  ImageURL VARCHAR(255),
   BalloonColour CHAR(6) DEFAULT FFFFFF,
   TimeCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (ContentID))

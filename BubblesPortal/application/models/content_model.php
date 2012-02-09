@@ -7,7 +7,7 @@ class Content_model extends CI_Model {
 			'Title' => $name,
 			'SubmittedBy' => $user,
 			'URL' => $url,
-			'Image' => $image,
+			'ImageURL' => $image,
 			'BalloonColour' => $colour
 		);
 		
