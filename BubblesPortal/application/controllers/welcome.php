@@ -54,6 +54,12 @@ class Welcome extends CI_Controller {
 			}
 		}
 	}
+	
+	public function logout() {
+		$this->session->unset_userdata('username');
+		$this->session->unset_userdata('is_logged_in');
+		redirect('submit_content/index');
+	}
 }
 
 /* End of file welcome.php */
