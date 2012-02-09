@@ -25,5 +25,15 @@ class Content_model extends CI_Model {
                         ->get('usercontent')
                         ->result();
     }
+
+    public function get_by_id($id) {
+        $result = $this->db->where('ContentID', $id)->get('usercontent')->result();
+        if (isset($result[0])) {
+            return $result[0];
+        }
+        else {
+            return false;
+        }
+    }
 	
 }

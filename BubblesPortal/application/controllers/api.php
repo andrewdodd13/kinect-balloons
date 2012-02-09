@@ -5,14 +5,21 @@ require_once(APPPATH . 'libraries/tmhOAuth/tmhOAuth.php');
 
 class Api extends CI_Controller {
 
+    public function __construct() {
+        parent::__construct();
+        $this->load->helper('url');
+    }
+
     protected function getUserContent($limit) {
         $this->load->model('content_model');
+
         $ugc = new Content_model();
         $recent = $ugc->get_recent($limit);
 
         foreach ($recent as $r) {
-            $r->TimeCreated = strtotime($r->TimeCreated);
             $r->Type = FeedContentTypes::USER_CONTENT;
+            $r->URL = site_url('content/visit/' . $r->Type . '/' . $r->ContentID);
+            $r->TimeCreated = strtotime($r->TimeCreated);
         }
 
         return $recent;
@@ -25,7 +32,7 @@ class Api extends CI_Controller {
             'Title' => '',
             'Excerpt' => '',
             'SubmittedBy' => '',
-            'URL' => 'http://www.macs.hw.ac.uk',
+            'URL' => site_url(''),
             'ImageURL' => '',
             'TimeCreated' => time(),
             'Type' => FeedContentTypes::BLANK_BALLOON
@@ -45,13 +52,18 @@ class Api extends CI_Controller {
     }
 
     protected function makeBalloonFromTweet($tweet) {
+        $permalink = urlencode(sprintf('http://twitter.com/%s/status/%s',
+                                $tweet->user->screen_name,
+                                $tweet->id));
+        $tweetURL = site_url('content/visit/' . FeedContentTypes::TWEET . '/?url=' . $permalink);
+
         return (object) array(
             'ContentID' => 't' . $tweet->id,
             'Title' => $tweet->text,
             'SubmittedBy' => $tweet->user->screen_name,
             'TimeCreated' => strtotime($tweet->created_at),
             'Excerpt' => '',
-            'URL' => 'http://twitter.com/status/' . $tweet->id,
+            'URL' => $tweetURL,
             'ImageURL' => $tweet->user->profile_image_url,
             'BalloonColour' => TWITTER_BALLOON_COLOR,
             'Type' => FeedContentTypes::TWEET
