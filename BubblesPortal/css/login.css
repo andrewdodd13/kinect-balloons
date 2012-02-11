@@ -63,6 +63,13 @@ input[type=submit]:hover {
 	font-size:10pt;
 }
 
+.userdetails {
+	font-family: Arial;
+	color: blue;
+	font-size:15px;
+	margin-left: 20px;
+}
+
 #heading {
 	width:700px;
 	height:20%;
