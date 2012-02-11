@@ -175,9 +175,9 @@ namespace BubblesClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            handTexture = Content.Load<Texture2D>("tmpCircle");
+            handTexture = Content.Load<Texture2D>("tmpCircleTransBG");
             balloonTexture = Content.Load<Texture2D>("balloon");
-            bucketTexture = Content.Load<Texture2D>("tmpBucket");
+            bucketTexture = Content.Load<Texture2D>("tmpBucketTransBG");
 
             // Lol roof!
             Body _roofBody;
