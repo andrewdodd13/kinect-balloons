@@ -58,7 +58,7 @@ namespace BubblesClient
         private Dictionary<int, ClientBalloon> balloons = new Dictionary<int, ClientBalloon>();
         private List<Bucket> buckets = new List<Bucket>();
 
-        public int temp = 0;
+        private bool showBuckets = true;
 
         public BubblesClientGame(ScreenManager screenManager)
         {
@@ -112,8 +112,11 @@ namespace BubblesClient
 
             position.Y = m.Y * screenDimensions.Y;
 
-            // Setup the balloon's body. 
-            Body balloonBody = BodyFactory.CreateCircle(_world, 128f / (2f * MeterInPixels), 1f, PixelToWorld(position));
+            // Setup the balloon's body.
+            //We have to set the body in the constructor to null first, the reassign a new body
+            //because it seems you can't set userdata after creation, only from the factory method.
+            ClientBalloon b = new ClientBalloon(m.BalloonID, null);
+            Body balloonBody = BodyFactory.CreateCircle(_world, 128f / (2f * MeterInPixels), 1f, PixelToWorld(position), b);
             balloonBody.BodyType = BodyType.Dynamic;
             balloonBody.Restitution = 0.3f;
             balloonBody.Friction = 0.5f;
@@ -122,8 +125,28 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             balloonBody.ApplyLinearImpulse(velocity * balloonBody.Mass);
 
-            ClientBalloon b = new ClientBalloon(m.BalloonID, balloonBody);
+            b.Body = balloonBody;
+            b.Body.OnCollision += new OnCollisionEventHandler(onBalloonCollision);
             balloons.Add(b.ID, b);
+        }
+
+        bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
+        {
+            if (fixtureA.UserData == null || fixtureA.UserData.GetType() != typeof(ClientBalloon))
+            {
+                Console.WriteLine("WTF are you doing");
+            }
+            if (fixtureB.UserData == null)
+            {
+                return true;
+            }
+
+            if (fixtureB.UserData.GetType() == typeof(Bucket))
+            {
+                ApplyBucketToBalloon((Bucket)fixtureB.UserData, (ClientBalloon)fixtureA.UserData);
+            }
+
+            return true;
         }
 
         public void OnPopBalloon(object sender, MessageEventArgs e)
@@ -180,35 +203,9 @@ namespace BubblesClient
                 b.ID = i;
                 b.position = new Vector2(3+5*i, PixelToWorld(new Vector2(0, 800)).Y);
                 b.size = PixelToWorld(new Vector2(bucketTexture.Width, bucketTexture.Height));
-                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position);
+                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position, b);
                 buckets.Add(b);
-                b.physicalBody.OnCollision += new OnCollisionEventHandler(bucketCollision);
             }
-        }
-
-        bool bucketCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
-        {
-            //I assume that fixtureA is always the bucket object (which is detecting the collision)
-            Bucket _bucket = null;
-            foreach (Bucket b in buckets)
-            {
-                if (fixtureA.Body == b.physicalBody)
-                {
-                    _bucket = b;
-                    break;
-                }
-            }
-            //Try to find fixtureB in the balloons
-            foreach (ClientBalloon b in balloons.Values)
-            {
-                if (fixtureB.Body == b.Body)
-                {
-                    ApplyBucketToBalloon(_bucket, b);
-                    return true; //set this to false to allow the ballon to pass through the bucket
-                }
-            }
-            
-            return false; //let hand objects pass through
         }
 
         /// <summary>
@@ -260,7 +257,46 @@ namespace BubblesClient
             removals.ForEach(x => balloons.Remove(x.ID));
             removals.ForEach(x => _world.RemoveBody(x.Body));
 
+            //Show buckets if a balloon is in lower 1/3 of screen
+            //I don't like how this is implemented - animation speed is dependant on frame rate
+            //Would be better to have a spring or joint moving the buckets, but I haven't quite figured out how they work yet
+            bool shouldShowBuckets = false;
+            Vector2 screen = PixelToWorld(screenDimensions);
+            foreach (ClientBalloon balloon in balloons.Values)
+            {
+                if (balloon.Body.Position.Y > screen.Y *2 / 3)
+                {
+                    shouldShowBuckets = true;
+                    break;
+                }
+            }
+            if (showBuckets != shouldShowBuckets)
+            {
+                UpdateBuckets(shouldShowBuckets);
+            }
+
             base.Update(gameTime);
+        }
+
+        private void UpdateBuckets(bool show)
+        {
+            //Console.WriteLine("Update buckets called");
+            float targetY = show ? screenDimensions.Y+20 : screenDimensions.Y+170;
+            targetY = PixelToWorld(new Vector2(0, targetY)).Y;
+
+            bool atRest = true;
+            foreach (Bucket b in buckets)
+            {
+                b.position.Y += (targetY - b.position.Y)/4;
+                b.physicalBody.Position = b.position;
+
+                atRest &= Math.Abs(b.position.Y - targetY) < 1;
+            }
+            if (atRest)
+            {
+                //Console.WriteLine("At rest");
+                showBuckets = show;
+            }
         }
 
         /// <summary>
@@ -328,7 +364,7 @@ namespace BubblesClient
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels);
+            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels, hand);
             handBody.BodyType = BodyType.Dynamic;
             FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
             handJoint.MaxForce = 1000f;
