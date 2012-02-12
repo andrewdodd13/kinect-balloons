@@ -179,19 +179,24 @@ namespace BubblesClient
 
             //get type of balloon
             //is there a quicker way to do this? -lauren
-            string balloonType = "customcontent";
+            BalloonType balloonType = BalloonType.CustomContent;
             foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
             {
                 //TODO!! This doesn't work?? balloon.key.equals(m.balloonID) is never true??
                 //for now string balloonType defaults to "customcontent", because it never changes
                 //change to "customizable" by default once this is fixed
                 if (balloon.Key.Equals(m.BalloonID))
-                    balloonType = Balloon.FormatBalloonType(balloon.Value.Type);
+                {
+                    balloonType = balloon.Value.Type;
+                }
             }
 
-            //display content only if balloon is not customizable type            
-            if (!balloonType.Equals("customizable"))
-                balloonPopped = m.BalloonID; //TODO: only >-1 for 30 seconds??
+            // Display content only if balloon is not customizable type
+            if (!BalloonType.CustomContent.Equals(balloonType))
+            {
+                //TODO: only >-1 for 30 seconds
+                balloonPopped = m.BalloonID;
+            }
 
 
             Console.WriteLine("Pop balloon!");
