@@ -1,24 +1,17 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
+using System.Timers;
+using Balloons.DummyClient;
+using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
-using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics.Joints;
-using Balloons.DummyClient;
-using Balloons.Messaging;
-using Balloons.Messaging.Model;
-using System.Timers;
+using FarseerPhysics.Factories;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace BubblesClient
 {

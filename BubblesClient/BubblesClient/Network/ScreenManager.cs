@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading;
-using Microsoft.Xna.Framework;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
+using Microsoft.Xna.Framework;
 
 namespace Balloons.DummyClient
 {
