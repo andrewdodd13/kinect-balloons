@@ -42,11 +42,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Images\Balloon.png">
-      <Name>Balloon</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
     <Compile Include="Images\BalloonSpots.png">
       <Name>BalloonSpots</Name>
       <Importer>TextureImporter</Importer>
