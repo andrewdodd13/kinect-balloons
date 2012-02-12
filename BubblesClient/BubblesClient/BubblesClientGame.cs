@@ -146,6 +146,21 @@ namespace BubblesClient
                 ApplyBucketToBalloon((Bucket)fixtureB.UserData, (ClientBalloon)fixtureA.UserData);
             }
 
+            if (fixtureB.UserData.GetType() == typeof(Hand))
+            {
+                foreach(Hand altHand in handBodies.Keys) {
+                    if (altHand != fixtureB.UserData)
+                    {
+                        //Magic number! Might need to adjust for sensitivity
+                        //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
+                        if (Vector2.Distance(new Vector2(altHand.Position.X, altHand.Position.Y), WorldToPixel(fixtureA.Body.Position)) < 50)
+                        {
+                            Console.WriteLine("Pop balloon {0}", ((ClientBalloon)fixtureA.UserData).ID);
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 
