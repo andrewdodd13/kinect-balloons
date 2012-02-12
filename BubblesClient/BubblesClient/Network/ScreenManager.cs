@@ -14,19 +14,19 @@ namespace Balloons.DummyClient
         private IPAddress serverAddress;
         private int serverPort;
 
-        public event EventHandler<MessageEventArgs> NewBalloonEvent;
-        public event EventHandler<MessageEventArgs> PopBalloonEvent;
+        public CircularQueue<Message> MessageQueue { get; private set; }
 
         public ScreenManager(IPAddress serverAddress, int serverPort)
         {
             this.serverAddress = serverAddress;
             this.serverPort = serverPort;
 
-            m_conn = new ScreenConnection();
+            this.MessageQueue = new CircularQueue<Message>(64);
+
+            m_conn = new ScreenConnection(this.MessageQueue);
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
-            m_conn.MessageReceived += OnMessageReceived;
         }
 
         public void Dispose()
@@ -67,20 +67,6 @@ namespace Balloons.DummyClient
         {
             Console.WriteLine("Disconnected from the server");
             Environment.Exit(1);
-        }
-
-        private void OnMessageReceived(object sender, MessageEventArgs args)
-        {
-            Message msg = args.Message;
-            switch (msg.Type)
-            {
-                case MessageType.NewBalloon:
-                    if (NewBalloonEvent != null) { NewBalloonEvent(this, args); }
-                    break;
-                case MessageType.PopBalloon:
-                    if (PopBalloonEvent != null) { PopBalloonEvent(this, args); }
-                    break;
-            }
         }
     }
 }

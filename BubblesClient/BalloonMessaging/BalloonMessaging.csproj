@@ -33,6 +33,8 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Serialization\BinaryMessageSerializer.cs" />
+    <Compile Include="Serialization\IMessageSerializer.cs" />
     <Compile Include="Model\Balloon.cs" />
     <Compile Include="CircularBuffer.cs" />
     <Compile Include="CircularQueue.cs" />
@@ -40,6 +42,7 @@
     <Compile Include="Model\Message.cs" />
     <Compile Include="Model\Vector2D.cs" />
     <Compile Include="ScreenConnection.cs" />
+    <Compile Include="Serialization\TextMessageSerializer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

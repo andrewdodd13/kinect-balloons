@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Balloons.Messaging
@@ -276,6 +277,31 @@ namespace Balloons.Messaging
                 value = default(T);
                 return false;
             }
+        }
+        /// <summary>
+        /// Dequeue all items from the queue, without blocking.
+        /// </summary>
+        public virtual List<T> DequeueAll()
+        {
+            List<T> items = new List<T>();
+            if (Monitor.TryEnter(syncExcl))
+            {
+                try
+                {
+                    while (available > 0)
+                    {
+                        --available;
+                        items.Add(DequeueCore());
+                        ++capacity;
+                    }
+                    canWrite.SignalAll();
+                }
+                finally
+                {
+                    Monitor.Exit(syncExcl);
+                }
+            }
+            return items;
         }
         #endregion
     }

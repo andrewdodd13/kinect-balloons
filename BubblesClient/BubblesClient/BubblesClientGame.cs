@@ -16,6 +16,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics.Joints;
 using Balloons.DummyClient;
+using Balloons.Messaging;
 using Balloons.Messaging.Model;
 
 namespace BubblesClient
@@ -110,14 +111,33 @@ namespace BubblesClient
 
             // Initialise network
             this.ScreenManager = screenManager;
-            ScreenManager.NewBalloonEvent += this.OnNewBalloon;
-            ScreenManager.PopBalloonEvent += this.OnPopBalloon;
         }
 
-        public void OnNewBalloon(object sender, MessageEventArgs e)
+        public void ProcessNetworkMessages()
         {
-            NewBalloonMessage m = (NewBalloonMessage)e.Message;
+            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
+            foreach(Message msg in messages)
+            {
+                if(msg == null)
+                {
+                    // the connection to the server was closed
+                    break;
+                }
 
+                switch(msg.Type)
+                {
+                case MessageType.NewBalloon:
+                    OnNewBalloon((NewBalloonMessage)msg);
+                    break;
+                case MessageType.PopBalloon:
+                    OnPopBalloon((PopBalloonMessage)msg);
+                    break;
+                }
+            }
+        }
+
+        public void OnNewBalloon(NewBalloonMessage m)
+        {
             // Choose where to place the balloon
             Vector2 position = new Vector2();
             switch (m.Direction)
@@ -212,11 +232,9 @@ namespace BubblesClient
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnPopBalloon(object sender, MessageEventArgs e)
+        public void OnPopBalloon(PopBalloonMessage m)
         {
             Console.WriteLine("Pop balloon!");
-
-            PopBalloonMessage m = (PopBalloonMessage)e.Message;
         }
 
         /// <summary>
@@ -314,6 +332,9 @@ namespace BubblesClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            // Query the Network Manager for events
+            ProcessNetworkMessages();
+
             // Query the Input Library
             this.HandleInput();
 
