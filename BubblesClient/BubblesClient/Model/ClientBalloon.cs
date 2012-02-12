@@ -16,7 +16,7 @@ namespace Balloons.DummyClient
         /// </summary>
         public bool OffScreen;
 
-        public Body Body { get; set; }
+        public Body Body { get; private set; }
 
         public ClientBalloon(int balloonID, Body body)
             : base(balloonID)
