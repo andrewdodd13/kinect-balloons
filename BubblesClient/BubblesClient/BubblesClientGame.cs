@@ -18,6 +18,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Balloons.DummyClient;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
+using System.Timers;
 
 namespace BubblesClient
 {
@@ -81,7 +82,12 @@ namespace BubblesClient
         private bool showBuckets = true;
         private int oldBucketID = 5; //buckets 0-4
 
-        private int balloonPopped = -1; //>-1 (==balloon.ID) for 30 seconds, displays content box
+        // The time to display a message for, in milliseconds
+        private const int MessageDisplayTime = 30000;
+
+        // If this is > -1 then we will be showing a balloon. We really need
+        // a state machine.
+        private int poppedBalloonID = -1;
 
         //Todo - find a better name for this, objects is quite vague
         private Dictionary<Body, WorldObject> objects = new Dictionary<Body, WorldObject>();
@@ -335,17 +341,19 @@ namespace BubblesClient
             // Query the Network Manager for events
             ProcessNetworkMessages();
 
-            // Query the Input Library
-            this.HandleInput();
+            // Query the Input Library if there isn't currently a message displayed.
+            if (poppedBalloonID == -1)
+            {
+                this.HandleInput();
+            }
 
             _world.Step((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f);
 
-            //TODO: make this some kind of 30 second timer
-            //for now, content disappears after clicking
+            // God this is hacky!
             MouseState mouseState = Mouse.GetState();
-            if (mouseState.LeftButton == ButtonState.Pressed)
+            if (mouseState.MiddleButton == ButtonState.Pressed)
             {
-                balloonPopped = -1;
+                poppedBalloonID = -1;
             }
 
             // Check if any of the balloons have buggered off
@@ -491,7 +499,7 @@ namespace BubblesClient
                 }
 
                 //balloonPopped = -1 if no content screen to display
-                if (balloon.Key == balloonPopped)
+                if (balloon.Key == poppedBalloonID)
                     balloonContent = balloon.Value.Content;
             }
 
@@ -523,7 +531,7 @@ namespace BubblesClient
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (balloonPopped > -1)
+            if (poppedBalloonID > -1)
             {
                 spriteBatch.Draw(contentBox, new Vector2(0, 0), Color.White);
                 drawContentText(balloonContent, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
@@ -740,10 +748,17 @@ namespace BubblesClient
             }
 
             // Display content only if balloon is not customizable type
-            if (BalloonType.CustomContent != balloon.Type)
+            if (BalloonType.Customizable != balloon.Type)
             {
-                //TODO: only >-1 for 30 seconds
-                balloonPopped = balloonID;
+                poppedBalloonID = balloonID;
+
+                Timer timer = new Timer();
+                timer.Elapsed += delegate(Object o, ElapsedEventArgs e) {
+                    poppedBalloonID = -1;
+                    timer.Stop();
+                };
+                timer.Interval = MessageDisplayTime;
+                timer.Start();
             }
         }
     }
