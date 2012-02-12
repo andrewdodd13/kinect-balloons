@@ -20,9 +20,13 @@ namespace Balloons.Serialization
         {
             m_encoding = Encoding.UTF8;
             m_parsers = new Dictionary<string, MessageParser>();
-            m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloonMessage);
-            m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreenMessage);
-            m_parsers.Add(PopBalloonMessage.Tag, ParsePopBalloonMessage);
+            m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloon);
+            m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreen);
+            m_parsers.Add(BalloonContentUpdateMessage.Tag, ParseBalloonContentUpdate);
+            m_parsers.Add(BalloonDecorationUpdateMessage.Tag, ParseBalloonDecorationUpdate);
+            m_parsers.Add(PopBalloonMessage.Tag, ParseBalloon);
+            m_parsers.Add(GetBalloonContentMessage.Tag, ParseBalloon);
+            m_parsers.Add(GetBalloonDecorationMessage.Tag, ParseBalloon);
         }
 
         public byte[] Serialize(Message msg)
@@ -76,7 +80,7 @@ namespace Balloons.Serialization
             return parser(parts);
         }
 
-        private NewBalloonMessage ParseNewBalloonMessage(string[] parts)
+        private Message ParseNewBalloon(string[] parts)
         {
             if(parts.Length != 6)
             {
@@ -89,7 +93,7 @@ namespace Balloons.Serialization
             return new NewBalloonMessage(balloonID, direction, y, velocity);
         }
 
-        private ChangeScreenMessage ParseChangeScreenMessage(string[] parts)
+        private Message ParseChangeScreen(string[] parts)
         {
             if(parts.Length != 6)
             {
@@ -101,15 +105,55 @@ namespace Balloons.Serialization
             Vector2D velocity = new Vector2D(Single.Parse(parts[4]), Single.Parse(parts[5]));
             return new ChangeScreenMessage(balloonID, direction, y, velocity);
         }
+        
+        private Message ParseBalloonDecorationUpdate(string[] parts)
+        {
+            if(parts.Length != 7)
+            {
+                throw new Exception("Invalid message");
+            }
+            int balloonID = Int32.Parse(parts[1]);
+            int overlayType = Int32.Parse(parts[2]);
+            byte r = Byte.Parse(parts[3]);
+            byte g = Byte.Parse(parts[4]);
+            byte b = Byte.Parse(parts[5]);
+            byte a = Byte.Parse(parts[6]);
+            Colour c = new Colour(r, g, b, a);
+            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+        }
+        
+        private Message ParseBalloonContentUpdate(string[] parts)
+        {
+            if(parts.Length != 6)
+            {
+                throw new Exception("Invalid message");
+            }
+            int balloonID = Int32.Parse(parts[1]);
+            int balloonType = Int32.Parse(parts[2]);
+            string label = parts[3];
+            string content = parts[4];
+            string url = parts[5];
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+        }
 
-        private PopBalloonMessage ParsePopBalloonMessage(string[] parts)
+        private Message ParseBalloon(string[] parts)
         {
             if(parts.Length != 2)
             {
                 throw new Exception("Invalid message");
             }
             int balloonID = Int32.Parse(parts[1]);
-            return new PopBalloonMessage(balloonID);
+            switch(parts[0])
+            {
+            case PopBalloonMessage.Tag:
+                return new PopBalloonMessage(balloonID);
+            case GetBalloonContentMessage.Tag:
+                return new GetBalloonContentMessage(balloonID);
+            case GetBalloonDecorationMessage.Tag:
+                return new GetBalloonDecorationMessage(balloonID);
+            default:
+                throw new Exception("Invalid message");
+            }
         }
     }
 }

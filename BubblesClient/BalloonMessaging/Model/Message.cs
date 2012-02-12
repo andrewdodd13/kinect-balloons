@@ -111,7 +111,7 @@ namespace Balloons.Messaging.Model
     #region Messages sent by the server
     public class NewBalloonMessage : BalloonMessage
     {
-        public static readonly string Tag = "new-balloon";
+        public const string Tag = "new-balloon";
 
         public Direction Direction
         {
@@ -149,7 +149,7 @@ namespace Balloons.Messaging.Model
 
     public class BalloonContentUpdateMessage : BalloonMessage
     {
-        public static readonly string Tag = "balloon-content-update";
+        public const string Tag = "balloon-content-update";
 
         public int BalloonType
         {
@@ -196,7 +196,7 @@ namespace Balloons.Messaging.Model
     #region Messages sent by the client
     public class ChangeScreenMessage : BalloonMessage
     {
-        public static readonly string Tag = "change-screen";
+        public const string Tag = "change-screen";
 
         public Direction Direction
         {
@@ -234,7 +234,7 @@ namespace Balloons.Messaging.Model
 
     public class GetBalloonContentMessage : BalloonMessage
     {
-        public static readonly string Tag = "get-balloon-content";
+        public const string Tag = "get-balloon-content";
 
         public GetBalloonContentMessage(int balloonID)
             : base(MessageType.GetBalloonContent, Tag, balloonID)
@@ -244,7 +244,7 @@ namespace Balloons.Messaging.Model
 
     public class GetBalloonDecorationMessage : BalloonMessage
     {
-        public static readonly string Tag = "get-balloon-decoration";
+        public const string Tag = "get-balloon-decoration";
 
         public GetBalloonDecorationMessage(int balloonID)
             : base(MessageType.GetBalloonDecoration, Tag, balloonID)
@@ -256,7 +256,7 @@ namespace Balloons.Messaging.Model
     #region Messages sent by both
     public class PopBalloonMessage : BalloonMessage
     {
-        public static readonly string Tag = "pop-balloon";
+        public const string Tag = "pop-balloon";
 
         public PopBalloonMessage(int balloonID)
             : base(MessageType.PopBalloon, Tag, balloonID)
@@ -266,7 +266,7 @@ namespace Balloons.Messaging.Model
 
     public class BalloonDecorationUpdateMessage : BalloonMessage
     {
-        public static readonly string Tag = "balloon-decoration-update";
+        public const string Tag = "balloon-decoration-update";
 
         public int OverlayType
         {
@@ -287,8 +287,9 @@ namespace Balloons.Messaging.Model
 
         protected override string FormatContent()
         {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, m_overlayType, m_bgColor.Red, m_bgColor.Green, m_bgColor.Blue);
+            return String.Format("{0} {1} {2} {3} {4}",
+                BalloonID, m_overlayType,
+                m_bgColor.Red, m_bgColor.Green, m_bgColor.Blue, m_bgColor.Alpha);
         }
 
         private int m_overlayType;

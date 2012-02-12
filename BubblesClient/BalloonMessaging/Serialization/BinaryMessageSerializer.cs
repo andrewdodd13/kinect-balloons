@@ -8,7 +8,7 @@ namespace Balloons.Serialization
 {
     public class BinaryMessageSerializer : IMessageSerializer
     {
-        private delegate Message MessageDecoder(BinaryReader reader);
+        private delegate Message MessageDecoder(BinaryReader reader, MessageType type);
         private delegate void MessageEncoder(BinaryWriter writer, Message msg);
         
         private Dictionary<MessageType, MessageDecoder> m_decoders;
@@ -19,12 +19,20 @@ namespace Balloons.Serialization
             m_decoders = new Dictionary<MessageType, MessageDecoder>();
             m_decoders.Add(MessageType.NewBalloon, DecodeNewBalloon);
             m_decoders.Add(MessageType.ChangeScreen, DecodeChangeScreen);
-            m_decoders.Add(MessageType.PopBalloon, DecodePopBalloon);
+            m_decoders.Add(MessageType.BalloonContentUpdate, DecodeBalloonContentUpdate);
+            m_decoders.Add(MessageType.BalloonDecorationUpdate, DecodeBalloonDecorationUpdate);
+            m_decoders.Add(MessageType.PopBalloon, DecodeBalloon);
+            m_decoders.Add(MessageType.GetBalloonContent, DecodeBalloon);
+            m_decoders.Add(MessageType.GetBalloonDecoration, DecodeBalloon);
             
             m_encoders = new Dictionary<MessageType, MessageEncoder>();
             m_encoders.Add(MessageType.NewBalloon, SerializeNewBalloon);
             m_encoders.Add(MessageType.ChangeScreen, SerializeChangeScreen);
-            m_encoders.Add(MessageType.PopBalloon, SerializePopBalloon);
+            m_encoders.Add(MessageType.BalloonContentUpdate, SerializeBalloonContentUpdate);
+            m_encoders.Add(MessageType.BalloonDecorationUpdate, SerializeBalloonDecorationUpdate);
+            m_encoders.Add(MessageType.PopBalloon, SerializeBalloon);
+            m_encoders.Add(MessageType.GetBalloonContent, SerializeBalloon);
+            m_encoders.Add(MessageType.GetBalloonDecoration, SerializeBalloon);
         }
         
         #region Serialization
@@ -75,10 +83,31 @@ namespace Balloons.Serialization
             writer.Write(csm.Velocity.Y);
         }
         
-        private void SerializePopBalloon(BinaryWriter writer, Message msg)
+        private void SerializeBalloonDecorationUpdate(BinaryWriter writer, Message msg)
         {
-            PopBalloonMessage pbm = (PopBalloonMessage)msg;
-            writer.Write(pbm.BalloonID);
+            BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)msg;
+            writer.Write(bdm.BalloonID);
+            writer.Write(bdm.OverlayType);
+            writer.Write(bdm.BackgroundColor.Red);
+            writer.Write(bdm.BackgroundColor.Green);
+            writer.Write(bdm.BackgroundColor.Blue);
+            writer.Write(bdm.BackgroundColor.Alpha);
+        }
+        
+        private void SerializeBalloonContentUpdate(BinaryWriter writer, Message msg)
+        {
+            BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)msg;
+            writer.Write(bcm.BalloonID);
+            writer.Write(bcm.BalloonType);
+            writer.Write(bcm.Label);
+            writer.Write(bcm.Content);
+            writer.Write(bcm.Url);
+        }
+        
+        private void SerializeBalloon(BinaryWriter writer, Message msg)
+        {
+            BalloonMessage bm = (BalloonMessage)msg;
+            writer.Write(bm.BalloonID);
         }
         #endregion
         
@@ -114,10 +143,10 @@ namespace Balloons.Serialization
             {
                 throw new NotImplementedException("Message type not supported: " + type);
             }
-            return decoder(reader);
+            return decoder(reader, type);
         }
         
-        private Message DecodeNewBalloon(BinaryReader reader)
+        private Message DecodeNewBalloon(BinaryReader reader, MessageType type)
         {
             int balloonID = reader.ReadInt32();
             Direction direction = (Direction)reader.ReadInt32();
@@ -127,7 +156,7 @@ namespace Balloons.Serialization
             return new NewBalloonMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
         }
         
-        private Message DecodeChangeScreen(BinaryReader reader)
+        private Message DecodeChangeScreen(BinaryReader reader, MessageType type)
         {
             int balloonID = reader.ReadInt32();
             Direction direction = (Direction)reader.ReadInt32();
@@ -137,10 +166,42 @@ namespace Balloons.Serialization
             return new ChangeScreenMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
         }
         
-        private Message DecodePopBalloon(BinaryReader reader)
+        private Message DecodeBalloonDecorationUpdate(BinaryReader reader, MessageType type)
         {
             int balloonID = reader.ReadInt32();
-            return new PopBalloonMessage(balloonID);
+            int overlayType = reader.ReadInt32();
+            byte r = reader.ReadByte();
+            byte g = reader.ReadByte();
+            byte b = reader.ReadByte();
+            byte a = reader.ReadByte();
+            Colour c = new Colour(r, g, b, a);
+            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+        }
+        
+        private Message DecodeBalloonContentUpdate(BinaryReader reader, MessageType type)
+        {
+            int balloonID = reader.ReadInt32();
+            int balloonType = reader.ReadInt32();
+            string label = reader.ReadString();
+            string content = reader.ReadString();
+            string url = reader.ReadString();
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+        }
+        
+        private Message DecodeBalloon(BinaryReader reader, MessageType type)
+        {
+            int balloonID = reader.ReadInt32();
+            switch(type)
+            {
+            case MessageType.PopBalloon:
+                return new PopBalloonMessage(balloonID);
+            case MessageType.GetBalloonContent:
+                return new GetBalloonContentMessage(balloonID);
+            case MessageType.GetBalloonDecoration:
+                return new GetBalloonDecorationMessage(balloonID);
+            default:
+                throw new ArgumentOutOfRangeException("type");
+            }
         }
         #endregion
     }
