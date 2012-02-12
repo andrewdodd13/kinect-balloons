@@ -173,33 +173,16 @@ namespace BubblesClient
             return true;
         }
 
+        /// <summary>
+        /// Handles the case where the server forces us to pop a balloon
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void OnPopBalloon(object sender, MessageEventArgs e)
         {
-            PopBalloonMessage m = (PopBalloonMessage)e.Message;
-
-            //get type of balloon
-            //is there a quicker way to do this? -lauren
-            BalloonType balloonType = BalloonType.CustomContent;
-            foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
-            {
-                //TODO!! This doesn't work?? balloon.key.equals(m.balloonID) is never true??
-                //for now string balloonType defaults to "customcontent", because it never changes
-                //change to "customizable" by default once this is fixed
-                if (balloon.Key.Equals(m.BalloonID))
-                {
-                    balloonType = balloon.Value.Type;
-                }
-            }
-
-            // Display content only if balloon is not customizable type
-            if (!BalloonType.CustomContent.Equals(balloonType))
-            {
-                //TODO: only >-1 for 30 seconds
-                balloonPopped = m.BalloonID;
-            }
-
-
             Console.WriteLine("Pop balloon!");
+
+            PopBalloonMessage m = (PopBalloonMessage)e.Message;
         }
 
         /// <summary>
@@ -692,6 +675,22 @@ namespace BubblesClient
                     }
                 }
                 oldBucketID = bucket.ID;
+            }
+        }
+
+        private void PopBalloon(int balloonID)
+        {
+            ClientBalloon balloon = balloons[balloonID];
+            if (balloon == null)
+            {
+                throw new ArgumentOutOfRangeException("e", "No such balloon in received message.");
+            }
+
+            // Display content only if balloon is not customizable type
+            if (!BalloonType.CustomContent.Equals(balloon.Type))
+            {
+                //TODO: only >-1 for 30 seconds
+                balloonPopped = balloonID;
             }
         }
     }
