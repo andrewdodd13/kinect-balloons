@@ -194,7 +194,6 @@ namespace BubblesClient
                 foreach(Hand altHand in handBodies.Keys) {
                     if (altHand != B.hand)
                     {
-                        Console.WriteLine("Collision?");
                         //Magic number! Might need to adjust for sensitivity
                         //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
                         if (Vector2.Distance(new Vector2(altHand.Position.X, altHand.Position.Y), WorldToPixel(fixtureA.Body.Position)) < 128)
@@ -315,9 +314,6 @@ namespace BubblesClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Query the Network Manager for events
-            //PerformNetworkEvents();
-
             // Query the Input Library
             this.HandleInput();
 
@@ -419,36 +415,36 @@ namespace BubblesClient
             string balloonContent = "";
             foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
             {
-                string balloonType = Balloon.FormatBalloonType(balloon.Value.Type);
+                BalloonType balloonType = balloon.Value.Type;
 
                 switch (balloon.Value.OverlayType)
                 {
                     case 1:
-                        if (balloonType.Equals("twitter"))
+                        if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterSpots;
-                        else if (balloonType.Equals("news"))
+                        else if (balloonType == BalloonType.News)
                             balloonTexture = balloonNewsSpots;
-                        else if (balloonType.Equals("customcontent"))
+                        else if (balloonType == BalloonType.CustomContent)
                             balloonTexture = balloonCustomSpots;
                         else
                             balloonTexture = balloonSpots;
                         break;
                     case 2:
-                        if (balloonType.Equals("twitter"))
+                        if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterStripes;
-                        else if (balloonType.Equals("news"))
+                        else if (balloonType == BalloonType.News)
                             balloonTexture = balloonNewsStripes;
-                        else if (balloonType.Equals("customcontent"))
+                        else if (balloonType == BalloonType.CustomContent)
                             balloonTexture = balloonCustomStripes;
                         else
                             balloonTexture = balloonStripes;
                         break;
                     default:
-                        if (balloonType.Equals("twitter"))
+                        if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterWhite;
-                        else if (balloonType.Equals("news"))
+                        else if (balloonType == BalloonType.News)
                             balloonTexture = balloonNewsWhite;
-                        else if (balloonType.Equals("customcontent"))
+                        else if (balloonType == BalloonType.CustomContent)
                             balloonTexture = balloonCustomWhite;
                         else
                             balloonTexture = balloonWhite;
@@ -464,7 +460,7 @@ namespace BubblesClient
 
                 //Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
                 //balloons that are not customizable need boxes for their text
-                if (!balloonType.Equals("customizable"))
+                if (balloonType != BalloonType.Customizable)
                 {
                     Vector2 position = WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(Box.Width, Box.Height));
                     spriteBatch.Draw(Box, position, Color.White);
@@ -474,7 +470,7 @@ namespace BubblesClient
                 }
 
                 //balloonPopped = -1 if no content screen to display
-                if (balloon.Key.Equals(balloonPopped))
+                if (balloon.Key == balloonPopped)
                     balloonContent = balloon.Value.Content;
             }
 
@@ -723,7 +719,7 @@ namespace BubblesClient
             }
 
             // Display content only if balloon is not customizable type
-            if (!BalloonType.CustomContent.Equals(balloon.Type))
+            if (BalloonType.CustomContent != balloon.Type)
             {
                 //TODO: only >-1 for 30 seconds
                 balloonPopped = balloonID;
