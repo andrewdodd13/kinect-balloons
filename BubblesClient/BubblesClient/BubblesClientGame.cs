@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -37,6 +38,16 @@ namespace BubblesClient
             public Body physicalBody;
         }
 
+        //Hmm, abstract?
+        private class WorldObject
+        {
+            public enum objType { Balloon, Bucket, Hand };
+            public objType type;
+            public ClientBalloon balloon;
+            public Bucket bucket;
+            public Hand hand;
+        }
+
         // Textures
         private Texture2D skyTexture, handTexture, contentBox;
         private Texture2D balloonWhite, balloonStripes, balloonSpots;
@@ -70,6 +81,9 @@ namespace BubblesClient
         private int oldBucketID = 5; //buckets 0-4
 
         private int balloonPopped = -1; //>-1 (==balloon.ID) for 30 seconds, displays content box
+
+        //Todo - find a better name for this, objects is quite vague
+        private Dictionary<Body, WorldObject> objects = new Dictionary<Body, WorldObject>();
 
         public BubblesClientGame(ScreenManager screenManager)
         {
@@ -124,16 +138,11 @@ namespace BubblesClient
             position.Y = m.Y * screenDimensions.Y;
 
             // Setup the balloon's body.
-            //We have to set the body in the constructor to null first, the reassign a new body
-            //because it seems you can't set userdata after creation, only from the factory method.
-            ClientBalloon b = new ClientBalloon(m.BalloonID, null);
-
-            //TODO: fix this so that physics circle roughly lines up with balloon part at top of texture
+            // TODO: fix this so that physics circle roughly lines up with balloon part at top of texture
             float circleRadius = 128f / (2f * MeterInPixels); //balloonWhite.Width / 2?
             Vector2 circlePosition = position; //circlePosition.Y += balloonWhite.Height / 2?
 
-            //Body balloonBody = BodyFactory.CreateCircle(_world, 128f / (2f * MeterInPixels), 1f, PixelToWorld(position), b);
-            Body balloonBody = BodyFactory.CreateCircle(_world, circleRadius, 1f, PixelToWorld(circlePosition), b);
+            Body balloonBody = BodyFactory.CreateCircle(_world, circleRadius, 1f, PixelToWorld(circlePosition));
             balloonBody.BodyType = BodyType.Dynamic;
             balloonBody.Restitution = 0.3f;
             balloonBody.Friction = 0.5f;
@@ -142,32 +151,58 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             balloonBody.ApplyLinearImpulse(velocity * balloonBody.Mass);
 
-            b.Body = balloonBody;
+            ClientBalloon b = new ClientBalloon(m.BalloonID, balloonBody);
             b.Body.OnCollision += new OnCollisionEventHandler(onBalloonCollision);
 
             //TODO: detect type of balloon, balloon colour and get content and labels
             //for now, everything's custom content
-            b.Type = Balloon.ParseBalloonType("customcontent");
+            b.Type = BalloonType.CustomContent;
             b.Content = "blahifaeowh foawihf awoifj ewoaifjao wfjawiofo";
             b.Label = "blah blah blah blah";
 
             balloons.Add(b.ID, b);
+            objects.Add(b.Body, new WorldObject { type = WorldObject.objType.Balloon, balloon = b }); //need to remember to remove this on pop
         }
 
         bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
         {
-            if (fixtureA.UserData == null || fixtureA.UserData.GetType() != typeof(ClientBalloon))
+            if (!objects.ContainsKey(fixtureA.Body))
             {
-                Console.WriteLine("WTF are you doing");
-            }
-            if (fixtureB.UserData == null)
-            {
+                Console.WriteLine("Error: a balloon was not in the objects dictionary");
                 return true;
             }
-
-            if (fixtureB.UserData.GetType() == typeof(Bucket))
+            WorldObject A = objects[fixtureA.Body];
+            if (A.type != WorldObject.objType.Balloon)
             {
-                ApplyBucketToBalloon((Bucket)fixtureB.UserData, (ClientBalloon)fixtureA.UserData);
+                Console.WriteLine("Error: balloon collide event attached to non-balloon body");
+                return true;
+            }
+            if (!objects.ContainsKey(fixtureB.Body))
+            {
+                //This is an acceptable case
+                return true;
+            }
+            WorldObject B = objects[fixtureB.Body];
+
+            if (B.type == WorldObject.objType.Bucket)
+            {
+                ApplyBucketToBalloon(B.bucket, A.balloon);
+            }
+
+            if (B.type == WorldObject.objType.Hand)
+            {
+                foreach(Hand altHand in handBodies.Keys) {
+                    if (altHand != B.hand)
+                    {
+                        Console.WriteLine("Collision?");
+                        //Magic number! Might need to adjust for sensitivity
+                        //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
+                        if (Vector2.Distance(new Vector2(altHand.Position.X, altHand.Position.Y), WorldToPixel(fixtureA.Body.Position)) < 128)
+                        {
+                            PopBalloon(A.balloon.ID);
+                        }
+                    }
+                }
             }
 
             return true;
@@ -233,8 +268,6 @@ namespace BubblesClient
             bucketBlue = Content.Load<Texture2D>("bucketBlue");
             bucketStripes = Content.Load<Texture2D>("bucketStripes");
             bucketSpots = Content.Load<Texture2D>("bucketSpots");
-            //balloonTexture = Content.Load<Texture2D>("WhiteBalloon");
-            //bucketTexture = Content.Load<Texture2D>("tmpBucket");
 
             // Lol roof!
             Body _roofBody;
@@ -250,18 +283,19 @@ namespace BubblesClient
 
             //Load buckets
             //Note to self: Prettify - William
+            // TODO: Should this be the first line... or the second? :P
             float gapBetweenBuckets = (screenDimensions.Y - (bucketRed.Width * 5)) / 6;
             gapBetweenBuckets = 121;
             for (int i = 0; i < 5; i++)
             {
-                Bucket b = new Bucket();
-                b.ID = i;
+                Bucket b = new Bucket() { ID = i };
                 float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * bucketRed.Width; //buckets 128x128
                 float y = screenDimensions.Y - bucketRed.Height;
                 b.position = PixelToWorld(new Vector2(x, y));
                 b.size = PixelToWorld(new Vector2(bucketRed.Width, bucketRed.Height));
-                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position, b);
+                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position);
                 buckets.Add(b);
+                objects.Add(b.physicalBody, new WorldObject { type = WorldObject.objType.Bucket, bucket = b });
             }
         }
 
@@ -533,7 +567,7 @@ namespace BubblesClient
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels, hand);
+            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels);
             handBody.BodyType = BodyType.Dynamic;
             FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
             handJoint.MaxForce = 1000f;
@@ -541,6 +575,7 @@ namespace BubblesClient
             handBodies.Add(hand, new BodyJointPair() { Body = handBody, Joint = handJoint });
 
             _world.AddJoint(handJoint);
+            objects.Add(handBody, new WorldObject { type = WorldObject.objType.Hand, hand = hand });
         }
 
         private void RemoveHandFixture(Hand hand)
@@ -549,6 +584,7 @@ namespace BubblesClient
             _world.RemoveJoint(bodyJoint.Joint);
             _world.RemoveBody(bodyJoint.Body);
             handBodies.Remove(hand);
+            objects.Remove(bodyJoint.Body);
         }
 
         private Vector2 WorldToPixel(Vector2 worldPosition)
