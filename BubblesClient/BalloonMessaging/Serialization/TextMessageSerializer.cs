@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
 
@@ -13,8 +15,8 @@ namespace Balloons.Serialization
     public class TextMessageSerializer : IMessageSerializer
     {
         private Encoding m_encoding;
-        private delegate Message MessageParser(string[] parts);
-        private delegate string MessageFormatter(Message m);
+        private delegate Message MessageParser(JArray args);
+        private delegate void MessageFormatter(JArray args, Message m);
         private Dictionary<string, MessageParser> m_parsers;
         private Dictionary<string, MessageFormatter> m_formatters;
 
@@ -47,41 +49,59 @@ namespace Balloons.Serialization
             {
                 throw new Exception("Unsupported type: " + msg.TypeTag);
             }
-            string line = formatter(msg);
+            JArray args = new JArray();
+            args.Add(JValue.CreateString(msg.TypeTag));
+            formatter(args, msg);
+            string line = args.ToString(Formatting.None);
             Debug.WriteLine(String.Format(">> {0}", line));
             return m_encoding.GetBytes(line + "\n");
         }
 
-        private string FormatNewBalloon(Message msg)
+        private void FormatNewBalloon(JArray args, Message m)
         {
-            NewBalloonMessage nbm = (NewBalloonMessage)msg;
-            return String.Format("{0} {1} {2} {3} {4} {5}",
-                nbm.TypeTag, nbm.BalloonID, Balloon.FormatDirection(nbm.Direction),
-                nbm.Y, nbm.Velocity.X, nbm.Velocity.Y);
+            NewBalloonMessage nbm = (NewBalloonMessage)m;
+            args.Add(JValue.FromObject(nbm.BalloonID));
+            args.Add(JValue.CreateString(Balloon.FormatDirection(nbm.Direction)));
+            args.Add(JValue.FromObject(nbm.Y));
+            args.Add(JValue.FromObject(nbm.Velocity.X));
+            args.Add(JValue.FromObject(nbm.Velocity.Y));
         }
 
-        private string FormatChangeScreen(Message msg)
+        private void FormatChangeScreen(JArray args, Message m)
         {
-            ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-            return String.Format("{0} {1} {2} {3} {4} {5}",
-                csm.TypeTag, csm.BalloonID, Balloon.FormatDirection(csm.Direction),
-                csm.Y, csm.Velocity.X, csm.Velocity.Y);
+            ChangeScreenMessage csm = (ChangeScreenMessage)m;
+            args.Add(JValue.FromObject(csm.BalloonID));
+            args.Add(JValue.CreateString(Balloon.FormatDirection(csm.Direction)));
+            args.Add(JValue.FromObject(csm.Y));
+            args.Add(JValue.FromObject(csm.Velocity.X));
+            args.Add(JValue.FromObject(csm.Velocity.Y));
         }
 
-        private string FormatBalloonDecorationUpdate(Message msg)
+        private void FormatBalloonDecorationUpdate(JArray args, Message m)
         {
-            throw new NotImplementedException();
+            BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)m;
+            args.Add(JValue.FromObject(bdm.BalloonID));
+            args.Add(JValue.FromObject(bdm.OverlayType));
+            args.Add(JValue.FromObject(bdm.BackgroundColor.Red));
+            args.Add(JValue.FromObject(bdm.BackgroundColor.Green));
+            args.Add(JValue.FromObject(bdm.BackgroundColor.Blue));
+            args.Add(JValue.FromObject(bdm.BackgroundColor.Alpha));
         }
 
-        private string FormatBalloonContentUpdate(Message msg)
+        private void FormatBalloonContentUpdate(JArray args, Message m)
         {
-            throw new NotImplementedException();
+            BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)m;
+            args.Add(JValue.FromObject(bcm.BalloonID));
+            args.Add(JValue.FromObject(bcm.BalloonType));
+            args.Add(JValue.CreateString(bcm.Label));
+            args.Add(JValue.CreateString(bcm.Content));
+            args.Add(JValue.CreateString(bcm.Url));
         }
 
-        private string FormatBalloon(Message msg)
+        private void FormatBalloon(JArray args, Message m)
         {
-            BalloonMessage bm = (BalloonMessage)msg;
-            return String.Format("{0} {1}", msg.TypeTag, bm.BalloonID);
+            BalloonMessage bm = (BalloonMessage)m;
+            args.Add(JValue.FromObject(bm.BalloonID));
         }
 
         public Message Deserialize(CircularBuffer buffer)
@@ -115,86 +135,61 @@ namespace Balloons.Serialization
 
         private Message ParseMessage(string line)
         {
-            string[] parts = line.Split(' ');
-            if(parts.Length < 1)
-            {
-                throw new Exception("Invalid message: " + line);
-            }
+            JArray args = JArray.Parse(line);
+            string tag = args[0].ToObject<string>();
             MessageParser parser;
-            if(!m_parsers.TryGetValue(parts[0], out parser))
+            if(!m_parsers.TryGetValue(tag, out parser))
             {
-                throw new Exception("Unknown message: " + parts[0]);
+                throw new Exception("Unknown message: " + tag);
             }
-            return parser(parts);
+            return parser(args);
         }
 
-        private Message ParseNewBalloon(string[] parts)
+        private Message ParseNewBalloon(JArray args)
         {
-            if(parts.Length != 6)
-            {
-                throw new Exception("Invalid message");
-            }
-            int balloonID = Int32.Parse(parts[1]);
-            Direction direction = Balloon.ParseDirection(parts[2]);
-            float y = Single.Parse(parts[3]);
-            Vector2D velocity = new Vector2D(Single.Parse(parts[4]), Single.Parse(parts[5]));
+            int balloonID = args[1].ToObject<int>();
+            Direction direction = Balloon.ParseDirection(args[2].ToObject<string>());
+            float y = args[3].ToObject<float>();
+            Vector2D velocity = new Vector2D(args[4].ToObject<float>(), args[5].ToObject<float>());
             return new NewBalloonMessage(balloonID, direction, y, velocity);
         }
 
-        private Message ParseChangeScreen(string[] parts)
+        private Message ParseChangeScreen(JArray args)
         {
-            if(parts.Length != 6)
-            {
-                throw new Exception("Invalid message");
-            }
-            int balloonID = Int32.Parse(parts[1]);
-            Direction direction = Balloon.ParseDirection(parts[2]);
-            float y = Single.Parse(parts[3]);
-            Vector2D velocity = new Vector2D(Single.Parse(parts[4]), Single.Parse(parts[5]));
+            int balloonID = args[1].ToObject<int>();
+            Direction direction = Balloon.ParseDirection(args[2].ToObject<string>());
+            float y = args[3].ToObject<float>();
+            Vector2D velocity = new Vector2D(args[4].ToObject<float>(), args[5].ToObject<float>());
             return new ChangeScreenMessage(balloonID, direction, y, velocity);
         }
-        
-        private Message ParseBalloonDecorationUpdate(string[] parts)
+
+        private Message ParseBalloonDecorationUpdate(JArray args)
         {
-            throw new NotImplementedException();
-            /*if(parts.Length != 7)
-            {
-                throw new Exception("Invalid message");
-            }
-            int balloonID = Int32.Parse(parts[1]);
-            int overlayType = Int32.Parse(parts[2]);
-            byte r = Byte.Parse(parts[3]);
-            byte g = Byte.Parse(parts[4]);
-            byte b = Byte.Parse(parts[5]);
-            byte a = Byte.Parse(parts[6]);
+            int balloonID = args[1].ToObject<int>();
+            int overlayType = args[2].ToObject<int>();
+            byte r = args[3].ToObject<byte>();
+            byte g = args[4].ToObject<byte>();
+            byte b = args[5].ToObject<byte>();
+            byte a = args[6].ToObject<byte>();
             Colour c = new Colour(r, g, b, a);
             return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
-             * */
-        }
-        
-        private Message ParseBalloonContentUpdate(string[] parts)
-        {
-            throw new NotImplementedException();
-            /*if(parts.Length != 6)
-            {
-                throw new Exception("Invalid message");
-            }
-            int balloonID = Int32.Parse(parts[1]);
-            int balloonType = Int32.Parse(parts[2]);
-            string label = parts[3];
-            string content = parts[4];
-            string url = parts[5];
-            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);*/
         }
 
-        private Message ParseBalloon(string[] parts)
+        private Message ParseBalloonContentUpdate(JArray args)
         {
-            if(parts.Length != 2)
-            {
-                throw new Exception("Invalid message");
-            }
-            int balloonID = Int32.Parse(parts[1]);
-            switch(parts[0])
+            int balloonID = args[1].ToObject<int>();
+            int balloonType = args[2].ToObject<int>();
+            string label = args[3].ToObject<string>();
+            string content = args[4].ToObject<string>();
+            string url = args[5].ToObject<string>();
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+        }
+
+        private Message ParseBalloon(JArray args)
+        {
+            string tag = args[0].ToObject<string>();
+            int balloonID = args[1].ToObject<int>();
+            switch(tag)
             {
             case PopBalloonMessage.Tag:
                 return new PopBalloonMessage(balloonID);
