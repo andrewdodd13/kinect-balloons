@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,5 +26,10 @@ namespace Balloons.Server
         public int Type;
         [JsonProperty]
         public string Excerpt;
+
+        public static List<FeedContent> ParseList(string jsonText)
+        {
+            return JsonConvert.DeserializeObject<List<FeedContent>>(jsonText);
+        }
     }
 }

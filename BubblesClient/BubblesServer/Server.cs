@@ -12,7 +12,8 @@ namespace Balloons.Server
 	public class Server
 	{
         #region Public interface
-        private const string FeedUrl = "http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/10";
+        private const string FeedUrl = "http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/{0}";
+        private const int FeedTimeout = 1000 * 60 * 1; // 1 min for now
 
         public Server(int port)
         {
@@ -23,8 +24,8 @@ namespace Balloons.Server
             m_nextScreenID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
-            m_reader = new FeedReader(this, FeedUrl, 1000);
-            //m_reader.Start();
+            m_feed = new FeedReader(this, FeedUrl, FeedTimeout); // 1 min for now
+            m_feed.Start();
             
             m_random = new Random();
         }
@@ -79,9 +80,22 @@ namespace Balloons.Server
             m_queue.Enqueue(message);
         }
 
+        public int ScreenCount
+        {
+            get
+            {
+                return m_screens.Count;
+            }
+        }
+
         internal ServerBalloon GetBubble(string BalloonID)
         {
-            return m_bubbles[BalloonID];
+            ServerBalloon b;
+            if(m_bubbles.TryGetValue(BalloonID, out b))
+            {
+                return b;
+            }
+            return null;
         }
         
         private Screen GetScreen(int screenID) {
@@ -106,7 +120,7 @@ namespace Balloons.Server
         private int m_nextScreenID;
         private List<Screen> m_screens;
         private Dictionary<string, ServerBalloon> m_bubbles;
-        private FeedReader m_reader;
+        private FeedReader m_feed;
         
         private Random m_random;
         
@@ -150,13 +164,7 @@ namespace Balloons.Server
             Screen screen = new Screen("Screen-" + screenID, screenID, msg.Connection, this);
             m_screens.Add(screen);
 
-            if(m_screens.Count == 1) {
-                // Add all the orphans balloons to the newly created screen
-                var orphans = OrphansBalloons();
-                foreach(ServerBalloon b in orphans) {
-                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, Direction.Any, 0, new Vector2D(0, 0)));
-                }
-            }
+            m_feed.Refresh();
 
             return true;
         }
@@ -173,13 +181,8 @@ namespace Balloons.Server
             Screen right = GetNextScreen(s);
             if(left == s || right == s) {
                 // if next or previous screen are equal to current screen
-                // it means that this is the only screen left
-                // set the balloons' screen to null,
-                // they will be reacffected when a new screen connects
-                foreach(ServerBalloon i in balloons.Values)
-                {
-                    i.Screen = null;
-                }
+                // it means that this was the last screen left
+                m_bubbles.Clear();
             } else {
                 foreach(ServerBalloon i in balloons.Values)
                 {
@@ -199,7 +202,13 @@ namespace Balloons.Server
         private bool HandleChangeScreen(ChangeScreenMessage csm) {
             Screen oldScreen = (Screen)csm.Sender;
             Screen newScreen = ChooseNewScreen(oldScreen, csm.Direction);
-            ChangeScreen(csm.BalloonID, newScreen);
+            ServerBalloon b = GetBubble(csm.BalloonID);
+            if(b == null)
+            {
+                // balloon was removed and client wasn't notified yet
+                return true;
+            }
+            b.Screen = newScreen;
             Direction newDirection = csm.Direction;
             if(csm.Direction == Direction.Left)
             {
@@ -217,6 +226,7 @@ namespace Balloons.Server
         {
             if(m_bubbles.ContainsKey(nbm.BalloonID)) {
                 // Balloon already present !
+                Debug.WriteLine(String.Format("Balloon {0} already present!", nbm.BalloonID));
                 return true;
             }
             if(m_screens.Count == 0) {
@@ -326,12 +336,6 @@ namespace Balloons.Server
             } else {
                 return null;
             }
-        }
-        
-        private void ChangeScreen(string BalloonID, Screen newScreen)
-        {
-            ServerBalloon b = GetBubble(BalloonID);
-            b.Screen = newScreen;
         }
         #endregion
 	}
