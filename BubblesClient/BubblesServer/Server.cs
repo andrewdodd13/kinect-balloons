@@ -88,7 +88,7 @@ namespace Balloons.Server
             }
         }
 
-        internal ServerBalloon GetBubble(string BalloonID)
+        internal ServerBalloon GetBalloon(string BalloonID)
         {
             ServerBalloon b;
             if(m_bubbles.TryGetValue(BalloonID, out b))
@@ -202,7 +202,7 @@ namespace Balloons.Server
         private bool HandleChangeScreen(ChangeScreenMessage csm) {
             Screen oldScreen = (Screen)csm.Sender;
             Screen newScreen = ChooseNewScreen(oldScreen, csm.Direction);
-            ServerBalloon b = GetBubble(csm.BalloonID);
+            ServerBalloon b = GetBalloon(csm.BalloonID);
             if(b == null)
             {
                 // balloon was removed and client wasn't notified yet
@@ -265,7 +265,7 @@ namespace Balloons.Server
 
         private bool HandlePopBalloon(PopBalloonMessage pbm) {
             if(m_bubbles.ContainsKey(pbm.BalloonID)) {
-                ServerBalloon b = GetBubble(pbm.BalloonID);
+                ServerBalloon b = GetBalloon(pbm.BalloonID);
                 m_bubbles.Remove(pbm.BalloonID);
                 if(b.Screen != null) {
                     b.Screen.EnqueueMessage(pbm, this); // Notify Screen

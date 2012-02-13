@@ -241,24 +241,17 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "balloon-decoration-update";
 
-        public int OverlayType
-        {
-            get { return this.m_overlayType; }
-        }
-
         public Colour BackgroundColor
         {
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(string balloonID, int overlayType, Colour bgColor)
+        public BalloonDecorationUpdateMessage(string balloonID, Colour bgColor)
             : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
         {
-            m_overlayType = overlayType;
             m_bgColor = bgColor;
         }
 
-        private int m_overlayType;
         private Colour m_bgColor;
     }
     #endregion

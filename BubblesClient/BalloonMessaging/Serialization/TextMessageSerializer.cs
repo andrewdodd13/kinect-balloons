@@ -81,7 +81,6 @@ namespace Balloons.Serialization
         {
             BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)m;
             args.Add(JValue.FromObject(bdm.BalloonID));
-            args.Add(JValue.FromObject(bdm.OverlayType));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Red));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Green));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Blue));
@@ -166,13 +165,12 @@ namespace Balloons.Serialization
         private Message ParseBalloonDecorationUpdate(JArray args)
         {
             string balloonID = args[1].ToObject<string>();
-            int overlayType = args[2].ToObject<int>();
-            byte r = args[3].ToObject<byte>();
-            byte g = args[4].ToObject<byte>();
-            byte b = args[5].ToObject<byte>();
-            byte a = args[6].ToObject<byte>();
+            byte r = args[2].ToObject<byte>();
+            byte g = args[3].ToObject<byte>();
+            byte b = args[4].ToObject<byte>();
+            byte a = args[5].ToObject<byte>();
             Colour c = new Colour(r, g, b, a);
-            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+            return new BalloonDecorationUpdateMessage(balloonID, c);
         }
 
         private Message ParseBalloonContentUpdate(JArray args)

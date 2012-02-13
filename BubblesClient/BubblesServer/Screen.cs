@@ -101,6 +101,7 @@ namespace Balloons.Server
         /// </returns>
         private bool HandleMessage(Message msg)
         {
+            ServerBalloon b = null;
             if(msg == null)
             {
                 return false;
@@ -109,7 +110,7 @@ namespace Balloons.Server
             {
             case MessageType.NewBalloon:
                 NewBalloonMessage am = (NewBalloonMessage)msg;
-                m_bubbles[am.BalloonID] = m_server.GetBubble(am.BalloonID);
+                m_bubbles[am.BalloonID] = m_server.GetBalloon(am.BalloonID);
                 m_bubbles[am.BalloonID].Screen = this;
                 m_connection.SendMessage(am);
                 return true;
@@ -127,6 +128,24 @@ namespace Balloons.Server
                 else
                 {
                     m_connection.SendMessage(pbm);  // Notify physical screen
+                }
+                return true;
+            case MessageType.GetBalloonContent:
+                GetBalloonContentMessage gbcm = (GetBalloonContentMessage)msg;
+                b = m_server.GetBalloon(gbcm.BalloonID);
+                if(b != null)
+                {
+                    m_connection.SendMessage(new BalloonContentUpdateMessage(
+                        b.ID, b.Type, b.Label, b.Content, b.Url));
+                }
+                return true;
+            case MessageType.GetBalloonDecoration:
+                GetBalloonDecorationMessage gbdm = (GetBalloonDecorationMessage)msg;
+                b = m_server.GetBalloon(gbdm.BalloonID);
+                if(b != null)
+                {
+                    m_connection.SendMessage(new BalloonDecorationUpdateMessage(
+                        b.ID, b.BackgroundColor));
                 }
                 return true;
             default:

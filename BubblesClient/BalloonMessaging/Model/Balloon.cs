@@ -20,7 +20,6 @@ namespace Balloons.Messaging.Model
         public string Url;
 
         public int Type;
-        public int OverlayType;
         public Colour BackgroundColor;
 
         public string ID
