@@ -49,7 +49,7 @@ namespace BubblesClient
         private Texture2D balloonTwitterWhite, balloonTwitterStripes, balloonTwitterSpots;
         private Texture2D balloonNewsWhite, balloonNewsStripes, balloonNewsSpots;
         private Texture2D balloonCustomWhite, balloonCustomStripes, balloonCustomSpots; //TODO: add twitter and news balloon images
-        private Texture2D Box;
+        private Texture2D boxTexture;
         private Texture2D bucketRed, bucketGreen, bucketBlue, bucketStripes, bucketSpots;
         private SpriteFont textContent, textSummary;
 
@@ -77,6 +77,8 @@ namespace BubblesClient
 
         // The time to display a message for, in milliseconds
         private const int MessageDisplayTime = 30000;
+        private const float BalloonWidth = 162f;
+        private const float BalloonHeight = 192f;
 
         // If this is > -1 then we will be showing a balloon. We really need
         // a state machine.
@@ -115,22 +117,22 @@ namespace BubblesClient
         public void ProcessNetworkMessages()
         {
             List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
-            foreach(Message msg in messages)
+            foreach (Message msg in messages)
             {
-                if(msg == null)
+                if (msg == null)
                 {
                     // the connection to the server was closed
                     break;
                 }
 
-                switch(msg.Type)
+                switch (msg.Type)
                 {
-                case MessageType.NewBalloon:
-                    OnNewBalloon((NewBalloonMessage)msg);
-                    break;
-                case MessageType.PopBalloon:
-                    OnPopBalloon((PopBalloonMessage)msg);
-                    break;
+                    case MessageType.NewBalloon:
+                        OnNewBalloon((NewBalloonMessage)msg);
+                        break;
+                    case MessageType.PopBalloon:
+                        OnPopBalloon((PopBalloonMessage)msg);
+                        break;
                 }
             }
         }
@@ -157,11 +159,9 @@ namespace BubblesClient
             position.Y = m.Y * screenDimensions.Y;
 
             // Setup the balloon's body.
-            // TODO: fix this so that physics circle roughly lines up with balloon part at top of texture
-            float circleRadius = 128f / (2f * MeterInPixels); //balloonWhite.Width / 2?
-            Vector2 circlePosition = position; //circlePosition.Y += balloonWhite.Height / 2?
+            float circleRadius = BalloonWidth / (2f * MeterInPixels);
 
-            Body balloonBody = BodyFactory.CreateCircle(_world, circleRadius, 1f, PixelToWorld(circlePosition));
+            Body balloonBody = BodyFactory.CreateCircle(_world, circleRadius, 1f, PixelToWorld(position));
             balloonBody.BodyType = BodyType.Dynamic;
             balloonBody.Restitution = 0.3f;
             balloonBody.Friction = 0.5f;
@@ -205,7 +205,8 @@ namespace BubblesClient
 
             if (B.type == WorldObject.objType.Hand)
             {
-                foreach(Hand altHand in handBodies.Keys) {
+                foreach (Hand altHand in handBodies.Keys)
+                {
                     if (altHand != B.hand)
                     {
                         //Magic number! Might need to adjust for sensitivity
@@ -242,44 +243,6 @@ namespace BubblesClient
             // Initialise base
             base.Initialize();
 
-            // Always do this last
-            this.ScreenManager.Connect();
-        }
-
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
-        protected override void LoadContent()
-        {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            textContent = Content.Load<SpriteFont>("SpriteFontSmall");
-            textSummary = Content.Load<SpriteFont>("SpriteFontLarge");
-
-            skyTexture = Content.Load<Texture2D>("Sky");
-            handTexture = Content.Load<Texture2D>("Hand");
-            contentBox = Content.Load<Texture2D>("ContentBox");
-            balloonCustomWhite = Content.Load<Texture2D>("BalloonWhiteCustom");
-            balloonCustomSpots = Content.Load<Texture2D>("BalloonSpotsCustom");
-            balloonCustomStripes = Content.Load<Texture2D>("BalloonStripesCustom");
-            balloonTwitterWhite = Content.Load<Texture2D>("BalloonWhiteTwitter");
-            balloonTwitterSpots = Content.Load<Texture2D>("BalloonSpotsTwitter");
-            balloonTwitterStripes = Content.Load<Texture2D>("BalloonStripesTwitter");
-            balloonNewsWhite = Content.Load<Texture2D>("BalloonWhiteNews");
-            balloonNewsSpots = Content.Load<Texture2D>("BalloonSpotsNews");
-            balloonNewsStripes = Content.Load<Texture2D>("BalloonStripesNews");
-            Box = Content.Load<Texture2D>("Box");
-            balloonWhite = Content.Load<Texture2D>("BalloonWhite");
-            balloonStripes = Content.Load<Texture2D>("BalloonStripes");
-            balloonSpots = Content.Load<Texture2D>("BalloonSpots");
-            bucketRed = Content.Load<Texture2D>("BucketRed");
-            bucketGreen = Content.Load<Texture2D>("bucketGreen");
-            bucketBlue = Content.Load<Texture2D>("bucketBlue");
-            bucketStripes = Content.Load<Texture2D>("bucketStripes");
-            bucketSpots = Content.Load<Texture2D>("bucketSpots");
-
             // Lol roof!
             Body _roofBody;
             _roofBody = BodyFactory.CreateRectangle(_world, screenDimensions.X * 4 / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(screenDimensions.X / 2 / MeterInPixels, 0));
@@ -308,6 +271,44 @@ namespace BubblesClient
                 buckets.Add(b);
                 objects.Add(b.physicalBody, new WorldObject { type = WorldObject.objType.Bucket, bucket = b });
             }
+
+            // Always do this last
+            this.ScreenManager.Connect();
+        }
+
+        /// <summary>
+        /// LoadContent will be called once per game and is the place to load
+        /// all of your content.
+        /// </summary>
+        protected override void LoadContent()
+        {
+            // Create a new SpriteBatch, which can be used to draw textures.
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            textContent = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
+            textSummary = Content.Load<SpriteFont>("Fonts/SpriteFontLarge");
+
+            skyTexture = Content.Load<Texture2D>("Images/Sky");
+            handTexture = Content.Load<Texture2D>("Images/Hand");
+            contentBox = Content.Load<Texture2D>("Images/ContentBox");
+            balloonCustomWhite = Content.Load<Texture2D>("Images/BalloonWhiteCustom");
+            balloonCustomSpots = Content.Load<Texture2D>("Images/BalloonSpotsCustom");
+            balloonCustomStripes = Content.Load<Texture2D>("Images/BalloonStripesCustom");
+            balloonTwitterWhite = Content.Load<Texture2D>("Images/BalloonWhiteTwitter");
+            balloonTwitterSpots = Content.Load<Texture2D>("Images/BalloonSpotsTwitter");
+            balloonTwitterStripes = Content.Load<Texture2D>("Images/BalloonStripesTwitter");
+            balloonNewsWhite = Content.Load<Texture2D>("Images/BalloonWhiteNews");
+            balloonNewsSpots = Content.Load<Texture2D>("Images/BalloonSpotsNews");
+            balloonNewsStripes = Content.Load<Texture2D>("Images/BalloonStripesNews");
+            boxTexture = Content.Load<Texture2D>("Images/Box");
+            balloonWhite = Content.Load<Texture2D>("Images/BalloonWhite");
+            balloonStripes = Content.Load<Texture2D>("Images/BalloonStripes");
+            balloonSpots = Content.Load<Texture2D>("Images/BalloonSpots");
+            bucketRed = Content.Load<Texture2D>("Images/BucketRed");
+            bucketGreen = Content.Load<Texture2D>("Images/bucketGreen");
+            bucketBlue = Content.Load<Texture2D>("Images/bucketBlue");
+            bucketStripes = Content.Load<Texture2D>("Images/bucketStripes");
+            bucketSpots = Content.Load<Texture2D>("Images/bucketSpots");
         }
 
         /// <summary>
@@ -366,8 +367,11 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x => balloons.Remove(x.ID));
-            removals.ForEach(x => _world.RemoveBody(x.Body));
+            removals.ForEach(x =>
+            {
+                balloons.Remove(x.ID);
+                _world.RemoveBody(x.Body);
+            });
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -467,19 +471,22 @@ namespace BubblesClient
                         break;
                 }
 
-                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)),
+                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, BalloonHeight)),
                                 new Color(balloon.Value.BackgroundColor.Red, balloon.Value.BackgroundColor.Green, balloon.Value.BackgroundColor.Blue, balloon.Value.BackgroundColor.Alpha));
                 //balloon image is see-through for some reason, will be fixed for final version. ignore this for now. -lauren
                 //TODO: fix balloon image so not so see-through
-                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)),
+                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, BalloonHeight)),
                                 new Color(balloon.Value.BackgroundColor.Red, balloon.Value.BackgroundColor.Green, balloon.Value.BackgroundColor.Blue, balloon.Value.BackgroundColor.Alpha));
 
                 //balloons that are not customizable need boxes for their text
                 if (balloonType != BalloonType.Customizable)
                 {
-                    Vector2 position = WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(Box.Width, Box.Height));
-                    spriteBatch.Draw(Box, position, Color.White);
-                    drawSummaryText(balloon.Value.Label, new Vector2(position.X + Box.Width / 20, position.Y + Box.Height * 2 / 3));
+                    Vector2 position = WorldToPixel(balloon.Value.Body.Position);
+                    position -= new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
+                    position.Y += balloonTexture.Height - (BalloonWidth / 2);
+                    Console.WriteLine("Position: " + position);
+                    spriteBatch.Draw(boxTexture, position, Color.White);
+                    drawSummaryText(balloon.Value.Label, new Vector2(position.X + boxTexture.Width / 20, position.Y + boxTexture.Height * 2 / 3));
                 }
             }
 
@@ -516,14 +523,15 @@ namespace BubblesClient
                 spriteBatch.Draw(contentBox, new Vector2(0, 0), Color.White);
                 drawContentText(balloons[poppedBalloonID].Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
             }
-
-            // Draw all of the registered hands
-            foreach (KeyValuePair<Hand, BodyJointPair> handBody in handBodies)
+            else
             {
-                Vector2 cursorPos = WorldBodyToPixel(handBody.Value.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
-                spriteBatch.Draw(handTexture, cursorPos, Color.White);
+                // Draw all of the registered hands
+                foreach (KeyValuePair<Hand, BodyJointPair> handBody in handBodies)
+                {
+                    Vector2 cursorPos = WorldBodyToPixel(handBody.Value.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
+                    spriteBatch.Draw(handTexture, cursorPos, Color.White);
+                }
             }
-
 
             spriteBatch.End();
 
@@ -733,7 +741,8 @@ namespace BubblesClient
                 poppedBalloonID = balloonID;
 
                 Timer timer = new Timer();
-                timer.Elapsed += delegate(Object o, ElapsedEventArgs e) {
+                timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
+                {
                     poppedBalloonID = -1;
                     timer.Stop();
                 };
