@@ -22,7 +22,7 @@ namespace Balloons.Server
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
             m_screens = new List<Screen>();
-            m_bubbles = new Dictionary<int, ServerBalloon>();
+            m_bubbles = new Dictionary<string, ServerBalloon>();
             m_reader = new FeedReader(this, FeedUrl, 1000);
             //m_reader.Start();
             
@@ -79,7 +79,7 @@ namespace Balloons.Server
             m_queue.Enqueue(message);
         }
 
-        private ServerBalloon GetBubble(int BalloonID)
+        internal ServerBalloon GetBubble(string BalloonID)
         {
             return m_bubbles[BalloonID];
         }
@@ -93,7 +93,7 @@ namespace Balloons.Server
             return null;
         }
 
-        public Dictionary<int, ServerBalloon> Balloons()
+        public Dictionary<string, ServerBalloon> Balloons()
         {
             return m_bubbles;
         }
@@ -105,7 +105,7 @@ namespace Balloons.Server
         private CircularQueue<Message> m_queue;
         private int m_nextScreenID;
         private List<Screen> m_screens;
-        private Dictionary<int, ServerBalloon> m_bubbles;
+        private Dictionary<string, ServerBalloon> m_bubbles;
         private FeedReader m_reader;
         
         private Random m_random;
@@ -176,19 +176,19 @@ namespace Balloons.Server
                 // it means that this is the only screen left
                 // set the balloons' screen to null,
                 // they will be reacffected when a new screen connects
-                foreach(KeyValuePair<int, ServerBalloon> i in balloons)
+                foreach(ServerBalloon i in balloons.Values)
                 {
-                    i.Value.Screen = null;
+                    i.Screen = null;
                 }
             } else {
-                foreach(KeyValuePair<int, ServerBalloon> i in balloons)
+                foreach(ServerBalloon i in balloons.Values)
                 {
                     // Choose randomly between left or right screen
                     int random = m_random.Next(1);
                     if(random == 0) {
-                        left.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Right, 0.1f, ServerBalloon.VelocityLeft), this);
+                        left.EnqueueMessage(new NewBalloonMessage(i.ID, Direction.Right, 0.1f, ServerBalloon.VelocityLeft), this);
                     } else {
-                        right.EnqueueMessage(new NewBalloonMessage(i.Value.ID, Direction.Left, 0.1f, ServerBalloon.VelocityRight), this);
+                        right.EnqueueMessage(new NewBalloonMessage(i.ID, Direction.Left, 0.1f, ServerBalloon.VelocityRight), this);
                     }
                 }
             }
@@ -240,7 +240,7 @@ namespace Balloons.Server
                 ServerBalloon b  = m_bubbles[cum.BalloonID];
                 b.Label = cum.Label;
                 b.Content = cum.Content;
-                b.Type = cum.Type;
+                b.Type = cum.BalloonType;
                 b.Url = cum.Url;
             }
             return true;
@@ -248,7 +248,7 @@ namespace Balloons.Server
 
         private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage dum) {
             if(m_bubbles.ContainsKey(dum.BalloonID)) {
-                m_bubbles[cum.BalloonID].BackgroundColor = dum.BackgroundColor;
+                m_bubbles[dum.BalloonID].BackgroundColor = dum.BackgroundColor;
             }
             return true;
         }
@@ -281,12 +281,13 @@ namespace Balloons.Server
         private List<ServerBalloon> OrphansBalloons()
         {
             var list = new List<ServerBalloon>();
-            foreach(KeyValuePair<int, ServerBalloon> i in m_bubbles)
+            foreach(ServerBalloon i in m_bubbles.Values)
             {
-                if(i.Value.Screen == null) {
-                    list.Add(i.Value);
+                if(i.Screen == null) {
+                    list.Add(i);
                 }
             }
+            return list;
         }
          
         private Screen GetNextScreen(Screen s) {
@@ -327,7 +328,7 @@ namespace Balloons.Server
             }
         }
         
-        private void ChangeScreen(int BalloonID, Screen newScreen)
+        private void ChangeScreen(string BalloonID, Screen newScreen)
         {
             ServerBalloon b = GetBubble(BalloonID);
             b.Screen = newScreen;

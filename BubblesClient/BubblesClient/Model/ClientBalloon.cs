@@ -18,7 +18,7 @@ namespace Balloons.DummyClient
 
         public Body Body { get; private set; }
 
-        public ClientBalloon(int balloonID, Body body)
+        public ClientBalloon(string balloonID, Body body)
             : base(balloonID)
         {
             this.Body = body;

@@ -147,7 +147,7 @@ namespace Balloons.Serialization
 
         private Message ParseNewBalloon(JArray args)
         {
-            int balloonID = args[1].ToObject<int>();
+            string balloonID = args[1].ToObject<string>();
             Direction direction = Balloon.ParseDirection(args[2].ToObject<string>());
             float y = args[3].ToObject<float>();
             Vector2D velocity = new Vector2D(args[4].ToObject<float>(), args[5].ToObject<float>());
@@ -156,7 +156,7 @@ namespace Balloons.Serialization
 
         private Message ParseChangeScreen(JArray args)
         {
-            int balloonID = args[1].ToObject<int>();
+            string balloonID = args[1].ToObject<string>();
             Direction direction = Balloon.ParseDirection(args[2].ToObject<string>());
             float y = args[3].ToObject<float>();
             Vector2D velocity = new Vector2D(args[4].ToObject<float>(), args[5].ToObject<float>());
@@ -165,7 +165,7 @@ namespace Balloons.Serialization
 
         private Message ParseBalloonDecorationUpdate(JArray args)
         {
-            int balloonID = args[1].ToObject<int>();
+            string balloonID = args[1].ToObject<string>();
             int overlayType = args[2].ToObject<int>();
             byte r = args[3].ToObject<byte>();
             byte g = args[4].ToObject<byte>();
@@ -177,7 +177,7 @@ namespace Balloons.Serialization
 
         private Message ParseBalloonContentUpdate(JArray args)
         {
-            int balloonID = args[1].ToObject<int>();
+            string balloonID = args[1].ToObject<string>();
             int balloonType = args[2].ToObject<int>();
             string label = args[3].ToObject<string>();
             string content = args[4].ToObject<string>();
@@ -188,7 +188,7 @@ namespace Balloons.Serialization
         private Message ParseBalloon(JArray args)
         {
             string tag = args[0].ToObject<string>();
-            int balloonID = args[1].ToObject<int>();
+            string balloonID = args[1].ToObject<string>();
             switch(tag)
             {
             case PopBalloonMessage.Tag:

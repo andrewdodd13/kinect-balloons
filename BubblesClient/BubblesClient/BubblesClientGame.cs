@@ -56,7 +56,7 @@ namespace BubblesClient
         // Physics World
         private World _world;
         private const float MeterInPixels = 64f;
-        private Dictionary<int, ClientBalloon> balloons = new Dictionary<int, ClientBalloon>();
+        private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
         private List<Bucket> buckets = new List<Bucket>();
 
         public int temp = 0;
@@ -300,10 +300,10 @@ namespace BubblesClient
             }
 
             // Draw all of the balloons
-            foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
+            foreach (ClientBalloon balloon in balloons.Values)
             {
-                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)), Color.White);
-                //Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
+                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)), Color.White);
+                //Console.WriteLine("Balloon Position: " + balloon.Body.Position);
             }
 
             //Draw all buckets

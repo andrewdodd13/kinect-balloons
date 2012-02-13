@@ -34,31 +34,32 @@ namespace Balloons.Server
 
         private void HandleTimerEvent(object source, ElapsedEventArgs e) {
             // Connect to WebServer, gets balloons
-            Dictionary<int, FeedContent> fromFeed = GetFeedContents();
+            List<FeedContent> fromFeed = GetFeedContents();
             
             // Gets news balloons to be displayed
-            Dictionary<int, ServerBalloon> fromServer = m_server.Balloons();
+            Dictionary<string, ServerBalloon> fromServer = m_server.Balloons();
 
-            foreach(KeyValuePair<int, ServerBalloon> i in fromServer)
+            foreach(KeyValuePair<string, ServerBalloon> i in fromServer)
             {
                 ServerBalloon b = i.Value;
                 // Check if the bubble need to be keept, or deleted
-                if(!fromFeed.ContainsKey(b.ID)) {
+                if(fromFeed.Find(c => c.ContentID == b.ID) == null) {
                     // Pop the balloon in the server not present in the feed
                     m_server.EnqueueMessage(new PopBalloonMessage(b.ID), this);
                 }
             }
 
-            foreach(KeyValuePair<int, FeedContent> i in fromFeed)
+            foreach(FeedContent i in fromFeed)
             {
-                if(!fromServer.ContainsKey(b.ID)) {
-                    Colour c = new Colour(byte.Parse(i.Value.BalloonColour.Substring(0, 2), System.Globalization.NumberStyles.HexNumber),
-                                          byte.Parse(i.Value.BalloonColour.Substring(2, 2), System.Globalization.NumberStyles.HexNumber),
-                                          byte.Parse(i.Value.BalloonColour.Substring(4, 2), System.Globalization.NumberStyles.HexNumber));
+                if(!fromServer.ContainsKey(i.ContentID)) {
+                    Colour c = new Colour(byte.Parse(i.BalloonColour.Substring(0, 2), System.Globalization.NumberStyles.HexNumber),
+                                          byte.Parse(i.BalloonColour.Substring(2, 2), System.Globalization.NumberStyles.HexNumber),
+                                          byte.Parse(i.BalloonColour.Substring(4, 2), System.Globalization.NumberStyles.HexNumber),
+                                          byte.Parse(i.BalloonColour.Substring(6, 2), System.Globalization.NumberStyles.HexNumber));
                     // Add the new balloon to the server and send content and decoration
-                    m_server.EnqueueMessage(new NewBalloonMessage(i.Value.ContentID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
-                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.Value.ContentID, i.Value.Type, i.Value.Label, i.Value.Excerpt, i.Value.URL));
-                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.Value.ContentID, c));
+                    m_server.EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
+                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID, i.Type, i.Title, i.Excerpt, i.URL));
+                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0, c));
                 }
             }
         }

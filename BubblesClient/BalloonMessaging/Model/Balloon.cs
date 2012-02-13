@@ -14,7 +14,7 @@ namespace Balloons.Messaging.Model
 
     public class Balloon
     {
-        private int m_id;
+        private string m_id;
         public string Label;
         public string Content;
         public string Url;
@@ -23,12 +23,12 @@ namespace Balloons.Messaging.Model
         public int OverlayType;
         public Colour BackgroundColor;
 
-        public int ID
+        public string ID
         {
             get { return this.m_id; }
         }
 
-        public Balloon(int id)
+        public Balloon(string id)
         {
             m_id = id;
         }

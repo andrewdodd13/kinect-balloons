@@ -16,7 +16,7 @@ namespace Balloons.Server
             m_name = name;
             m_id = id;
             m_server = server;
-            m_bubbles = new Dictionary<int, ServerBalloon>();
+            m_bubbles = new Dictionary<string, ServerBalloon>();
             m_queue = new CircularQueue<Message>(64);
             m_connection = new ScreenConnection(m_queue, socket);
             m_thread = new Thread(Run);
@@ -62,7 +62,7 @@ namespace Balloons.Server
 		private ScreenConnection m_connection;
 		private Thread m_thread;
 
-        private Dictionary<int, ServerBalloon> m_bubbles;
+        private Dictionary<string, ServerBalloon> m_bubbles;
         private CircularQueue<Message> m_queue;
         
         /// <summary>
@@ -139,7 +139,7 @@ namespace Balloons.Server
             return m_bubbles.Count;
         }
 
-        public Dictionary<int, ServerBalloon> GetBalloons()
+        public Dictionary<string, ServerBalloon> GetBalloons()
         {
             return m_bubbles;
         }

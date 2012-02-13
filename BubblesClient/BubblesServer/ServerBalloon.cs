@@ -17,7 +17,7 @@ namespace Balloons.Server
             set { m_screen = value; }
         }
 
-        public ServerBalloon(int balloonID)
+        public ServerBalloon(string balloonID)
             : base(balloonID)
         {
         }

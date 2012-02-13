@@ -69,17 +69,18 @@ namespace Balloons.Messaging.Model
 
     public class BalloonMessage : Message
     {
-        public int BalloonID
+        public string BalloonID
         {
             get { return this.m_balloonID; }
         }
 
-        public BalloonMessage(MessageType type, string tag, int balloonID) : base(type, tag)
+        public BalloonMessage(MessageType type, string tag, string balloonID)
+            : base(type, tag)
         {
             m_balloonID = balloonID;
         }
 
-        private int m_balloonID;
+        private string m_balloonID;
     }
 
     public class MessageEventArgs : EventArgs
@@ -118,7 +119,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_velocity; }
         }
 
-        public NewBalloonMessage(int balloonID, Direction direction, float y, Vector2D velocity)
+        public NewBalloonMessage(string balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.NewBalloon, Tag, balloonID)
         {
             m_direction = direction;
@@ -155,7 +156,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_url; }
         }
 
-        public BalloonContentUpdateMessage(int balloonID, int type, string label, string content, string url)
+        public BalloonContentUpdateMessage(string balloonID, int type, string label, string content, string url)
             : base(MessageType.BalloonContentUpdate, Tag, balloonID)
         {
             m_type = type;
@@ -191,7 +192,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_velocity; }
         }
 
-        public ChangeScreenMessage(int balloonID, Direction direction, float y, Vector2D velocity)
+        public ChangeScreenMessage(string balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
@@ -208,7 +209,7 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "get-balloon-content";
 
-        public GetBalloonContentMessage(int balloonID)
+        public GetBalloonContentMessage(string balloonID)
             : base(MessageType.GetBalloonContent, Tag, balloonID)
         {
         }
@@ -218,7 +219,7 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "get-balloon-decoration";
 
-        public GetBalloonDecorationMessage(int balloonID)
+        public GetBalloonDecorationMessage(string balloonID)
             : base(MessageType.GetBalloonDecoration, Tag, balloonID)
         {
         }
@@ -230,7 +231,7 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "pop-balloon";
 
-        public PopBalloonMessage(int balloonID)
+        public PopBalloonMessage(string balloonID)
             : base(MessageType.PopBalloon, Tag, balloonID)
         {
         }
@@ -250,7 +251,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(int balloonID, int overlayType, Colour bgColor)
+        public BalloonDecorationUpdateMessage(string balloonID, int overlayType, Colour bgColor)
             : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;

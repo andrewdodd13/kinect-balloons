@@ -148,7 +148,7 @@ namespace Balloons.Serialization
         
         private Message DecodeNewBalloon(BinaryReader reader, MessageType type)
         {
-            int balloonID = reader.ReadInt32();
+            string balloonID = reader.ReadString();
             Direction direction = (Direction)reader.ReadInt32();
             float y = reader.ReadSingle();
             float velocityX = reader.ReadSingle();
@@ -158,7 +158,7 @@ namespace Balloons.Serialization
         
         private Message DecodeChangeScreen(BinaryReader reader, MessageType type)
         {
-            int balloonID = reader.ReadInt32();
+            string balloonID = reader.ReadString();
             Direction direction = (Direction)reader.ReadInt32();
             float y = reader.ReadSingle();
             float velocityX = reader.ReadSingle();
@@ -168,7 +168,7 @@ namespace Balloons.Serialization
         
         private Message DecodeBalloonDecorationUpdate(BinaryReader reader, MessageType type)
         {
-            int balloonID = reader.ReadInt32();
+            string balloonID = reader.ReadString();
             int overlayType = reader.ReadInt32();
             byte r = reader.ReadByte();
             byte g = reader.ReadByte();
@@ -180,7 +180,7 @@ namespace Balloons.Serialization
         
         private Message DecodeBalloonContentUpdate(BinaryReader reader, MessageType type)
         {
-            int balloonID = reader.ReadInt32();
+            string balloonID = reader.ReadString();
             int balloonType = reader.ReadInt32();
             string label = reader.ReadString();
             string content = reader.ReadString();
@@ -190,7 +190,7 @@ namespace Balloons.Serialization
         
         private Message DecodeBalloon(BinaryReader reader, MessageType type)
         {
-            int balloonID = reader.ReadInt32();
+            string balloonID = reader.ReadString();
             switch(type)
             {
             case MessageType.PopBalloon:
