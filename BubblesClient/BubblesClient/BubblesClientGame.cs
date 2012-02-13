@@ -429,7 +429,6 @@ namespace BubblesClient
 
             // Draw all of the balloons
             Texture2D balloonTexture;
-            string balloonContent = "";
             foreach (KeyValuePair<int, ClientBalloon> balloon in balloons)
             {
                 BalloonType balloonType = balloon.Value.Type;
@@ -475,20 +474,13 @@ namespace BubblesClient
                 spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(balloonTexture.Width, balloonTexture.Height)),
                                 new Color(balloon.Value.BackgroundColor.Red, balloon.Value.BackgroundColor.Green, balloon.Value.BackgroundColor.Blue, balloon.Value.BackgroundColor.Alpha));
 
-                //Console.WriteLine("Balloon Position: " + balloon.Value.Body.Position);
                 //balloons that are not customizable need boxes for their text
                 if (balloonType != BalloonType.Customizable)
                 {
                     Vector2 position = WorldBodyToPixel(balloon.Value.Body.Position, new Vector2(Box.Width, Box.Height));
                     spriteBatch.Draw(Box, position, Color.White);
-                    //drawSummaryText("blahablahblahablah", new Vector2(position.X + Box.Width / 20, position.Y + Box.Height * 2 / 3));
-                    //note: assuming .Label is the summary text? -lauren
                     drawSummaryText(balloon.Value.Label, new Vector2(position.X + Box.Width / 20, position.Y + Box.Height * 2 / 3));
                 }
-
-                //balloonPopped = -1 if no content screen to display
-                if (balloon.Key == poppedBalloonID)
-                    balloonContent = balloon.Value.Content;
             }
 
             //Draw all buckets
@@ -522,7 +514,7 @@ namespace BubblesClient
             if (poppedBalloonID > -1)
             {
                 spriteBatch.Draw(contentBox, new Vector2(0, 0), Color.White);
-                drawContentText(balloonContent, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
+                drawContentText(balloons[poppedBalloonID].Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
             }
 
             // Draw all of the registered hands
