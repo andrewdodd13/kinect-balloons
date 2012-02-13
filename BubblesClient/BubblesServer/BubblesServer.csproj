@@ -36,16 +36,12 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Compile Include="FeedContent.cs" />
     <Compile Include="ServerBalloon.cs" />
     <Compile Include="Screen.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="FeedReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\Libraries\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>

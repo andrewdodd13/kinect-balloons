@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Balloons.Server
+namespace Balloons.Messaging.Model
 {
     [JsonObject(MemberSerialization.OptIn)]
     public class FeedContent
