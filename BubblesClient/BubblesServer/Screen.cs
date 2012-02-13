@@ -141,9 +141,7 @@ namespace Balloons.Server
 
         public Dictionary<int, ServerBalloon> GetBalloons()
         {
-            lock(m_bubbles) {
-                return m_bubbles;
-            }
+            return m_bubbles;
         }
         #endregion
 	}
