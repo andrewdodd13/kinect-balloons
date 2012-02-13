@@ -139,6 +139,10 @@ namespace Balloons.Server
                 return HandleNewBalloon((NewBalloonMessage)msg);
             case MessageType.PopBalloon:
                 return HandlePopBalloon((PopBalloonMessage)msg);
+            case MessageType.BalloonContentUpdate:
+                return HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+            case MessageType.BalloonDecorationUpdate:
+                return HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
             default:
                 // Disconnect when receiving unknown messages
                 return false;
@@ -248,6 +252,24 @@ namespace Balloons.Server
             return true;
         }
         
+        private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage cum) {
+            if(m_bubbles.ContainsKey(cum.BalloonID)) {
+                ServerBalloon b  = m_bubbles[cum.BalloonID];
+                b.Label = cum.Label;
+                b.Content = cum.Content;
+                b.Type = cum.Type;
+                b.Url = cum.Url;
+            }
+            return true;
+        }
+
+        private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage dum) {
+            if(m_bubbles.ContainsKey(dum.BalloonID)) {
+                m_bubbles[cum.BalloonID].BackgroundColor = dum.BackgroundColor;
+            }
+            return true;
+        }
+
         private bool HandlePopBalloon(PopBalloonMessage pbm) {
             lock(m_bubbles) {
                 ServerBalloon b = GetBubble(pbm.BalloonID);
@@ -257,7 +279,7 @@ namespace Balloons.Server
             }
             return true;
         }
-        
+
         private void AcceptCompleted(IAsyncResult result)
         {
             try
