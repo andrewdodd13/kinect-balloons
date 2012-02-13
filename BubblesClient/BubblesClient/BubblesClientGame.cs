@@ -133,6 +133,12 @@ namespace BubblesClient
                     case MessageType.PopBalloon:
                         OnPopBalloon((PopBalloonMessage)msg);
                         break;
+                    case MessageType.BalloonContentUpdate:
+                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+                        break;
+                    case MessageType.BalloonDecorationUpdate:
+                        OnBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+                        break;
                 }
             }
         }
@@ -230,6 +236,28 @@ namespace BubblesClient
         public void OnPopBalloon(PopBalloonMessage m)
         {
             Console.WriteLine("Pop balloon!");
+        }
+
+        public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
+        {
+            ClientBalloon balloon;
+            if(balloons.TryGetValue(bcm.BalloonID, out balloon))
+            {
+                balloon.Label = bcm.Label;
+                balloon.Content = bcm.Content;
+                balloon.Type = bcm.BalloonType;
+                balloon.Url = bcm.Url;
+            }
+        }
+
+        public void OnBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        {
+            ClientBalloon balloon;
+            if(balloons.TryGetValue(bdm.BalloonID, out balloon))
+            {
+                balloon.OverlayType = bdm.OverlayType;
+                balloon.BackgroundColor = bdm.BackgroundColor;
+            }
         }
 
         /// <summary>
@@ -570,12 +598,26 @@ namespace BubblesClient
         //(have to do new lines manually, based on number of characters in string..?
         private void drawContentText(String text, Vector2 pos)
         {
-            spriteBatch.DrawString(textContent, text, pos, Color.Black);
+            try
+            {
+                spriteBatch.DrawString(textContent, text, pos, Color.Black);
+            }
+            catch (Exception)
+            {
+                spriteBatch.DrawString(textContent, "Invalid character", pos, Color.Red);
+            }
         }
 
         private void drawSummaryText(String text, Vector2 pos)
         {
-            spriteBatch.DrawString(textSummary, text, pos, Color.Black);
+            try
+            {
+                spriteBatch.DrawString(textSummary, text, pos, Color.Black);
+            }
+            catch (Exception)
+            {
+                spriteBatch.DrawString(textSummary, "Invalid character", pos, Color.Red);
+            }
         }
 
         private void CreateHandFixture(Hand hand)
