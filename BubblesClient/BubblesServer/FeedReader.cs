@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Timers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ namespace Balloons.Server
     {
         private Server m_server;
         private string m_feedUrl;
+        private WebClient m_client;
         private double m_interval;
         private Timer m_timer;
         
@@ -25,6 +27,7 @@ namespace Balloons.Server
             this.m_feedUrl = feedUrl;
             this.m_interval = pullIntervals;
             this.m_balloons = new List<ServerBalloon>();
+            this.m_client = new WebClient();
             this.m_timer = new Timer(m_interval);
             this.m_timer.Elapsed += new ElapsedEventHandler(HandleTimerEvent);
         }
@@ -67,7 +70,7 @@ namespace Balloons.Server
 
         internal List<FeedContent> GetFeedContents()
         {
-            string jsonText = File.ReadAllText(@"C:\Users\Xya\Documents\Projects\hwkinect\BubblesPortal\test2.json");
+            string jsonText = m_client.DownloadString(m_feedUrl);
             return JsonConvert.DeserializeObject<List<FeedContent>>(jsonText);
         }
 

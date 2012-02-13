@@ -11,6 +11,8 @@ namespace Balloons.Server
 	public class Server
 	{
         #region Public interface
+        private const string FeedUrl = "http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/10";
+
         public Server(int port)
         {
             m_port = port;
@@ -21,7 +23,7 @@ namespace Balloons.Server
             m_nextBalloonID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<int, ServerBalloon>();
-            m_reader = new FeedReader(this, "http://localhost", 1000);
+            m_reader = new FeedReader(this, FeedUrl, 1000);
             //m_reader.Start();
             
             m_random = new Random();
