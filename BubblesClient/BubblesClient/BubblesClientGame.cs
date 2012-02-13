@@ -170,14 +170,9 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             balloonBody.ApplyLinearImpulse(velocity * balloonBody.Mass);
 
-            ClientBalloon b = new ClientBalloon(m.BalloonID, balloonBody);
+            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            ClientBalloon b = new ClientBalloon(balloon, balloonBody);
             b.Body.OnCollision += new OnCollisionEventHandler(onBalloonCollision);
-
-            //TODO: detect type of balloon, balloon colour and get content and labels
-            //for now, everything's custom content
-            b.Type = BalloonType.CustomContent;
-            b.Content = "blahifaeowh foawihf awoifj ewoaifjao wfjawiofo";
-            b.Label = "blah blah blah blah";
 
             balloons.Add(b.ID, b);
             objects.Add(b.Body, new WorldObject { type = WorldObject.objType.Balloon, balloon = b }); //need to remember to remove this on pop

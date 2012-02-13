@@ -51,6 +51,15 @@ namespace Balloons.DummyClient
             balloon.OffScreen = true;
         }
 
+        public Balloon GetBalloonDetails(int balloonID)
+        {
+            //b.Type = BalloonType.CustomContent;
+            //b.Content = "blahifaeowh foawihf awoifj ewoaifjao wfjawiofo";
+            //b.Label = "blah blah blah blah";
+
+            return new Balloon(balloonID) { Label = "Test Label", Content = "Test Content", Type = BalloonType.CustomContent };
+        }
+
         private void OnConnected(object sender, EventArgs args)
         {
         }
