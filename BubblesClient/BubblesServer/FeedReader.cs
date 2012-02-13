@@ -1,6 +1,9 @@
 using System;
+using System.IO;
 using System.Timers;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Balloons;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
@@ -60,6 +63,23 @@ namespace Balloons.Server
         private Dictionary<int, ServerBalloon> GetFeed()
         {
             return new Dictionary<int, ServerBalloon>();
+        }
+
+        private List<FeedContent> GetFeedContents()
+        {
+            List<FeedContent> contents = new List<FeedContent>();
+            using(FileStream fs = new FileStream(@"C:\Users\Xya\Documents\Projects\hwkinect\BubblesPortal\test2.json", FileMode.Open))
+            {
+                JsonTextReader reader = new JsonTextReader(new StreamReader(fs));
+                JArray array = JArray.Load(reader);
+                foreach(JObject val in array)
+                {
+                    FeedContent content = new FeedContent();
+                    content.Load(val);
+                    contents.Add(content);
+                }
+            }
+            return contents;
         }
 
         public List<ServerBalloon> Balloons()
