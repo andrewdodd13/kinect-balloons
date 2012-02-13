@@ -145,27 +145,15 @@ namespace Balloons.Server
             int screenID = m_nextScreenID++;
             Screen screen = new Screen("Screen-" + screenID, screenID, msg.Connection, this);
             m_screens.Add(screen);
-            for(int i = 0; i < ServerBalloon.NewBalloonsForScreen; i++)
-            {
-                // Create a new balloon for the screen
-                ServerBalloon b = CreateBalloon();
-                Direction dir;
-                float y;
-                Vector2D velocity;
-                if((b.ID % 2) == 0)
-                {
-                    dir = Direction.Left;
-                    velocity = ServerBalloon.VelocityRight;
-                    y = 0.2f;
+
+            if(m_screens.Count == 1) {
+                // Add all the orphans balloons to the newly created screen
+                var orphans = OrphansBalloons();
+                foreach(ServerBalloon b in orphans) {
+                    screen.EnqueueMessage(new NewBalloonMessage(b.ID, Direction.Any, 0, new Vector2D(0, 0)));
                 }
-                else
-                {
-                    dir = Direction.Right;
-                    velocity = ServerBalloon.VelocityLeft;
-                    y = 0.1f;
-                }
-                screen.EnqueueMessage(new NewBalloonMessage(b.ID, dir, y, velocity), this);   
             }
+
             return true;
         }
         
@@ -232,9 +220,13 @@ namespace Balloons.Server
                 return true;
             }
 
-            int screen_idx = m_random.Next(m_screens.Count);
             m_bubbles[nbm.BalloonID] = new ServerBalloon(nbm.BalloonID);
-            m_screens[screen_idx].EnqueueMessage(nbm, this);
+            if(m_screens.Count > 0 ) {
+                int screen_idx = m_random.Next(m_screens.Count);
+                m_screens[screen_idx].EnqueueMessage(nbm, this);
+            } else {
+                m_bubbles[nbm.BalloonID].Screen = null;
+            }
 
             return true;
         }
@@ -282,7 +274,7 @@ namespace Balloons.Server
             }
         }
 
-        private List<ServerBalloon> orphansBalloons()
+        private List<ServerBalloon> OrphansBalloons()
         {
             var list = new List<ServerBalloon>();
             foreach(KeyValuePair<int, ServerBalloon> i in m_bubbles)
