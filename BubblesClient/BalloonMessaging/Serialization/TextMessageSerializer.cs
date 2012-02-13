@@ -14,7 +14,9 @@ namespace Balloons.Serialization
     {
         private Encoding m_encoding;
         private delegate Message MessageParser(string[] parts);
+        private delegate string MessageFormatter(Message m);
         private Dictionary<string, MessageParser> m_parsers;
+        private Dictionary<string, MessageFormatter> m_formatters;
 
         public TextMessageSerializer()
         {
@@ -27,13 +29,59 @@ namespace Balloons.Serialization
             m_parsers.Add(PopBalloonMessage.Tag, ParseBalloon);
             m_parsers.Add(GetBalloonContentMessage.Tag, ParseBalloon);
             m_parsers.Add(GetBalloonDecorationMessage.Tag, ParseBalloon);
+
+            m_formatters = new Dictionary<string, MessageFormatter>();
+            m_formatters.Add(NewBalloonMessage.Tag, FormatNewBalloon);
+            m_formatters.Add(ChangeScreenMessage.Tag, FormatChangeScreen);
+            m_formatters.Add(BalloonContentUpdateMessage.Tag, FormatBalloonContentUpdate);
+            m_formatters.Add(BalloonDecorationUpdateMessage.Tag, FormatBalloonDecorationUpdate);
+            m_formatters.Add(PopBalloonMessage.Tag, FormatBalloon);
+            m_formatters.Add(GetBalloonContentMessage.Tag, FormatBalloon);
+            m_formatters.Add(GetBalloonDecorationMessage.Tag, FormatBalloon);
         }
 
         public byte[] Serialize(Message msg)
         {
-            string line = msg.Format();
-            Debug.WriteLine(">> {0}", line);
+            MessageFormatter formatter;
+            if(!m_formatters.TryGetValue(msg.TypeTag, out formatter))
+            {
+                throw new Exception("Unsupported type: " + msg.TypeTag);
+            }
+            string line = formatter(msg);
+            Debug.WriteLine(String.Format(">> {0}", line));
             return m_encoding.GetBytes(line + "\n");
+        }
+
+        private string FormatNewBalloon(Message msg)
+        {
+            NewBalloonMessage nbm = (NewBalloonMessage)msg;
+            return String.Format("{0} {1} {2} {3} {4} {5}",
+                nbm.TypeTag, nbm.BalloonID, Balloon.FormatDirection(nbm.Direction),
+                nbm.Y, nbm.Velocity.X, nbm.Velocity.Y);
+        }
+
+        private string FormatChangeScreen(Message msg)
+        {
+            ChangeScreenMessage csm = (ChangeScreenMessage)msg;
+            return String.Format("{0} {1} {2} {3} {4} {5}",
+                csm.TypeTag, csm.BalloonID, Balloon.FormatDirection(csm.Direction),
+                csm.Y, csm.Velocity.X, csm.Velocity.Y);
+        }
+
+        private string FormatBalloonDecorationUpdate(Message msg)
+        {
+            throw new NotImplementedException();
+        }
+
+        private string FormatBalloonContentUpdate(Message msg)
+        {
+            throw new NotImplementedException();
+        }
+
+        private string FormatBalloon(Message msg)
+        {
+            BalloonMessage bm = (BalloonMessage)msg;
+            return String.Format("{0} {1}", msg.TypeTag, bm.BalloonID);
         }
 
         public Message Deserialize(CircularBuffer buffer)
@@ -61,7 +109,7 @@ namespace Balloons.Serialization
             byte[] messageData = new byte[lineSize];
             buffer.Read(messageData, 0, lineSize);
             string line = m_encoding.GetString(messageData);
-            Debug.WriteLine("<< {0}", line.Substring(0, line.Length - 1));
+            Debug.WriteLine(String.Format("<< {0}", line.Substring(0, line.Length - 1)));
             return ParseMessage(line);
         }
 
@@ -108,7 +156,8 @@ namespace Balloons.Serialization
         
         private Message ParseBalloonDecorationUpdate(string[] parts)
         {
-            if(parts.Length != 7)
+            throw new NotImplementedException();
+            /*if(parts.Length != 7)
             {
                 throw new Exception("Invalid message");
             }
@@ -120,11 +169,13 @@ namespace Balloons.Serialization
             byte a = Byte.Parse(parts[6]);
             Colour c = new Colour(r, g, b, a);
             return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+             * */
         }
         
         private Message ParseBalloonContentUpdate(string[] parts)
         {
-            if(parts.Length != 6)
+            throw new NotImplementedException();
+            /*if(parts.Length != 6)
             {
                 throw new Exception("Invalid message");
             }
@@ -133,7 +184,7 @@ namespace Balloons.Serialization
             string label = parts[3];
             string content = parts[4];
             string url = parts[5];
-            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);*/
         }
 
         private Message ParseBalloon(string[] parts)

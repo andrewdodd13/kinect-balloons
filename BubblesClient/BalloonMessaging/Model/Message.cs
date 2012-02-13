@@ -40,6 +40,14 @@ namespace Balloons.Messaging.Model
         }
 
         /// <summary>
+        /// Identifies the type of the message.
+        /// </summary>
+        public string TypeTag
+        {
+            get { return m_tag; }
+        }
+
+        /// <summary>
         /// Object that sent this message.
         /// </summary>
         public object Sender
@@ -52,19 +60,6 @@ namespace Balloons.Messaging.Model
         {
             m_type = type;
             m_tag = tag;
-        }
-        
-        /// <summary>
-        /// Convert the message to a string that can be sent on the network.
-        /// </summary>
-        public virtual string Format()
-        {
-            return String.Format("{0} {1}", m_tag, FormatContent());
-        }
-
-        protected virtual string FormatContent()
-        {
-            return "";
         }
         
         private readonly MessageType m_type;
@@ -82,11 +77,6 @@ namespace Balloons.Messaging.Model
         public BalloonMessage(MessageType type, string tag, int balloonID) : base(type, tag)
         {
             m_balloonID = balloonID;
-        }
-
-        protected override string FormatContent()
-        {
-            return m_balloonID.ToString();
         }
 
         private int m_balloonID;
@@ -136,12 +126,6 @@ namespace Balloons.Messaging.Model
             m_velocity = velocity;
         }
 
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
-        }
-        
         private Direction m_direction;
         private Vector2D m_velocity;
         private float m_y;
@@ -180,12 +164,6 @@ namespace Balloons.Messaging.Model
             m_url = url;
         }
 
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, m_type, m_label, m_content, m_url);
-        }
-
         private int m_type;
         private string m_label;
         private string m_content;
@@ -219,12 +197,6 @@ namespace Balloons.Messaging.Model
             m_direction = direction;
             m_y = y;
             m_velocity = velocity;
-        }
-        
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
         private Direction m_direction;
@@ -285,13 +257,6 @@ namespace Balloons.Messaging.Model
             m_bgColor = bgColor;
         }
 
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, m_overlayType,
-                m_bgColor.Red, m_bgColor.Green, m_bgColor.Blue, m_bgColor.Alpha);
-        }
-
         private int m_overlayType;
         private Colour m_bgColor;
     }
@@ -327,11 +292,6 @@ namespace Balloons.Messaging.Model
         public DisconnectedMessage(int screenID) : base(MessageType.Disconnected, Tag)
         {
             m_screenID = screenID;
-        }
-        
-        protected override string FormatContent()
-        {
-            return m_screenID.ToString();
         }
         
         private int m_screenID;

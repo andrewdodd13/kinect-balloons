@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using Balloons;
@@ -31,6 +32,9 @@ namespace Balloons.Server
         
         public static void Main(string[] args)
         {
+#if DEBUG
+            Debug.Listeners.Add(new ConsoleTraceListener());
+#endif
             Server server = new Server(4000);
             server.Run();
         }
