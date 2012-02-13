@@ -37,5 +37,19 @@ namespace Balloons.Messaging.Model
             }
             return new Colour(r, g, b, a);
         }
+
+        public override bool Equals(object obj)
+        {
+            Colour other = obj as Colour;
+            if(other == null)
+            {
+                return base.Equals(obj);
+            }
+
+            return this.Red == other.Red &&
+                this.Green == other.Green &&
+                this.Blue == other.Blue &&
+                this.Alpha == other.Alpha;
+        }
     }
 }

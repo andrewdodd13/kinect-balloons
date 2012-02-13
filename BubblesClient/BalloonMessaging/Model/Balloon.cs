@@ -20,6 +20,13 @@ namespace Balloons.Messaging.Model
         CustomContent
     }
 
+    public enum OverlayType
+    {
+        White = 0,
+        Spots = 1,
+        Stripes = 2
+    }
+
     public class Balloon
     {
         public string ID { get; private set; }
@@ -28,7 +35,7 @@ namespace Balloons.Messaging.Model
         public string Content { get; set; }
         public string Url { get; set; }
 
-        public int OverlayType { get; set; }
+        public OverlayType OverlayType { get; set; }
         public BalloonType Type { get; set; }
         public Colour BackgroundColor { get; set; }
 
@@ -37,6 +44,17 @@ namespace Balloons.Messaging.Model
             this.ID = id;
 
             BackgroundColor = new Colour(255, 255, 255, 255);
+        }
+
+        public Balloon(Balloon parent) : this(parent.ID)
+        {
+            // Copy properties from the parent
+            this.BackgroundColor = parent.BackgroundColor;
+            this.Content = parent.Content;
+            this.Label = parent.Label;
+            this.OverlayType = parent.OverlayType;
+            this.Type = parent.Type;
+            this.Url = parent.Url;
         }
 
         public static string FormatDirection(Direction direction)

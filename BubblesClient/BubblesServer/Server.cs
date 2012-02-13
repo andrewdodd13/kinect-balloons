@@ -244,21 +244,27 @@ namespace Balloons.Server
 
             return true;
         }
-        
-        private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage cum) {
-            if(m_bubbles.ContainsKey(cum.BalloonID)) {
-                ServerBalloon b  = m_bubbles[cum.BalloonID];
-                b.Label = cum.Label;
-                b.Content = cum.Content;
-                b.Type = cum.BalloonType;
-                b.Url = cum.Url;
+
+        private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
+        {
+            ServerBalloon b = GetBalloon(bcm.BalloonID);
+            if(b != null)
+            {
+                b.Label = bcm.Label;
+                b.Content = bcm.Content;
+                b.Type = bcm.BalloonType;
+                b.Url = bcm.Url;
             }
             return true;
         }
 
-        private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage dum) {
-            if(m_bubbles.ContainsKey(dum.BalloonID)) {
-                m_bubbles[dum.BalloonID].BackgroundColor = dum.BackgroundColor;
+        private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        {
+            ServerBalloon b = GetBalloon(bdm.BalloonID);
+            if(b != null)
+            {
+                b.OverlayType = bdm.OverlayType;
+                b.BackgroundColor = bdm.BackgroundColor;
             }
             return true;
         }

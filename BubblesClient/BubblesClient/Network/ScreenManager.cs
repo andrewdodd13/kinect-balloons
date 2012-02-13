@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
+using BubblesClient.Model;
 using Microsoft.Xna.Framework;
 
-namespace Balloons.DummyClient
+namespace BubblesClient
 {
     public class ScreenManager : IDisposable
     {
         private ScreenConnection m_conn;
         private IPAddress serverAddress;
         private int serverPort;
+        private Dictionary<string, Balloon> balloonCache;
 
         public CircularQueue<Message> MessageQueue { get; private set; }
 
@@ -19,12 +22,14 @@ namespace Balloons.DummyClient
             this.serverAddress = serverAddress;
             this.serverPort = serverPort;
 
+            this.balloonCache = new Dictionary<string, Balloon>();
             this.MessageQueue = new CircularQueue<Message>(64);
 
             m_conn = new ScreenConnection(this.MessageQueue);
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
+            m_conn.MessageReceived += OnMessageReceived;
         }
 
         public void Dispose()
@@ -53,11 +58,26 @@ namespace Balloons.DummyClient
 
         public Balloon GetBalloonDetails(string balloonID)
         {
-            //b.Type = BalloonType.CustomContent;
-            //b.Content = "blahifaeowh foawihf awoifj ewoaifjao wfjawiofo";
-            //b.Label = "blah blah blah blah";
-
+            Balloon balloon = null;
+            if(balloonCache.TryGetValue(balloonID, out balloon))
+            {
+                return balloon;
+            }
             return new Balloon(balloonID) { Label = "Test Label", Content = "Test Content", Type = BalloonType.CustomContent };
+        }
+
+        public void UpdateBalloonDetails(Balloon balloon)
+        {
+            Balloon cachedBalloon = null;
+            if(!balloonCache.TryGetValue(balloon.ID, out cachedBalloon))
+            {
+                cachedBalloon = new Balloon(balloon);
+                balloonCache.Add(balloon.ID, cachedBalloon);
+            }
+            cachedBalloon.OverlayType = balloon.OverlayType;
+            cachedBalloon.BackgroundColor = balloon.BackgroundColor;
+            m_conn.SendMessage(new BalloonDecorationUpdateMessage(balloon.ID,
+                balloon.OverlayType, balloon.BackgroundColor));
         }
 
         private void OnConnected(object sender, EventArgs args)
@@ -74,6 +94,59 @@ namespace Balloons.DummyClient
         {
             Console.WriteLine("Disconnected from the server");
             Environment.Exit(1);
+        }
+
+        private void OnMessageReceived(object sender, MessageEventArgs args)
+        {
+            Message msg = args.Message;
+            switch(msg.Type)
+            {
+            case MessageType.NewBalloon:
+                HandleNewBalloon((NewBalloonMessage)msg);
+                break;
+            case MessageType.BalloonContentUpdate:
+                HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+                break;
+            case MessageType.BalloonDecorationUpdate:
+                HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+                break;
+            }
+        }
+
+        private void HandleNewBalloon(NewBalloonMessage nbm)
+        {
+            // ask the server to send the balloon's content
+            if(!balloonCache.ContainsKey(nbm.BalloonID))
+            {
+                balloonCache.Add(nbm.BalloonID, new Balloon(nbm.BalloonID));
+                m_conn.SendMessage(new GetBalloonContentMessage(nbm.BalloonID));
+            }
+
+            // ask the server to send updated decoration details
+            // TODO: only do this if the details have been changed
+            m_conn.SendMessage(new GetBalloonDecorationMessage(nbm.BalloonID));
+        }
+
+        private void HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
+        {
+            Balloon balloon = null;
+            if(balloonCache.TryGetValue(bcm.BalloonID, out balloon))
+            {
+                balloon.Label = bcm.Label;
+                balloon.Content = bcm.Content;
+                balloon.Type = bcm.BalloonType;
+                balloon.Url = bcm.Url;
+            }
+        }
+
+        private void HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        {
+            Balloon balloon = null;
+            if(balloonCache.TryGetValue(bdm.BalloonID, out balloon))
+            {
+                balloon.OverlayType = bdm.OverlayType;
+                balloon.BackgroundColor = bdm.BackgroundColor;
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Balloons.Messaging.Model;
 using FarseerPhysics.Dynamics;
 
-namespace Balloons.DummyClient
+namespace BubblesClient.Model
 {
     public class ClientBalloon : Balloon
     {
@@ -14,17 +14,9 @@ namespace Balloons.DummyClient
         public Body Body { get; private set; }
 
         public ClientBalloon(Balloon parent, Body body)
-            : base(parent.ID)
+            : base(parent)
         {
             this.Body = body;
-
-            // Copy properties from the parent
-            this.BackgroundColor = parent.BackgroundColor;
-            this.Content = parent.Content;
-            this.Label = parent.Label;
-            this.OverlayType = parent.OverlayType;
-            this.Type = parent.Type;
-            this.Url = parent.Url;
         }
     }
 }

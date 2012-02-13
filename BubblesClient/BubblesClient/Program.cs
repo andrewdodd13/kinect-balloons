@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using Balloons.DummyClient;
 
 namespace BubblesClient
 {

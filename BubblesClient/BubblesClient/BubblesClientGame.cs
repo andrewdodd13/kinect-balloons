@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using Balloons.DummyClient;
 using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Input.Controllers.Mouse;
+using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
@@ -439,7 +439,7 @@ namespace BubblesClient
 
                 switch (balloon.OverlayType)
                 {
-                    case 1:
+                    case OverlayType.Spots:
                         if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterSpots;
                         else if (balloonType == BalloonType.News)
@@ -449,7 +449,7 @@ namespace BubblesClient
                         else
                             balloonTexture = balloonSpots;
                         break;
-                    case 2:
+                    case OverlayType.Stripes:
                         if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterStripes;
                         else if (balloonType == BalloonType.News)
@@ -460,6 +460,7 @@ namespace BubblesClient
                             balloonTexture = balloonStripes;
                         break;
                     default:
+                    case OverlayType.White:
                         if (balloonType == BalloonType.Twitter)
                             balloonTexture = balloonTwitterWhite;
                         else if (balloonType == BalloonType.News)
@@ -623,6 +624,8 @@ namespace BubblesClient
         private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)
         {
             //Console.WriteLine("Bucket {0} collided with ballon {1}", bucket.ID, balloon.ID);
+            OverlayType oldOverlay = balloon.OverlayType;
+            Colour oldBackgroundColor = balloon.BackgroundColor;
 
             //only change colour if we're touching a new bucket
             //...what if we want to hit the same bucket twice? :S
@@ -658,13 +661,13 @@ namespace BubblesClient
                 else if (bucket.ID == 1)
                 {
                     //texture id 1
-                    if (balloon.OverlayType == bucket.ID)
+                    if (balloon.OverlayType == OverlayType.Spots)
                     {
-                        balloon.OverlayType = 0;
+                        balloon.OverlayType = OverlayType.White;
                     }
                     else
                     {
-                        balloon.OverlayType = 1;
+                        balloon.OverlayType = OverlayType.Spots;
                     }
                 }
                 else if (bucket.ID == 2)
@@ -692,13 +695,13 @@ namespace BubblesClient
                 else if (bucket.ID == 3)
                 {
                     //texture id 2
-                    if (balloon.OverlayType == bucket.ID)
+                    if (balloon.OverlayType == OverlayType.Stripes)
                     {
-                        balloon.OverlayType = 0;
+                        balloon.OverlayType = OverlayType.White;
                     }
                     else
                     {
-                        balloon.OverlayType = 2;
+                        balloon.OverlayType = OverlayType.Stripes;
                     }
                 }
                 else if (bucket.ID == 4)
@@ -724,6 +727,13 @@ namespace BubblesClient
                     }
                 }
                 oldBucketID = bucket.ID;
+            }
+
+            // notify the server that the ballon's decoration changed.
+            // otherwise decorations are lost when ballons change screens
+            if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
+            {
+                ScreenManager.UpdateBalloonDetails(balloon);
             }
         }
 
