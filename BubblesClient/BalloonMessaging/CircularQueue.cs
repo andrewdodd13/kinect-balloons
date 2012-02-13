@@ -284,11 +284,11 @@ namespace Balloons.Messaging
         public virtual List<T> DequeueAll()
         {
             List<T> items = new List<T>();
-            if(Monitor.TryEnter(syncExcl))
+            if (Monitor.TryEnter(syncExcl))
             {
                 try
                 {
-                    while(available > 0)
+                    while (available > 0)
                     {
                         --available;
                         items.Add(DequeueCore());

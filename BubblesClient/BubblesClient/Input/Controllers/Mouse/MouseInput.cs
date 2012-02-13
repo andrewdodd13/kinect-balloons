@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using XnaMouse = Microsoft.Xna.Framework.Input.Mouse;
 
@@ -14,6 +10,9 @@ namespace BubblesClient.Input.Controllers.Mouse
     public class MouseInput : IInputController
     {
         private Hand _hand = new Hand();
+        private Hand _altHand = new Hand();
+        private float Seperation = 0, MaxSeperation = 200;
+        private bool anim = false;
 
         /// <summary>
         /// Does nothing; Mouse input is handled by XNA for us
@@ -29,9 +28,30 @@ namespace BubblesClient.Input.Controllers.Mouse
         {
             MouseState ms = XnaMouse.GetState();
 
-            _hand.Position = new Vector3(ms.X, ms.Y, 0);
-
-            return new Hand[] { _hand };
+            if (ms.RightButton == ButtonState.Pressed)
+            {
+                if (ms.LeftButton == ButtonState.Pressed)
+                {
+                    anim = true;
+                }
+                if (anim)
+                {
+                    Seperation = Seperation - 20;
+                }
+                _hand.Position = new Vector3(ms.X - Seperation, ms.Y, 0);
+                _altHand.Position = new Vector3(ms.X + Seperation, ms.Y, 0);
+                if (Seperation <= 0)
+                {
+                    Seperation = MaxSeperation;
+                    anim = false;
+                }
+                return new Hand[] { _hand, _altHand };
+            }
+            else
+            {
+                _hand.Position = new Vector3(ms.X, ms.Y, 0);
+                return new Hand[] { _hand };
+            }
         }
     }
 }

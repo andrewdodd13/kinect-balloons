@@ -145,7 +145,7 @@ namespace Balloons.Server
                 if(b != null)
                 {
                     m_connection.SendMessage(new BalloonDecorationUpdateMessage(
-                        b.ID, b.BackgroundColor));
+                        b.ID, b.OverlayType, b.BackgroundColor));
                 }
                 return true;
             default:

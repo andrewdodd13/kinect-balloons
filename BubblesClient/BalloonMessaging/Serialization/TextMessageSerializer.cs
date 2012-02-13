@@ -81,6 +81,7 @@ namespace Balloons.Serialization
         {
             BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)m;
             args.Add(JValue.FromObject(bdm.BalloonID));
+            args.Add(JValue.FromObject(bdm.OverlayType));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Red));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Green));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Blue));
@@ -91,7 +92,7 @@ namespace Balloons.Serialization
         {
             BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)m;
             args.Add(JValue.FromObject(bcm.BalloonID));
-            args.Add(JValue.FromObject(bcm.BalloonType));
+            args.Add(JValue.FromObject((int)bcm.BalloonType));
             args.Add(JValue.CreateString(bcm.Label));
             args.Add(JValue.CreateString(bcm.Content));
             args.Add(JValue.CreateString(bcm.Url));
@@ -165,18 +166,19 @@ namespace Balloons.Serialization
         private Message ParseBalloonDecorationUpdate(JArray args)
         {
             string balloonID = args[1].ToObject<string>();
-            byte r = args[2].ToObject<byte>();
-            byte g = args[3].ToObject<byte>();
-            byte b = args[4].ToObject<byte>();
-            byte a = args[5].ToObject<byte>();
+            int overlayType = args[2].ToObject<int>();
+            byte r = args[3].ToObject<byte>();
+            byte g = args[4].ToObject<byte>();
+            byte b = args[5].ToObject<byte>();
+            byte a = args[6].ToObject<byte>();
             Colour c = new Colour(r, g, b, a);
-            return new BalloonDecorationUpdateMessage(balloonID, c);
+            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
         }
 
         private Message ParseBalloonContentUpdate(JArray args)
         {
             string balloonID = args[1].ToObject<string>();
-            int balloonType = args[2].ToObject<int>();
+            BalloonType balloonType = (BalloonType)args[2].ToObject<int>();
             string label = args[3].ToObject<string>();
             string content = args[4].ToObject<string>();
             string url = args[5].ToObject<string>();

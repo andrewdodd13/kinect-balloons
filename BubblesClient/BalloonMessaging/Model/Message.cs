@@ -136,7 +136,7 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "balloon-content-update";
 
-        public int BalloonType
+        public BalloonType BalloonType
         {
             get { return this.m_type; }
         }
@@ -156,7 +156,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_url; }
         }
 
-        public BalloonContentUpdateMessage(string balloonID, int type, string label, string content, string url)
+        public BalloonContentUpdateMessage(string balloonID, BalloonType type, string label, string content, string url)
             : base(MessageType.BalloonContentUpdate, Tag, balloonID)
         {
             m_type = type;
@@ -165,7 +165,7 @@ namespace Balloons.Messaging.Model
             m_url = url;
         }
 
-        private int m_type;
+        private BalloonType m_type;
         private string m_label;
         private string m_content;
         private string m_url;
@@ -241,17 +241,23 @@ namespace Balloons.Messaging.Model
     {
         public const string Tag = "balloon-decoration-update";
 
+        public int OverlayType
+        {
+            get { return this.m_overlayType; }
+        }
+
         public Colour BackgroundColor
         {
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(string balloonID, Colour bgColor)
+        public BalloonDecorationUpdateMessage(string balloonID, int overlayType, Colour bgColor)
             : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
         {
             m_bgColor = bgColor;
         }
 
+        private int m_overlayType;
         private Colour m_bgColor;
     }
     #endregion

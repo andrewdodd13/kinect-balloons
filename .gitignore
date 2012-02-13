@@ -7,3 +7,4 @@ Thumbs.db
 [Dd]ebug*/
 obj/
 [Rr]elease*/
+*.[Cc]ache*

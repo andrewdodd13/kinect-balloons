@@ -56,9 +56,12 @@ namespace Balloons.Server
             {
                 if(!fromServer.ContainsKey(i.ContentID)) {
                     // Add the new balloon to the server and send content and decoration
-                    m_server.EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
-                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID, i.Type, i.Title, i.Excerpt, i.URL));
-                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, Colour.Parse(i.BalloonColour)));
+                    m_server.EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
+                        0.2f, ServerBalloon.VelocityLeft), this);
+                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
+                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL));
+                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
+                        Colour.Parse(i.BalloonColour)));
                     added++;
                 }
             }

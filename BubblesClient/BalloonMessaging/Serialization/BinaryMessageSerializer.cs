@@ -10,10 +10,10 @@ namespace Balloons.Serialization
     {
         private delegate Message MessageDecoder(BinaryReader reader, MessageType type);
         private delegate void MessageEncoder(BinaryWriter writer, Message msg);
-        
+
         private Dictionary<MessageType, MessageDecoder> m_decoders;
         private Dictionary<MessageType, MessageEncoder> m_encoders;
-        
+
         public BinaryMessageSerializer()
         {
             m_decoders = new Dictionary<MessageType, MessageDecoder>();
@@ -24,7 +24,7 @@ namespace Balloons.Serialization
             m_decoders.Add(MessageType.PopBalloon, DecodeBalloon);
             m_decoders.Add(MessageType.GetBalloonContent, DecodeBalloon);
             m_decoders.Add(MessageType.GetBalloonDecoration, DecodeBalloon);
-            
+
             m_encoders = new Dictionary<MessageType, MessageEncoder>();
             m_encoders.Add(MessageType.NewBalloon, SerializeNewBalloon);
             m_encoders.Add(MessageType.ChangeScreen, SerializeChangeScreen);
@@ -34,16 +34,16 @@ namespace Balloons.Serialization
             m_encoders.Add(MessageType.GetBalloonContent, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonDecoration, SerializeBalloon);
         }
-        
+
         #region Serialization
         public byte[] Serialize(Message msg)
         {
-            if(msg == null)
+            if (msg == null)
             {
                 throw new ArgumentNullException("msg");
             }
             MessageEncoder encoder;
-            if(!m_encoders.TryGetValue(msg.Type, out encoder))
+            if (!m_encoders.TryGetValue(msg.Type, out encoder))
             {
                 throw new NotImplementedException("Message type not supported: " + msg.Type);
             }
@@ -62,7 +62,7 @@ namespace Balloons.Serialization
             writer.Flush();
             return s.ToArray();
         }
-        
+
         private void SerializeNewBalloon(BinaryWriter writer, Message msg)
         {
             NewBalloonMessage nbm = (NewBalloonMessage)msg;
@@ -72,7 +72,7 @@ namespace Balloons.Serialization
             writer.Write(nbm.Velocity.X);
             writer.Write(nbm.Velocity.Y);
         }
-        
+
         private void SerializeChangeScreen(BinaryWriter writer, Message msg)
         {
             ChangeScreenMessage csm = (ChangeScreenMessage)msg;
@@ -82,11 +82,12 @@ namespace Balloons.Serialization
             writer.Write(csm.Velocity.X);
             writer.Write(csm.Velocity.Y);
         }
-        
+
         private void SerializeBalloonDecorationUpdate(BinaryWriter writer, Message msg)
         {
             BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)msg;
             writer.Write(bdm.BalloonID);
+            writer.Write(bdm.OverlayType);
             writer.Write(bdm.BackgroundColor.Red);
             writer.Write(bdm.BackgroundColor.Green);
             writer.Write(bdm.BackgroundColor.Blue);
@@ -97,7 +98,7 @@ namespace Balloons.Serialization
         {
             BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)msg;
             writer.Write(bcm.BalloonID);
-            writer.Write(bcm.BalloonType);
+            writer.Write((int)bcm.BalloonType);
             writer.Write(bcm.Label);
             writer.Write(bcm.Content);
             writer.Write(bcm.Url);
@@ -109,42 +110,42 @@ namespace Balloons.Serialization
             writer.Write(bm.BalloonID);
         }
         #endregion
-        
+
         #region Deserialization
         public Message Deserialize(CircularBuffer buffer)
         {
             // Read the message size
-            if(buffer.Available < 4)
+            if (buffer.Available < 4)
             {
                 return null;
             }
             int offset = 0;
-            uint size = (uint)((buffer.PeekByte(offset++) << 0)  |
-                               (buffer.PeekByte(offset++) << 8)  |
+            uint size = (uint)((buffer.PeekByte(offset++) << 0) |
+                               (buffer.PeekByte(offset++) << 8) |
                                (buffer.PeekByte(offset++) << 16) |
                                (buffer.PeekByte(offset++) << 24));
-            if(buffer.Available < (int)size)
+            if (buffer.Available < (int)size)
             {
                 return null;
             }
-            
+
             // read the message's contents
             byte[] data = new byte[size];
             buffer.Read(data, 0, (int)size);
-            
+
             // decode the message's contents
             MemoryStream ms = new MemoryStream(data, false);
             BinaryReader reader = new BinaryReader(ms);
             reader.ReadInt32();
             MessageType type = (MessageType)reader.ReadInt32();
             MessageDecoder decoder;
-            if(!m_decoders.TryGetValue(type, out decoder))
+            if (!m_decoders.TryGetValue(type, out decoder))
             {
                 throw new NotImplementedException("Message type not supported: " + type);
             }
             return decoder(reader, type);
         }
-        
+
         private Message DecodeNewBalloon(BinaryReader reader, MessageType type)
         {
             string balloonID = reader.ReadString();
@@ -154,7 +155,7 @@ namespace Balloons.Serialization
             float velocityY = reader.ReadSingle();
             return new NewBalloonMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
         }
-        
+
         private Message DecodeChangeScreen(BinaryReader reader, MessageType type)
         {
             string balloonID = reader.ReadString();
@@ -164,22 +165,23 @@ namespace Balloons.Serialization
             float velocityY = reader.ReadSingle();
             return new ChangeScreenMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
         }
-        
+
         private Message DecodeBalloonDecorationUpdate(BinaryReader reader, MessageType type)
         {
             string balloonID = reader.ReadString();
+            int overlayType = reader.ReadInt32();
             byte r = reader.ReadByte();
             byte g = reader.ReadByte();
             byte b = reader.ReadByte();
             byte a = reader.ReadByte();
             Colour c = new Colour(r, g, b, a);
-            return new BalloonDecorationUpdateMessage(balloonID, c);
+            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
         }
         
         private Message DecodeBalloonContentUpdate(BinaryReader reader, MessageType type)
         {
             string balloonID = reader.ReadString();
-            int balloonType = reader.ReadInt32();
+            BalloonType balloonType = (BalloonType)reader.ReadInt32();
             string label = reader.ReadString();
             string content = reader.ReadString();
             string url = reader.ReadString();

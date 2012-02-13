@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading;
-using Microsoft.Xna.Framework;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
+using Microsoft.Xna.Framework;
 
 namespace Balloons.DummyClient
 {
@@ -51,6 +49,15 @@ namespace Balloons.DummyClient
             // notify the server that the balloon is moving off-screen
             m_conn.SendMessage(new ChangeScreenMessage(balloon.ID, direction, exitHeight, new Vector2D(velocity.X, velocity.Y)));
             balloon.OffScreen = true;
+        }
+
+        public Balloon GetBalloonDetails(string balloonID)
+        {
+            //b.Type = BalloonType.CustomContent;
+            //b.Content = "blahifaeowh foawihf awoifj ewoaifjao wfjawiofo";
+            //b.Label = "blah blah blah blah";
+
+            return new Balloon(balloonID) { Label = "Test Label", Content = "Test Content", Type = BalloonType.CustomContent };
         }
 
         private void OnConnected(object sender, EventArgs args)

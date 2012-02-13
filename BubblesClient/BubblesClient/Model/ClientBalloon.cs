@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Balloons.Messaging.Model;
+﻿using Balloons.Messaging.Model;
 using FarseerPhysics.Dynamics;
 
 namespace Balloons.DummyClient
@@ -18,10 +13,18 @@ namespace Balloons.DummyClient
 
         public Body Body { get; private set; }
 
-        public ClientBalloon(string balloonID, Body body)
-            : base(balloonID)
+        public ClientBalloon(Balloon parent, Body body)
+            : base(parent.ID)
         {
             this.Body = body;
+
+            // Copy properties from the parent
+            this.BackgroundColor = parent.BackgroundColor;
+            this.Content = parent.Content;
+            this.Label = parent.Label;
+            this.OverlayType = parent.OverlayType;
+            this.Type = parent.Type;
+            this.Url = parent.Url;
         }
     }
 }
