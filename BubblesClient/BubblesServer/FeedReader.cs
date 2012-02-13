@@ -34,7 +34,7 @@ namespace Balloons.Server
 
         private void HandleTimerEvent(object source, ElapsedEventArgs e) {
             // Connect to WebServer, gets balloons
-            Dictionary<int, ServerBalloon> fromFeed = GetFeed();
+            Dictionary<int, FeedContent> fromFeed = GetFeedContents();
             
             // Gets news balloons to be displayed
             Dictionary<int, ServerBalloon> fromServer = m_server.Balloons();
@@ -49,23 +49,22 @@ namespace Balloons.Server
                 }
             }
 
-            foreach(KeyValuePair<int, ServerBalloon> i in fromFeed)
+            foreach(KeyValuePair<int, FeedContent> i in fromFeed)
             {
-                ServerBalloon b = i.Value;
                 if(!fromServer.ContainsKey(b.ID)) {
-                    // Add the new balloon to the server
-                    m_server.EnqueueMessage(new NewBalloonMessage(b.ID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
+                    Colour c = new Colour(byte.Parse(i.Value.BalloonColour.Substring(0, 2), System.Globalization.NumberStyles.HexNumber),
+                                          byte.Parse(i.Value.BalloonColour.Substring(2, 2), System.Globalization.NumberStyles.HexNumber),
+                                          byte.Parse(i.Value.BalloonColour.Substring(4, 2), System.Globalization.NumberStyles.HexNumber));
+                    // Add the new balloon to the server and send content and decoration
+                    m_server.EnqueueMessage(new NewBalloonMessage(i.Value.ContentID, Direction.Any, 0.2f, ServerBalloon.VelocityLeft), this);
+                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.Value.ContentID, i.Value.Type, i.Value.Label, i.Value.Excerpt, i.Value.URL));
+                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.Value.ContentID, c));
                 }
             }
         }
         
         public void Start() {
             m_timer.Enabled = true;
-        }
-
-        private Dictionary<int, ServerBalloon> GetFeed()
-        {
-            return new Dictionary<int, ServerBalloon>();
         }
 
         internal List<FeedContent> GetFeedContents()
