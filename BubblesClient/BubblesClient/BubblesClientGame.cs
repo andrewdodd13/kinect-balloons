@@ -4,10 +4,9 @@ using System.Linq;
 using System.Timers;
 using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
-using BubblesClient.Input.Controllers.Mouse;
 using BubblesClient.Model;
+using BubblesClient.Physics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,31 +19,13 @@ namespace BubblesClient
     /// </summary>
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
-        private class BodyJointPair
-        {
-            public Body Body { get; set; }
-            public Joint Joint { get; set; }
-        }
-
-        private class Bucket
-        {
-            public int ID;
-            public Vector2 position, size;
-            public Body physicalBody;
-        }
-
-        //Hmm, abstract?
-        private class WorldObject
-        {
-            public enum objType { Balloon, Bucket, Hand };
-            public objType type;
-            public ClientBalloon balloon;
-            public Bucket bucket;
-            public Hand hand;
-        }
 
         // Textures
         private Texture2D skyTexture, handTexture, contentBox;
+
+        // Balloon Textures
+        private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>();
+
         private Texture2D balloonWhite, balloonStripes, balloonSpots;
         private Texture2D balloonTwitterWhite, balloonTwitterStripes, balloonTwitterSpots;
         private Texture2D balloonNewsWhite, balloonNewsStripes, balloonNewsSpots;
@@ -63,13 +44,13 @@ namespace BubblesClient
 
         // Input
         private IInputController input;
-        private Dictionary<Hand, BodyJointPair> handBodies = new Dictionary<Hand, BodyJointPair>();
-
+        
         // Physics World
-        private World _world;
-        private const float MeterInPixels = 64f;
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
         private List<Bucket> buckets = new List<Bucket>();
+        private PhysicsManager physicsManager = new PhysicsManager();
+
+        private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
 
         //other stuff
         private bool showBuckets = true;
@@ -77,15 +58,10 @@ namespace BubblesClient
 
         // The time to display a message for, in milliseconds
         private const int MessageDisplayTime = 30000;
-        private const float BalloonWidth = 162f;
-        private const float BalloonHeight = 192f;
 
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
         private string poppedBalloonID = null;
-
-        //Todo - find a better name for this, objects is quite vague
-        private Dictionary<Body, WorldObject> objects = new Dictionary<Body, WorldObject>();
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
@@ -104,7 +80,18 @@ namespace BubblesClient
             Content.RootDirectory = "Content";
 
             // Initialise Physics
-            _world = new World(new Vector2(0, -2));
+            physicsManager.Initialize();
+            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args) 
+            {
+                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                PopBalloon(b.ID);
+            };
+            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
+            {
+                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
+                ApplyBucketToBalloon(bucket, balloon);
+            };
 
             // Initialise network
             this.ScreenManager = screenManager;
@@ -160,68 +147,15 @@ namespace BubblesClient
 
             position.Y = m.Y * screenDimensions.Y;
 
-            // Setup the balloon's body.
-            float circleRadius = BalloonWidth / (2f * MeterInPixels);
-
-            Body balloonBody = BodyFactory.CreateCircle(_world, circleRadius, 1f, PixelToWorld(position));
-            balloonBody.BodyType = BodyType.Dynamic;
-            balloonBody.Restitution = 0.3f;
-            balloonBody.Friction = 0.5f;
-            balloonBody.LinearDamping = 1.0f;
-
+            // Setup the balloon's body
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
-            balloonBody.ApplyLinearImpulse(velocity * balloonBody.Mass);
-
+            WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
+            
             Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
-            ClientBalloon b = new ClientBalloon(balloon, balloonBody);
-            b.Body.OnCollision += new OnCollisionEventHandler(onBalloonCollision);
-
+            ClientBalloon b = new ClientBalloon(balloon);
+            
             balloons.Add(b.ID, b);
-            objects.Add(b.Body, new WorldObject { type = WorldObject.objType.Balloon, balloon = b }); //need to remember to remove this on pop
-        }
-
-        bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
-        {
-            if (!objects.ContainsKey(fixtureA.Body))
-            {
-                Console.WriteLine("Error: a balloon was not in the objects dictionary");
-                return true;
-            }
-            WorldObject A = objects[fixtureA.Body];
-            if (A.type != WorldObject.objType.Balloon)
-            {
-                Console.WriteLine("Error: balloon collide event attached to non-balloon body");
-                return true;
-            }
-            if (!objects.ContainsKey(fixtureB.Body))
-            {
-                //This is an acceptable case
-                return true;
-            }
-            WorldObject B = objects[fixtureB.Body];
-
-            if (B.type == WorldObject.objType.Bucket)
-            {
-                ApplyBucketToBalloon(B.bucket, A.balloon);
-            }
-
-            if (B.type == WorldObject.objType.Hand)
-            {
-                foreach (Hand altHand in handBodies.Keys)
-                {
-                    if (altHand != B.hand)
-                    {
-                        //Magic number! Might need to adjust for sensitivity
-                        //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
-                        if (Vector2.Distance(new Vector2(altHand.Position.X, altHand.Position.Y), WorldToPixel(fixtureA.Body.Position)) < 128)
-                        {
-                            PopBalloon(A.balloon.ID);
-                        }
-                    }
-                }
-            }
-
-            return true;
+            balloonEntities.Add(b, balloonEntity);
         }
 
         /// <summary>
@@ -268,16 +202,7 @@ namespace BubblesClient
             base.Initialize();
 
             // Lol roof!
-            Body _roofBody;
-            _roofBody = BodyFactory.CreateRectangle(_world, screenDimensions.X * 4 / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(screenDimensions.X / 2 / MeterInPixels, 0));
-            _roofBody.IsStatic = true;
-            _roofBody.Restitution = 0.3f;
-            _roofBody.Friction = 1f;
-
-            _roofBody = BodyFactory.CreateRectangle(_world, screenDimensions.X * 4 / MeterInPixels, 1 / MeterInPixels, 1f, new Vector2(screenDimensions.X / 2 / MeterInPixels, screenDimensions.Y / MeterInPixels));
-            _roofBody.IsStatic = true;
-            _roofBody.Restitution = 0.3f;
-            _roofBody.Friction = 1f;
+            physicsManager.CreateRoof((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
 
             //Load buckets
             //Note to self: Prettify - William
@@ -286,14 +211,19 @@ namespace BubblesClient
             gapBetweenBuckets = 121;
             for (int i = 0; i < 5; i++)
             {
-                Bucket b = new Bucket() { ID = i };
                 float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * bucketRed.Width; //buckets 128x128
                 float y = screenDimensions.Y - bucketRed.Height;
-                b.position = PixelToWorld(new Vector2(x, y));
-                b.size = PixelToWorld(new Vector2(bucketRed.Width, bucketRed.Height));
-                b.physicalBody = BodyFactory.CreateRectangle(_world, b.size.X, b.size.Y, 0.1f, b.position);
+
+                Bucket b = new Bucket()
+                {
+                    ID = i,
+                    Position = PhysicsManager.PixelToWorld(new Vector2(x, y)),
+                    Size = PhysicsManager.PixelToWorld(new Vector2(bucketRed.Width, bucketRed.Height))
+                    
+                };
                 buckets.Add(b);
-                objects.Add(b.physicalBody, new WorldObject { type = WorldObject.objType.Bucket, bucket = b });
+
+                b.Entity = physicsManager.CreateBucket(b.Size, b.Position);
             }
 
             // Always do this last
@@ -360,8 +290,8 @@ namespace BubblesClient
                 this.HandleInput();
             }
 
-            _world.Step((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f);
-
+            physicsManager.Update(gameTime);
+            
             // God this is hacky!
             MouseState mouseState = Mouse.GetState();
             if (mouseState.MiddleButton == ButtonState.Pressed)
@@ -374,19 +304,20 @@ namespace BubblesClient
 
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = balloon.Body.Position;
+                WorldEntity balloonEntity = balloonEntities[balloon];
+                Vector2 balloonPosition = balloonEntity.Body.Position;
 
                 // 1.5 width for that extra bit of margin
-                if (balloonPosition.X < (bucketRed.Width * -1.5) / MeterInPixels)
+                if (balloonPosition.X < (bucketRed.Width * -1.5) / PhysicsManager.MeterInPixels)
                 {
-                    float exitHeight = (balloonPosition.Y * MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloon.Body.LinearVelocity);
+                    float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
+                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
-                else if (balloonPosition.X > (bucketRed.Width * 1.5 + screenDimensions.X) / MeterInPixels)
+                else if (balloonPosition.X > (bucketRed.Width * 1.5 + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
-                    float exitHeight = (balloonPosition.Y * MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloon.Body.LinearVelocity);
+                    float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
+                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
             }
@@ -394,18 +325,18 @@ namespace BubblesClient
             removals.ForEach(x =>
             {
                 balloons.Remove(x.ID);
-                _world.RemoveBody(x.Body);
+                physicsManager.RemoveEntity(balloonEntities[x]);
             });
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
             //Would be better to have a spring or joint moving the buckets, but I haven't quite figured out how they work yet
             bool shouldShowBuckets = false;
-            Vector2 screen = PixelToWorld(screenDimensions);
+            Vector2 screen = PhysicsManager.PixelToWorld(screenDimensions);
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                //if (balloon.Body.Position.Y > screen.Y * 2 / 3)
-                if (balloon.Body.Position.Y + (128f / MeterInPixels) > screen.Y * 2 / 3)
+                Body balloonBody = balloonEntities[balloon].Body;
+                if (balloonBody.Position.Y + (128f / PhysicsManager.MeterInPixels) > screen.Y * 2 / 3)
                 {
                     shouldShowBuckets = true;
                     break;
@@ -421,24 +352,18 @@ namespace BubblesClient
 
         private void UpdateBuckets(bool show)
         {
-            //Console.WriteLine("Update buckets called");
-            //float targetY = show ? screenDimensions.Y+20 : screenDimensions.Y+170;
-
-            float targetY = show ? screenDimensions.Y - bucketRed.Height / 2 : screenDimensions.Y;
-            targetY = PixelToWorld(new Vector2(0, targetY)).Y;
-
+            float targetY = (show ? screenDimensions.Y - bucketRed.Height / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
+            
             bool atRest = true;
             foreach (Bucket b in buckets)
             {
-                //b.position.Y += (targetY - b.position.Y)/4;
-                b.position.Y = targetY;
-                b.physicalBody.Position = b.position;
+                b.Position = new Vector2(b.Position.X, targetY);
+                b.Entity.Body.Position = b.Position;
 
-                atRest &= Math.Abs(b.position.Y - targetY) < 1;
+                atRest &= Math.Abs(b.Position.Y - targetY) < 1;
             }
             if (atRest)
             {
-                //Console.WriteLine("At rest");
                 showBuckets = show;
             }
         }
@@ -496,22 +421,17 @@ namespace BubblesClient
                         break;
                 }
 
-                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Body.Position, new Vector2(balloonTexture.Width, BalloonHeight)),
-                                new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
-                //balloon image is see-through for some reason, will be fixed for final version. ignore this for now. -lauren
-                //TODO: fix balloon image so not so see-through
-                spriteBatch.Draw(balloonTexture, WorldBodyToPixel(balloon.Body.Position, new Vector2(balloonTexture.Width, BalloonHeight)),
-                                new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
+                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloonTexture.Width, ClientBalloon.BalloonHeight));
+                spriteBatch.Draw(balloonTexture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
 
-                //balloons that are not customizable need boxes for their text
+                // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (balloonType != BalloonType.Customizable)
                 {
-                    Vector2 position = WorldToPixel(balloon.Body.Position);
-                    position -= new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
-                    position.Y += balloonTexture.Height - (BalloonWidth / 2);
-                    Console.WriteLine("Position: " + position);
-                    spriteBatch.Draw(boxTexture, position, Color.White);
-                    drawSummaryText(balloon.Label, new Vector2(position.X + boxTexture.Width / 20, position.Y + boxTexture.Height * 2 / 3));
+                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
+                    boxPosition.Y += balloonTexture.Height - (ClientBalloon.BalloonWidth / 2);
+
+                    spriteBatch.Draw(boxTexture, boxPosition, Color.White);
+                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X + boxTexture.Width / 20, boxPosition.Y + boxTexture.Height * 2 / 3));
                 }
             }
 
@@ -538,7 +458,7 @@ namespace BubblesClient
                         bucketTexture = bucketBlue;
                         break;
                 }
-                spriteBatch.Draw(bucketTexture, WorldBodyToPixel(bucket.position, WorldToPixel(bucket.size)), Color.White);
+                spriteBatch.Draw(bucketTexture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
                 bucketIndex++;
             }
 
@@ -552,9 +472,9 @@ namespace BubblesClient
             else
             {
                 // Draw all of the registered hands
-                foreach (KeyValuePair<Hand, BodyJointPair> handBody in handBodies)
+                foreach (WorldEntity handBody in physicsManager.GetHandPositions())
                 {
-                    Vector2 cursorPos = WorldBodyToPixel(handBody.Value.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
+                    Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
                     spriteBatch.Draw(handTexture, cursorPos, Color.White);
                 }
             }
@@ -566,29 +486,7 @@ namespace BubblesClient
 
         private void HandleInput()
         {
-            Hand[] hands = input.GetHandPositions();
-
-            // Go through the hands array looking for new hands, if we find any, register them
-            foreach (Hand hand in hands)
-            {
-                if (!handBodies.ContainsKey(hand))
-                {
-                    this.CreateHandFixture(hand);
-                }
-            }
-
-            // Deregister any hands which aren't there any more
-            List<Hand> _removals = new List<Hand>(handBodies.Keys.Except(hands));
-            foreach (Hand hand in _removals)
-            {
-                this.RemoveHandFixture(hand);
-            }
-
-            // Move joint parts
-            foreach (KeyValuePair<Hand, BodyJointPair> handBody in handBodies)
-            {
-                handBody.Value.Joint.WorldAnchorB = new Vector2(handBody.Key.Position.X, handBody.Key.Position.Y) / MeterInPixels;
-            }
+            physicsManager.UpdateHandPositions(input.GetHandPositions());
         }
 
         //TODO: do these properly
@@ -615,49 +513,6 @@ namespace BubblesClient
             {
                 spriteBatch.DrawString(textSummary, "Invalid character", pos, Color.Red);
             }
-        }
-
-        private void CreateHandFixture(Hand hand)
-        {
-            Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(_world, 1f, 1f, 1f, handPos / MeterInPixels);
-            handBody.BodyType = BodyType.Dynamic;
-            FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
-            handJoint.MaxForce = 1000f;
-
-            handBodies.Add(hand, new BodyJointPair() { Body = handBody, Joint = handJoint });
-
-            _world.AddJoint(handJoint);
-            objects.Add(handBody, new WorldObject { type = WorldObject.objType.Hand, hand = hand });
-        }
-
-        private void RemoveHandFixture(Hand hand)
-        {
-            BodyJointPair bodyJoint = handBodies[hand];
-            _world.RemoveJoint(bodyJoint.Joint);
-            _world.RemoveBody(bodyJoint.Body);
-            handBodies.Remove(hand);
-            objects.Remove(bodyJoint.Body);
-        }
-
-        private Vector2 WorldToPixel(Vector2 worldPosition)
-        {
-            return worldPosition * MeterInPixels;
-        }
-
-        private Vector2 PixelToWorld(Vector2 pixelPosition)
-        {
-            return pixelPosition / MeterInPixels;
-        }
-
-        private Vector2 WorldBodyToPixel(Vector2 worldPosition, Vector2 pixelOffset)
-        {
-            return (worldPosition * MeterInPixels) - (pixelOffset / 2);
-        }
-
-        private Vector2 PixelToWorldBody(Vector2 pixelPosition, Vector2 pixelOffset)
-        {
-            return (pixelPosition / MeterInPixels) + ((pixelOffset / MeterInPixels) / 2);
         }
 
         private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)

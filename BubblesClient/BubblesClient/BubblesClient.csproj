@@ -116,8 +116,11 @@
     <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
     <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
+    <Compile Include="Model\Bucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
     <Compile Include="Network\ScreenManager.cs" />
+    <Compile Include="Physics\PhysicsManager.cs" />
+    <Compile Include="Physics\WorldEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />
