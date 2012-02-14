@@ -549,7 +549,8 @@ namespace BubblesClient
             //display content page if balloonPopped is true (should only be true for 30 seconds)
             if (poppedBalloonID != null)
             {
-                spriteBatch.Draw(contentBox, new Vector2(0, 0), Color.White);
+                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
+                spriteBatch.Draw(contentBox, position, Color.White);
                 drawContentText(balloons[poppedBalloonID].Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
             }
             else
