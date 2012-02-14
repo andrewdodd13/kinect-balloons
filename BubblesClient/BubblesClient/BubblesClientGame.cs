@@ -79,7 +79,7 @@ namespace BubblesClient
             physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
             {
                 Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                PopBalloon(b.ID);
+                PopBalloon(b.ID, true);
             };
             physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
             {
@@ -90,99 +90,6 @@ namespace BubblesClient
 
             // Initialise network
             this.ScreenManager = screenManager;
-        }
-
-        public void ProcessNetworkMessages()
-        {
-            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
-            foreach (Message msg in messages)
-            {
-                if (msg == null)
-                {
-                    // the connection to the server was closed
-                    break;
-                }
-
-                switch (msg.Type)
-                {
-                    case MessageType.NewBalloon:
-                        OnNewBalloon((NewBalloonMessage)msg);
-                        break;
-                    case MessageType.PopBalloon:
-                        OnPopBalloon((PopBalloonMessage)msg);
-                        break;
-                    case MessageType.BalloonContentUpdate:
-                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                        break;
-                    case MessageType.BalloonDecorationUpdate:
-                        OnBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
-                        break;
-                }
-            }
-        }
-
-        public void OnNewBalloon(NewBalloonMessage m)
-        {
-            // Choose where to place the balloon
-            Vector2 position = new Vector2();
-            switch (m.Direction)
-            {
-                case Direction.Left:
-                    position.X = ClientBalloon.BalloonWidth * -1;
-                    break;
-                case Direction.Right:
-                    position.X = ClientBalloon.BalloonWidth + screenDimensions.X;
-                    break;
-
-                case Direction.Any:
-                default:
-                    position.X = new Random().Next((int)screenDimensions.X);
-                    break;
-            }
-
-            position.Y = m.Y * screenDimensions.Y;
-
-            // Setup the balloon's body
-            Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
-            WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
-
-            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
-            ClientBalloon b = new ClientBalloon(balloon);
-
-            balloons.Add(b.ID, b);
-            balloonEntities.Add(b, balloonEntity);
-        }
-
-        /// <summary>
-        /// Handles the case where the server forces us to pop a balloon
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void OnPopBalloon(PopBalloonMessage m)
-        {
-            Console.WriteLine("Pop balloon!");
-        }
-
-        public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
-        {
-            ClientBalloon balloon;
-            if (balloons.TryGetValue(bcm.BalloonID, out balloon))
-            {
-                balloon.Label = bcm.Label;
-                balloon.Content = bcm.Content;
-                balloon.Type = bcm.BalloonType;
-                balloon.Url = bcm.Url;
-            }
-        }
-
-        public void OnBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
-        {
-            ClientBalloon balloon;
-            if (balloons.TryGetValue(bdm.BalloonID, out balloon))
-            {
-                balloon.OverlayType = bdm.OverlayType;
-                balloon.BackgroundColor = bdm.BackgroundColor;
-            }
         }
 
         /// <summary>
@@ -304,6 +211,7 @@ namespace BubblesClient
             MouseState mouseState = Mouse.GetState();
             if (mouseState.MiddleButton == ButtonState.Pressed)
             {
+                this.RemoveBalloon(balloons[poppedBalloonID]);
                 poppedBalloonID = null;
             }
 
@@ -581,7 +489,7 @@ namespace BubblesClient
             }
         }
 
-        private void PopBalloon(string balloonID)
+        private void PopBalloon(string balloonID, bool showContent = false)
         {
             ClientBalloon balloon = balloons[balloonID];
             if (balloon == null)
@@ -589,8 +497,8 @@ namespace BubblesClient
                 throw new ArgumentOutOfRangeException("e", "No such balloon in received message.");
             }
 
-            // Display content only if balloon is not customizable type
-            if (BalloonType.Customizable != balloon.Type)
+            // Display content only asked and if balloon is not customizable type
+            if (BalloonType.Customizable != balloon.Type && showContent)
             {
                 poppedBalloonID = balloonID;
 
@@ -599,10 +507,122 @@ namespace BubblesClient
                 {
                     poppedBalloonID = null;
                     timer.Stop();
+                    this.RemoveBalloon(balloon);
                 };
                 timer.Interval = MessageDisplayTime;
                 timer.Start();
             }
+            else
+            {
+                this.RemoveBalloon(balloon);
+            }
         }
+
+        /// <summary>
+        /// Removes the given balloon from the physics world and screen.
+        /// </summary>
+        /// <param name="balloon"></param>
+        private void RemoveBalloon(ClientBalloon balloon)
+        {
+            physicsManager.RemoveEntity(balloonEntities[balloon]);
+            balloonEntities.Remove(balloon);
+            balloons.Remove(balloon.ID);
+            ScreenManager.NotifyBalloonPopped(balloon);
+        }
+
+        #region "Networking"
+        public void ProcessNetworkMessages()
+        {
+            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
+            foreach (Message msg in messages)
+            {
+                if (msg == null)
+                {
+                    // the connection to the server was closed
+                    break;
+                }
+
+                switch (msg.Type)
+                {
+                    case MessageType.NewBalloon:
+                        OnNewBalloon((NewBalloonMessage)msg);
+                        break;
+                    case MessageType.PopBalloon:
+                        OnPopBalloon((PopBalloonMessage)msg);
+                        break;
+                    case MessageType.BalloonContentUpdate:
+                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+                        break;
+                    case MessageType.BalloonDecorationUpdate:
+                        OnBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+                        break;
+                }
+            }
+        }
+
+        public void OnNewBalloon(NewBalloonMessage m)
+        {
+            // Choose where to place the balloon
+            Vector2 position = new Vector2();
+            switch (m.Direction)
+            {
+                case Direction.Left:
+                    position.X = ClientBalloon.BalloonWidth * -1;
+                    break;
+                case Direction.Right:
+                    position.X = ClientBalloon.BalloonWidth + screenDimensions.X;
+                    break;
+
+                case Direction.Any:
+                default:
+                    position.X = new Random().Next((int)screenDimensions.X);
+                    break;
+            }
+
+            position.Y = m.Y * screenDimensions.Y;
+
+            // Setup the balloon's body
+            Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
+            WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
+
+            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            ClientBalloon b = new ClientBalloon(balloon);
+
+            balloons.Add(b.ID, b);
+            balloonEntities.Add(b, balloonEntity);
+        }
+
+        /// <summary>
+        /// Handles the case where the server forces us to pop a balloon
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OnPopBalloon(PopBalloonMessage m)
+        {
+            PopBalloon(m.BalloonID);
+        }
+
+        public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
+        {
+            ClientBalloon balloon;
+            if (balloons.TryGetValue(bcm.BalloonID, out balloon))
+            {
+                balloon.Label = bcm.Label;
+                balloon.Content = bcm.Content;
+                balloon.Type = bcm.BalloonType;
+                balloon.Url = bcm.Url;
+            }
+        }
+
+        public void OnBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        {
+            ClientBalloon balloon;
+            if (balloons.TryGetValue(bdm.BalloonID, out balloon))
+            {
+                balloon.OverlayType = bdm.OverlayType;
+                balloon.BackgroundColor = bdm.BackgroundColor;
+            }
+        }
+        #endregion
     }
 }
