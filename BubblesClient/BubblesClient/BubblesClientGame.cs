@@ -24,9 +24,9 @@ namespace BubblesClient
 
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
+        private Texture2D[] bucketTextures = new Texture2D[5];
 
         private Texture2D boxTexture;
-        private Texture2D bucketRed, bucketGreen, bucketBlue, bucketStripes, bucketSpots;
         private SpriteFont textContent, textSummary;
 
         // Network
@@ -202,19 +202,19 @@ namespace BubblesClient
             //Load buckets
             //Note to self: Prettify - William
             // TODO: Should this be the first line... or the second? :P
-            float gapBetweenBuckets = (screenDimensions.Y - (bucketRed.Width * 5)) / 6;
+            float gapBetweenBuckets = (screenDimensions.Y - (Bucket.BucketWidth * 5)) / 6;
             gapBetweenBuckets = 121;
             for (int i = 0; i < 5; i++)
             {
-                float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * bucketRed.Width; //buckets 128x128
-                float y = screenDimensions.Y - bucketRed.Height;
+                float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
+                float y = screenDimensions.Y - Bucket.BucketHeight;
 
                 Bucket b = new Bucket()
                 {
                     ID = i,
                     Position = PhysicsManager.PixelToWorld(new Vector2(x, y)),
-                    Size = PhysicsManager.PixelToWorld(new Vector2(bucketRed.Width, bucketRed.Height))
-
+                    Size = PhysicsManager.PixelToWorld(new Vector2(Bucket.BucketWidth, Bucket.BucketHeight)),
+                    Texture = bucketTextures[i]
                 };
                 buckets.Add(b);
 
@@ -266,11 +266,11 @@ namespace BubblesClient
             };
 
             boxTexture = Content.Load<Texture2D>("Images/Box");
-            bucketRed = Content.Load<Texture2D>("Images/BucketRed");
-            bucketGreen = Content.Load<Texture2D>("Images/bucketGreen");
-            bucketBlue = Content.Load<Texture2D>("Images/bucketBlue");
-            bucketStripes = Content.Load<Texture2D>("Images/bucketStripes");
-            bucketSpots = Content.Load<Texture2D>("Images/bucketSpots");
+            bucketTextures[0] = Content.Load<Texture2D>("Images/BucketRed");
+            bucketTextures[2] = Content.Load<Texture2D>("Images/bucketGreen");
+            bucketTextures[4] = Content.Load<Texture2D>("Images/bucketBlue");
+            bucketTextures[3] = Content.Load<Texture2D>("Images/bucketStripes");
+            bucketTextures[1] = Content.Load<Texture2D>("Images/bucketSpots");
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace BubblesClient
                 poppedBalloonID = null;
             }
 
-            // Check if any of the balloons have buggered off
+            // Check if any of the balloons have left the screen
             List<ClientBalloon> removals = new List<ClientBalloon>();
 
             foreach (ClientBalloon balloon in balloons.Values)
@@ -316,13 +316,13 @@ namespace BubblesClient
                 Vector2 balloonPosition = balloonEntity.Body.Position;
 
                 // 1.5 width for that extra bit of margin
-                if (balloonPosition.X < (bucketRed.Width * -1.5) / PhysicsManager.MeterInPixels)
+                if (balloonPosition.X < (ClientBalloon.BalloonWidth * -1.5) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
                     ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
-                else if (balloonPosition.X > (bucketRed.Width * 1.5 + screenDimensions.X) / PhysicsManager.MeterInPixels)
+                else if (balloonPosition.X > (ClientBalloon.BalloonWidth * 1.5 + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
                     ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
@@ -360,7 +360,7 @@ namespace BubblesClient
 
         private void UpdateBuckets(bool show)
         {
-            float targetY = (show ? screenDimensions.Y - bucketRed.Height / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
+            float targetY = (show ? screenDimensions.Y - Bucket.BucketHeight / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
 
             bool atRest = true;
             foreach (Bucket b in buckets)
@@ -406,31 +406,10 @@ namespace BubblesClient
                 }
             }
 
-            //Draw all buckets
-            int bucketIndex = 0;
-            Texture2D bucketTexture = bucketRed;
+            // Draw all buckets
             foreach (Bucket bucket in buckets)
             {
-                switch (bucketIndex)
-                {
-                    case 0:
-                        bucketTexture = bucketRed;
-                        break;
-                    case 1:
-                        bucketTexture = bucketSpots;
-                        break;
-                    case 2:
-                        bucketTexture = bucketGreen;
-                        break;
-                    case 3:
-                        bucketTexture = bucketStripes;
-                        break;
-                    case 4:
-                        bucketTexture = bucketBlue;
-                        break;
-                }
-                spriteBatch.Draw(bucketTexture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
-                bucketIndex++;
+                spriteBatch.Draw(bucket.Texture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
