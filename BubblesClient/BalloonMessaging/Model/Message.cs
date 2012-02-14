@@ -23,13 +23,14 @@ namespace Balloons.Messaging.Model
 
         // Internal messages
         Connected,
-        Disconnected
+        Disconnected,
+        RefreshFeed
     }
     
     /// <summary>
     /// Message that can be sent between a screen and bubble server or within the server.
     /// </summary>
-    public abstract class Message
+    public class Message
     {
         /// <summary>
         /// Identifies the type of the message.

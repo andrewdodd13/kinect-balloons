@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Timers;
-using System.Collections.Generic;
+using System.Threading;
 using Balloons;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
@@ -17,7 +17,9 @@ namespace Balloons.Server
         private string m_feedUrl;
         private WebClient m_client;
         private double m_interval;
-        private Timer m_timer;
+        private System.Timers.Timer m_timer;
+        private Thread m_thread;
+        private CircularQueue<Message> m_queue;
         
         private List<ServerBalloon> m_balloons;
         
@@ -27,12 +29,73 @@ namespace Balloons.Server
             this.m_feedUrl = feedUrl;
             this.m_interval = pullIntervals;
             this.m_balloons = new List<ServerBalloon>();
+            this.m_queue = new CircularQueue<Message>(64);
             this.m_client = new WebClient();
-            this.m_timer = new Timer(m_interval);
-            this.m_timer.Elapsed += (sender, args) => Update();
+            this.m_timer = new System.Timers.Timer(m_interval);
+            this.m_timer.Elapsed += (sender, args) => Refresh();
+            this.m_thread = new Thread(Run);
+            this.m_thread.Start();
+        }
+        
+        /// <summary>
+        /// Send a message to the feed reader. It will be handled in the reader's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message)
+        {
+            m_queue.Enqueue(message);
         }
 
-        private void Update()
+        /// <summary>
+        /// Send a message to the feed reader, changing its sender. It will be handled in the reader's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message, object sender)
+        {
+            if(message != null && sender != null)
+            {
+                message.Sender = sender;
+            }
+            m_queue.Enqueue(message);
+        }
+        
+        /// <summary>
+        /// Thread Main.
+        /// </summary>
+        private void Run()
+        {
+            while(true)
+            {
+                Message msg = m_queue.Dequeue();
+                if(!HandleMessage(msg))
+                {    
+                    break;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Handles a message. Must be called from the screen reader's thread.
+        /// </summary>
+        /// <returns>
+        /// True if the message has been handled, false if messages should stop being processed.
+        /// </returns>
+        private bool HandleMessage(Message msg)
+        {
+            if(msg == null)
+            {
+                return false;
+            }
+            switch(msg.Type)
+            {
+            case MessageType.RefreshFeed:
+                DoRefresh();
+                return true;
+            default:
+                // Stop message loop when receiving unknown messages
+                return false;
+            }
+        }
+
+        private void DoRefresh()
         {
             // Connect to WebServer, gets balloons
             List<FeedContent> fromFeed = GetFeedContents();
@@ -69,13 +132,14 @@ namespace Balloons.Server
             Debug.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
         }
         
-        public void Start() {
+        public void Start()
+        {
             m_timer.Enabled = true;
         }
 
         public void Refresh()
         {
-            System.Threading.ThreadPool.QueueUserWorkItem(state => Update());
+            EnqueueMessage(new Message(MessageType.RefreshFeed, "refresh-feed"));
         }
 
         internal List<FeedContent> GetFeedContents()
