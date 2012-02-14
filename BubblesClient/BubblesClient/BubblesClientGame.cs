@@ -87,7 +87,7 @@ namespace BubblesClient
         //Todo - find a better name for this, objects is quite vague
         private Dictionary<Body, WorldObject> objects = new Dictionary<Body, WorldObject>();
 
-        public BubblesClientGame(ScreenManager screenManager)
+        public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
@@ -97,11 +97,7 @@ namespace BubblesClient
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Initialise Input
-            // Use this line to enable the Kinect
-            //_input = new KinectControllerInput();
-
-            // And this one to enable the Mouse (if you use both, Mouse is used)
-            input = new MouseInput();
+            this.input = controller;
             input.Initialize(screenDimensions);
 
             // Initialise Content
