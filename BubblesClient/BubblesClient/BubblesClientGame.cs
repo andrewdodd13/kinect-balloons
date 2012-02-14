@@ -19,17 +19,12 @@ namespace BubblesClient
     /// </summary>
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
-
         // Textures
         private Texture2D skyTexture, handTexture, contentBox;
 
         // Balloon Textures
-        private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>();
+        private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
 
-        private Texture2D balloonWhite, balloonStripes, balloonSpots;
-        private Texture2D balloonTwitterWhite, balloonTwitterStripes, balloonTwitterSpots;
-        private Texture2D balloonNewsWhite, balloonNewsStripes, balloonNewsSpots;
-        private Texture2D balloonCustomWhite, balloonCustomStripes, balloonCustomSpots; //TODO: add twitter and news balloon images
         private Texture2D boxTexture;
         private Texture2D bucketRed, bucketGreen, bucketBlue, bucketStripes, bucketSpots;
         private SpriteFont textContent, textSummary;
@@ -44,7 +39,7 @@ namespace BubblesClient
 
         // Input
         private IInputController input;
-        
+
         // Physics World
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
         private List<Bucket> buckets = new List<Bucket>();
@@ -81,7 +76,7 @@ namespace BubblesClient
 
             // Initialise Physics
             physicsManager.Initialize();
-            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args) 
+            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
             {
                 Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
                 PopBalloon(b.ID);
@@ -133,10 +128,10 @@ namespace BubblesClient
             switch (m.Direction)
             {
                 case Direction.Left:
-                    position.X = balloonWhite.Width * -1;
+                    position.X = ClientBalloon.BalloonWidth * -1;
                     break;
                 case Direction.Right:
-                    position.X = balloonWhite.Width + screenDimensions.X;
+                    position.X = ClientBalloon.BalloonWidth + screenDimensions.X;
                     break;
 
                 case Direction.Any:
@@ -150,10 +145,10 @@ namespace BubblesClient
             // Setup the balloon's body
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
-            
+
             Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
-            
+
             balloons.Add(b.ID, b);
             balloonEntities.Add(b, balloonEntity);
         }
@@ -171,7 +166,7 @@ namespace BubblesClient
         public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
             ClientBalloon balloon;
-            if(balloons.TryGetValue(bcm.BalloonID, out balloon))
+            if (balloons.TryGetValue(bcm.BalloonID, out balloon))
             {
                 balloon.Label = bcm.Label;
                 balloon.Content = bcm.Content;
@@ -183,7 +178,7 @@ namespace BubblesClient
         public void OnBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
         {
             ClientBalloon balloon;
-            if(balloons.TryGetValue(bdm.BalloonID, out balloon))
+            if (balloons.TryGetValue(bdm.BalloonID, out balloon))
             {
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
@@ -219,7 +214,7 @@ namespace BubblesClient
                     ID = i,
                     Position = PhysicsManager.PixelToWorld(new Vector2(x, y)),
                     Size = PhysicsManager.PixelToWorld(new Vector2(bucketRed.Width, bucketRed.Height))
-                    
+
                 };
                 buckets.Add(b);
 
@@ -245,19 +240,32 @@ namespace BubblesClient
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
             contentBox = Content.Load<Texture2D>("Images/ContentBox");
-            balloonCustomWhite = Content.Load<Texture2D>("Images/BalloonWhiteCustom");
-            balloonCustomSpots = Content.Load<Texture2D>("Images/BalloonSpotsCustom");
-            balloonCustomStripes = Content.Load<Texture2D>("Images/BalloonStripesCustom");
-            balloonTwitterWhite = Content.Load<Texture2D>("Images/BalloonWhiteTwitter");
-            balloonTwitterSpots = Content.Load<Texture2D>("Images/BalloonSpotsTwitter");
-            balloonTwitterStripes = Content.Load<Texture2D>("Images/BalloonStripesTwitter");
-            balloonNewsWhite = Content.Load<Texture2D>("Images/BalloonWhiteNews");
-            balloonNewsSpots = Content.Load<Texture2D>("Images/BalloonSpotsNews");
-            balloonNewsStripes = Content.Load<Texture2D>("Images/BalloonStripesNews");
+
+            balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
+            {
+                { BalloonType.CustomContent, new Dictionary<OverlayType, Texture2D>() {
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteCustom") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsCustom")},
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesCustom") }
+                } },
+                { BalloonType.Twitter, new Dictionary<OverlayType, Texture2D>() { 
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteTwitter") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsTwitter") },
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesTwitter") }
+                } },
+                { BalloonType.News, new Dictionary<OverlayType, Texture2D>() { 
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteNews") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsNews") }, 
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesNews") }
+                } },
+                { BalloonType.Customizable, new Dictionary<OverlayType, Texture2D>() {
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhite") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpots") },
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripes") }
+                } }
+            };
+
             boxTexture = Content.Load<Texture2D>("Images/Box");
-            balloonWhite = Content.Load<Texture2D>("Images/BalloonWhite");
-            balloonStripes = Content.Load<Texture2D>("Images/BalloonStripes");
-            balloonSpots = Content.Load<Texture2D>("Images/BalloonSpots");
             bucketRed = Content.Load<Texture2D>("Images/BucketRed");
             bucketGreen = Content.Load<Texture2D>("Images/bucketGreen");
             bucketBlue = Content.Load<Texture2D>("Images/bucketBlue");
@@ -291,7 +299,7 @@ namespace BubblesClient
             }
 
             physicsManager.Update(gameTime);
-            
+
             // God this is hacky!
             MouseState mouseState = Mouse.GetState();
             if (mouseState.MiddleButton == ButtonState.Pressed)
@@ -353,7 +361,7 @@ namespace BubblesClient
         private void UpdateBuckets(bool show)
         {
             float targetY = (show ? screenDimensions.Y - bucketRed.Height / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
-            
+
             bool atRest = true;
             foreach (Bucket b in buckets)
             {
@@ -381,51 +389,14 @@ namespace BubblesClient
             spriteBatch.Draw(skyTexture, new Vector2(0, 0), Color.White);
 
             // Draw all of the balloons
-            Texture2D balloonTexture;
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                BalloonType balloonType = balloon.Type;
-
-                switch (balloon.OverlayType)
-                {
-                    case OverlayType.Spots:
-                        if (balloonType == BalloonType.Twitter)
-                            balloonTexture = balloonTwitterSpots;
-                        else if (balloonType == BalloonType.News)
-                            balloonTexture = balloonNewsSpots;
-                        else if (balloonType == BalloonType.CustomContent)
-                            balloonTexture = balloonCustomSpots;
-                        else
-                            balloonTexture = balloonSpots;
-                        break;
-                    case OverlayType.Stripes:
-                        if (balloonType == BalloonType.Twitter)
-                            balloonTexture = balloonTwitterStripes;
-                        else if (balloonType == BalloonType.News)
-                            balloonTexture = balloonNewsStripes;
-                        else if (balloonType == BalloonType.CustomContent)
-                            balloonTexture = balloonCustomStripes;
-                        else
-                            balloonTexture = balloonStripes;
-                        break;
-                    default:
-                    case OverlayType.White:
-                        if (balloonType == BalloonType.Twitter)
-                            balloonTexture = balloonTwitterWhite;
-                        else if (balloonType == BalloonType.News)
-                            balloonTexture = balloonNewsWhite;
-                        else if (balloonType == BalloonType.CustomContent)
-                            balloonTexture = balloonCustomWhite;
-                        else
-                            balloonTexture = balloonWhite;
-                        break;
-                }
-
+                Texture2D balloonTexture = balloonTextures[balloon.Type][balloon.OverlayType];
                 Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloonTexture.Width, ClientBalloon.BalloonHeight));
                 spriteBatch.Draw(balloonTexture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
 
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloonType != BalloonType.Customizable)
+                if (balloon.Type != BalloonType.Customizable)
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
                     boxPosition.Y += balloonTexture.Height - (ClientBalloon.BalloonWidth / 2);
