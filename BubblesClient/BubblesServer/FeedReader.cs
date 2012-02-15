@@ -12,7 +12,7 @@ namespace Balloons.Server
 {
     public class FeedReader
     {
-        private const int MaxBalloonPerScreen = 2;
+        private const int MaxBalloonPerScreen = 5;
         private Server m_server;
         private string m_feedUrl;
         private WebClient m_client;

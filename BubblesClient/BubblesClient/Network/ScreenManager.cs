@@ -58,7 +58,7 @@ namespace BubblesClient
 
         public void NotifyBalloonPopped(Balloon balloon)
         {
-            throw new NotImplementedException();
+            m_conn.SendMessage(new PopBalloonMessage(balloon.ID));
         }
 
         public Balloon GetBalloonDetails(string balloonID)
