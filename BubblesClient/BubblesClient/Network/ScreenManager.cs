@@ -56,6 +56,11 @@ namespace BubblesClient
             balloon.OffScreen = true;
         }
 
+        public void NotifyBalloonPopped(Balloon balloon)
+        {
+            throw new NotImplementedException();
+        }
+
         public Balloon GetBalloonDetails(string balloonID)
         {
             Balloon balloon = null;

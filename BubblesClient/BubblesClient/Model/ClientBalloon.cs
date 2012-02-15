@@ -11,12 +11,12 @@ namespace BubblesClient.Model
         /// </summary>
         public bool OffScreen;
 
-        public Body Body { get; private set; }
+        public const float BalloonWidth = 162f;
+        public const float BalloonHeight = 192f;
 
-        public ClientBalloon(Balloon parent, Body body)
+        public ClientBalloon(Balloon parent)
             : base(parent)
         {
-            this.Body = body;
         }
     }
 }
