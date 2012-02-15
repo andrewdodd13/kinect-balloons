@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Net;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
+using Balloons.Messaging.Model;
 
 namespace BubblesClient
 {
@@ -14,41 +16,31 @@ namespace BubblesClient
         /// </summary>
         static void Main(string[] args)
         {
-            IPAddress serverAddress = IPAddress.Loopback;
-            int serverPort = 4000;
+            // Load the configuration file
+            string configPath = "BalloonClient.conf";
+            if(args.Length > 1)
+            {
+                configPath = args[1];
+            }
+            // If this path doesn't exist, the config file will be created with default values
+            Configuration.Load(configPath);
+
+            // Initialise the input controller
             IInputController controller = null;
-
-            if (args.Length > 0)
+            switch(Configuration.InputType)
             {
-                if (args[0] == "kinect")
-                {
-                    controller = new KinectControllerInput();
-                }
-            }
-
-            if (controller == null)
-            {
+            default:
+            case InputType.Mouse:
                 controller = new MouseInput();
+                break;
+            case InputType.Kinect:
+                controller = new KinectControllerInput();
+                break;
             }
 
-            if (args.Length > 1)
-            {
-                if (!IPAddress.TryParse(args[1], out serverAddress))
-                {
-                    Console.WriteLine("Invalid Server IP Address: {0}", args[1]);
-                    return;
-                }
-            }
-            if (args.Length > 2)
-            {
-                if (!Int32.TryParse(args[2], out serverPort))
-                {
-                    Console.WriteLine("Invalid Port: {0}", args[2]);
-                    return;
-                }
-            }
-
-            using (BubblesClientGame game = new BubblesClientGame(new ScreenManager(serverAddress, serverPort), controller))
+            // Run the game
+            using(ScreenManager screen = new ScreenManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
+            using(BubblesClientGame game = new BubblesClientGame(screen, controller))
             {
                 game.Run();
             }
