@@ -207,16 +207,16 @@ namespace BubblesClient
             {
                 this.HandleInput();
             }
+            else
+            {
+                if (input.ShouldClosePopup())
+                {
+                    this.RemoveBalloon(balloons[poppedBalloonID]);
+                    poppedBalloonID = null;
+                }
+            }
 
             physicsManager.Update(gameTime);
-
-            // God this is hacky!
-            MouseState mouseState = Mouse.GetState();
-            if (mouseState.MiddleButton == ButtonState.Pressed)
-            {
-                this.RemoveBalloon(balloons[poppedBalloonID]);
-                poppedBalloonID = null;
-            }
 
             // Check if any of the balloons have left the screen
             List<ClientBalloon> removals = new List<ClientBalloon>();

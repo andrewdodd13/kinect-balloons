@@ -27,5 +27,13 @@ namespace BubblesClient.Input.Controllers
         /// <returns>An array of hands. Position should be relative to the 
         /// screen, as described by Initialize().</returns>
         Hand[] GetHandPositions();
+
+        /// <summary>
+        /// Indicates whether the user is trying to close the popup. This is
+        /// independant of whether or not the popup is currently shown. We
+        /// really need a state machine for this...
+        /// </summary>
+        /// <returns>True if the user is trying to close the popup.</returns>
+        bool ShouldClosePopup();
     }
 }

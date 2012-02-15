@@ -109,6 +109,11 @@ namespace BubblesClient.Input.Controllers.Kinect
             }
         }
 
+        public bool ShouldClosePopup()
+        {
+            throw new NotImplementedException("Gotta close the popup!");
+        }
+
         private Vector2 convertRawHandToScreen(SkeletonPoint raw)
         {
             return convertRawHandToScreen(new Vector2(raw.X, raw.Y));
