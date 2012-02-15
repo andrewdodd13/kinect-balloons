@@ -77,8 +77,16 @@ namespace Balloons.Messaging
             m_socket = socket;
             m_receiveQueue = receiveQueue;
             m_receiveBuffer = new CircularBuffer(4096);
-            //m_serializer = new TextMessageSerializer();
-            m_serializer = new BinaryMessageSerializer();
+            switch(Configuration.SerializerType)
+            {
+            default:
+            case SerializerType.Binary:
+                m_serializer = new BinaryMessageSerializer();
+                break;
+            case SerializerType.JSON:
+                m_serializer = new TextMessageSerializer();
+                break;
+            }
         }
 
         public void Dispose()

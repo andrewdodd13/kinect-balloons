@@ -17,6 +17,15 @@ namespace Balloons.Messaging.Model
     }
 
     /// <summary>
+    /// List of possible serializers.
+    /// </summary>
+    public enum SerializerType
+    {
+        Binary,
+        JSON
+    }
+
+    /// <summary>
     /// Contains application-wide configuration settings and constants.
     /// </summary>
     public class Configuration
@@ -42,6 +51,14 @@ namespace Balloons.Messaging.Model
         /// Which input type should be used for manipulating balloons.
         /// </summary>
         public static InputType InputType = InputType.Mouse;
+        /// <summary>
+        /// Which serializer should be used to send messages over the network.
+        /// </summary>
+        public static SerializerType SerializerType = SerializerType.Binary;
+        /// <summary>
+        /// Whether to log or not the messages sent and received from the network.
+        /// </summary>
+        public static bool LogNetworkMessages = false;
         #endregion
 
         #region Client settings
@@ -133,7 +150,7 @@ namespace Balloons.Messaging.Model
                 Trace.Listeners.Add(new ConsoleTraceListener());
                 Trace.AutoFlush = true;
             }
-            if(LogToFile)
+            if(LogToFile && !String.IsNullOrWhiteSpace(LogFilePath))
             {
                 Trace.Listeners.Add(new TextWriterTraceListener(LogFilePath));
             }
@@ -151,6 +168,8 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "LogToConsole", LogToConsole);
             StoreValue(settings, "LogToFile", LogToFile);
             StoreValue(settings, "LogFilePath", LogFilePath);
+            StoreValue(settings, "SerializerType", SerializerType);
+            StoreValue(settings, "LogNetworkMessages", LogNetworkMessages);
 
             // client settings
             StoreValue(settings, "InputType", InputType);
@@ -212,6 +231,8 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "LogToConsole", out LogToConsole);
             LoadValue(settings, "LogToFile", out LogToFile);
             LoadValue(settings, "LogFilePath", out LogFilePath);
+            LoadValue(settings, "SerializerType", out SerializerType);
+            LoadValue(settings, "LogNetworkMessages", out LogNetworkMessages);
 
             // client settings
             LoadValue(settings, "InputType", out InputType);
@@ -235,6 +256,31 @@ namespace Balloons.Messaging.Model
         }
 
         private static bool LoadValue<T>(JObject settings, string key, out T val)
+        {
+            if(typeof(T).IsEnum)
+            {
+                string text;
+                val = default(T);
+                if(LoadValueInternal(settings, key, out text))
+                {
+                    try
+                    {
+                        val = (T)Enum.Parse(typeof(T), text);
+                        return true;
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+                return false;
+            }
+            else
+            {
+                return LoadValueInternal(settings, key, out val);
+            }
+        }
+
+        private static bool LoadValueInternal<T>(JObject settings, string key, out T val)
         {
             JToken jVal = null;
             val = default(T);
@@ -276,28 +322,16 @@ namespace Balloons.Messaging.Model
             return false;
         }
 
-        private static bool LoadValue(JObject settings, string key, out InputType val)
-        {
-            string text;
-            val = Model.InputType.Mouse;
-            if(LoadValue(settings, key, out text))
-            {
-                switch(text)
-                {
-                case "mouse":
-                    val = InputType.Mouse;
-                    return true;
-                case "kinect":
-                    val = InputType.Kinect;
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private static void StoreValue<T>(JObject settings, string key, T val)
         {
-            settings[key] = JValue.FromObject(val);
+            if(typeof(T).IsEnum)
+            {
+                settings[key] = JValue.CreateString(val.ToString());
+            }
+            else
+            {
+                settings[key] = JValue.FromObject(val);
+            }
         }
 
         private static void StoreValue(JObject settings, string key, string val)
@@ -314,11 +348,6 @@ namespace Balloons.Messaging.Model
         private static void StoreValue(JObject settings, string key, IPAddress val)
         {
             settings[key] = (val == null) ? null : JValue.CreateString(val.ToString());
-        }
-
-        private static void StoreValue(JObject settings, string key, InputType val)
-        {
-            settings[key] = JValue.CreateString(val.ToString());
         }
 
         private static void LogError(string message, Exception e)

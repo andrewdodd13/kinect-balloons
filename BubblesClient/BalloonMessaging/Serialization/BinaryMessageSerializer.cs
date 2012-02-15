@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
@@ -13,6 +14,7 @@ namespace Balloons.Serialization
 
         private Dictionary<MessageType, MessageDecoder> m_decoders;
         private Dictionary<MessageType, MessageEncoder> m_encoders;
+        private TextMessageSerializer m_logFormatter;
 
         public BinaryMessageSerializer()
         {
@@ -33,6 +35,26 @@ namespace Balloons.Serialization
             m_encoders.Add(MessageType.PopBalloon, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonContent, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonDecoration, SerializeBalloon);
+
+            if(Configuration.LogNetworkMessages)
+            {
+                m_logFormatter = new TextMessageSerializer();
+            }
+        }
+
+        private void LogMessage(Message msg, string direction)
+        {
+            if((m_logFormatter != null) && (msg != null))
+            {
+                try
+                {
+                    string line = m_logFormatter.Format(msg);
+                    Trace.WriteLine(String.Format("{0} {1}", direction, line));
+                }
+                catch(Exception)
+                {
+                }
+            }
         }
 
         #region Serialization
@@ -60,6 +82,7 @@ namespace Balloons.Serialization
             writer.Seek(0, SeekOrigin.Begin);
             writer.Write((int)s.Length);
             writer.Flush();
+            LogMessage(msg, ">>");
             return s.ToArray();
         }
 
@@ -143,7 +166,9 @@ namespace Balloons.Serialization
             {
                 throw new NotImplementedException("Message type not supported: " + type);
             }
-            return decoder(reader, type);
+            Message msg = decoder(reader, type);
+            LogMessage(msg, "<<");
+            return msg;
         }
 
         private Message DecodeNewBalloon(BinaryReader reader, MessageType type)
