@@ -118,7 +118,8 @@ namespace Balloons.Messaging.Model
         {
             if(File.Exists(ConfigPath))
             {
-
+                JObject settings = LoadConfigFile(ConfigPath);
+                LoadValues(settings);
             }
             else
             {
@@ -144,34 +145,32 @@ namespace Balloons.Messaging.Model
         /// </summary>
         public static bool Save(string path)
         {
-            //Dictionary<string, object> settings = new Dictionary<string, object>();
             JObject settings = new JObject();
 
             // common settings
-            settings["LogToConsole"] = JValue.FromObject(LogToConsole);
-            settings["LogToFile"] = JValue.FromObject(LogToFile);
-            settings["LogFilePath"] = (LogFilePath == null) ? null : JValue.FromObject(LogFilePath);
+            StoreValue(settings, "LogToConsole", LogToConsole);
+            StoreValue(settings, "LogToFile", LogToFile);
+            StoreValue(settings, "LogFilePath", LogFilePath);
 
             // client settings
-            settings["InputType"] = JValue.FromObject(InputType.ToString());
-            settings["FullScreen"] = JValue.FromObject(FullScreen);
-            settings["ScreenWidth"] = JValue.FromObject(ScreenWidth);
-            settings["ScreenHeight"] = JValue.FromObject(ScreenHeight);
-            settings["MessageDisplayTime"] = JValue.FromObject(MessageDisplayTime);
-            settings["RemoteIPAddress"] = JValue.FromObject(RemoteIPAddress.ToString());
-            settings["RemotePort"] = JValue.FromObject(RemotePort);
+            StoreValue(settings, "InputType", InputType);
+            StoreValue(settings, "FullScreen", FullScreen);
+            StoreValue(settings, "ScreenWidth", ScreenWidth);
+            StoreValue(settings, "ScreenHeight", ScreenHeight);
+            StoreValue(settings, "MessageDisplayTime", MessageDisplayTime);
+            StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
+            StoreValue(settings, "RemotePort", RemotePort);
 
             // server settings
-            settings["LocalIPAddress"] = JValue.FromObject(LocalIPAddress.ToString());
-            settings["LocalPort"] = JValue.FromObject(LocalPort);
-            settings["FeedURL"] = (FeedURL == null) ? null : JValue.FromObject(FeedURL);
-            settings["FeedTimeout"] = JValue.FromObject(FeedTimeout);
-            settings["MinBalloonsPerScreen"] = JValue.FromObject(MinBalloonsPerScreen);
-            settings["MaxBalloonsPerScreen"] = JValue.FromObject(MaxBalloonsPerScreen);
-            settings["VelocityLeftX"] = JValue.FromObject(VelocityLeft.X);
-            settings["VelocityLeftY"] = JValue.FromObject(VelocityLeft.Y);
-            settings["VelocityRightX"] = JValue.FromObject(VelocityRight.X);
-            settings["VelocityRightY"] = JValue.FromObject(VelocityRight.Y);
+            StoreValue(settings, "LocalIPAddress", LocalIPAddress);
+            StoreValue(settings, "LocalPort", LocalPort);
+            StoreValue(settings, "FeedURL", FeedURL);
+            StoreValue(settings, "FeedTimeout", FeedTimeout);
+            StoreValue(settings, "MinBalloonsPerScreen", MinBalloonsPerScreen);
+            StoreValue(settings, "MaxBalloonsPerScreen", MaxBalloonsPerScreen);
+
+            StoreValue(settings, "VelocityLeft", VelocityLeft);
+            StoreValue(settings, "VelocityRight", VelocityRight);
 
             // write the settings to the configuration file, as JSON
             string jsonText = settings.ToString();
@@ -182,9 +181,150 @@ namespace Balloons.Messaging.Model
             }
             catch(Exception e)
             {
-                Trace.WriteLine(String.Format("Error when writing configuration file: {0}", e));
+                LogError("Error when writing configuration file", e);
                 return false;
             }
+        }
+
+        private static JObject LoadConfigFile(string path)
+        {
+            string jsonText = null;
+            try
+            {
+                jsonText = File.ReadAllText(path);
+                return JObject.Parse(jsonText);
+            }
+            catch(Exception e)
+            {
+                LogError("Error when reading configuration file", e);
+                return null;
+            }
+        }
+
+        private static void LoadValues(JObject settings)
+        {
+            if(settings == null)
+            {
+                return;
+            }
+
+            // common settings
+            LoadValue(settings, "LogToConsole", out LogToConsole);
+            LoadValue(settings, "LogToFile", out LogToFile);
+            LoadValue(settings, "LogFilePath", out LogFilePath);
+
+            // client settings
+            LoadValue(settings, "InputType", out InputType);
+            LoadValue(settings, "FullScreen", out FullScreen);
+            LoadValue(settings, "ScreenWidth", out ScreenWidth);
+            LoadValue(settings, "ScreenHeight", out ScreenHeight);
+            LoadValue(settings, "MessageDisplayTime", out MessageDisplayTime);
+            LoadValue(settings, "RemoteIPAddress", out RemoteIPAddress);
+            LoadValue(settings, "RemotePort", out RemotePort);
+
+            // server settings
+            LoadValue(settings, "LocalIPAddress", out LocalIPAddress);
+            LoadValue(settings, "LocalPort", out LocalPort);
+            LoadValue(settings, "FeedURL", out FeedURL);
+            LoadValue(settings, "FeedTimeout", out FeedTimeout);
+            LoadValue(settings, "MinBalloonsPerScreen", out MinBalloonsPerScreen);
+            LoadValue(settings, "MaxBalloonsPerScreen", out MaxBalloonsPerScreen);
+
+            LoadValue(settings, "VelocityLeft", out VelocityLeft);
+            LoadValue(settings, "VelocityRight", out VelocityRight);
+        }
+
+        private static bool LoadValue<T>(JObject settings, string key, out T val)
+        {
+            JToken jVal = null;
+            val = default(T);
+            if(settings.TryGetValue(key, out jVal))
+            {
+                try
+                {
+                    val = jVal.ToObject<T>();
+                    return true;
+                }
+                catch(Exception e)
+                {
+                    LogError("Invalid type for the configuration value", e);
+                }
+            }
+            return false;
+        }
+
+        private static bool LoadValue(JObject settings, string key, out Vector2D val)
+        {
+            float x, y;
+            val = new Vector2D(0.0f, 0.0f);
+            if(LoadValue(settings, key + "X", out x) && LoadValue(settings, key + "Y", out y))
+            {
+                val = new Vector2D(x, y);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool LoadValue(JObject settings, string key, out IPAddress val)
+        {
+            string text;
+            val = null;
+            if(LoadValue(settings, key, out text))
+            {
+                return IPAddress.TryParse(text, out val);
+            }
+            return false;
+        }
+
+        private static bool LoadValue(JObject settings, string key, out InputType val)
+        {
+            string text;
+            val = Model.InputType.Mouse;
+            if(LoadValue(settings, key, out text))
+            {
+                switch(text)
+                {
+                case "mouse":
+                    val = InputType.Mouse;
+                    return true;
+                case "kinect":
+                    val = InputType.Kinect;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static void StoreValue<T>(JObject settings, string key, T val)
+        {
+            settings[key] = JValue.FromObject(val);
+        }
+
+        private static void StoreValue(JObject settings, string key, string val)
+        {
+            settings[key] = (val == null) ? null : JValue.FromObject(val);
+        }
+
+        private static void StoreValue(JObject settings, string key, Vector2D val)
+        {
+            StoreValue(settings, key + "X", val.X);
+            StoreValue(settings, key + "Y", val.Y);
+        }
+
+        private static void StoreValue(JObject settings, string key, IPAddress val)
+        {
+            settings[key] = (val == null) ? null : JValue.CreateString(val.ToString());
+        }
+
+        private static void StoreValue(JObject settings, string key, InputType val)
+        {
+            settings[key] = JValue.CreateString(val.ToString());
+        }
+
+        private static void LogError(string message, Exception e)
+        {
+            // TODO: handle logging before the configuration is loaded
+            Console.WriteLine(String.Format("{0}: {1}", message, e));
         }
         #endregion
     }
