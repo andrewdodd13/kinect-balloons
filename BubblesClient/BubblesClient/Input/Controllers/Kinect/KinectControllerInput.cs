@@ -85,10 +85,10 @@ namespace BubblesClient.Input.Controllers.Kinect
                                     // Set the hands positions
                                     hands = _handPositions[skeleton];
                                     SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
-                                    hands[0].Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z);
+                                    hands[0].Position = new Vector3(convertRawHandToScreen(leftHand), leftHand.Z);
 
                                     SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
-                                    hands[1].Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z);
+                                    hands[1].Position = new Vector3(convertRawHandToScreen(rightHand), rightHand.Z);
 
                                     // Add this skeleton to the list of skeletons matched this frame
                                     matched.Add(skeleton);
@@ -104,6 +104,16 @@ namespace BubblesClient.Input.Controllers.Kinect
                     }
                 }
             }
+        }
+
+        private Vector2 convertRawHandToScreen(SkeletonPoint raw)
+        {
+            return convertRawHandToScreen(new Vector2(raw.X, raw.Y));
+        }
+
+        private Vector2 convertRawHandToScreen(Vector2 raw)
+        {
+            return new Vector2(_scaleFactorX * raw.X + _scaleFactorX, _scaleFactorY * -(raw.Y) + _scaleFactorY);
         }
 
         #region "Kinect Boilerplate Code"
