@@ -159,6 +159,10 @@ namespace Balloons.Server
                 return HandleNewBalloon((NewBalloonMessage)msg);
             case MessageType.PopBalloon:
                 return HandlePopBalloon((PopBalloonMessage)msg);
+            case MessageType.GetBalloonContent:
+                return HandleGetBalloonContent((GetBalloonContentMessage)msg);
+            case MessageType.GetBalloonDecoration:
+                return HandleGetBalloonDecoration((GetBalloonDecorationMessage)msg);
             case MessageType.BalloonContentUpdate:
                 return HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
             case MessageType.BalloonDecorationUpdate:
@@ -176,21 +180,23 @@ namespace Balloons.Server
         private bool HandleScreenConnected(ConnectedMessage msg)
         {
             int screenID = m_nextScreenID++;
-            Screen screen = new Screen("Screen-" + screenID, screenID, msg.Connection, this);
+            ScreenConnection conn = new ScreenConnection(m_queue, msg.Connection);
+            Screen screen = new Screen(screenID, conn);
+            conn.Sender = screen;
+            conn.StartReceivingMessages();
             m_screens.Add(screen);
-
+            Console.WriteLine("Screen connected: {0}", screenID);
             m_feed.Refresh();
-
             return true;
         }
         
         private bool HandleScreenDisconnected(DisconnectedMessage msg)
         {
-            Console.WriteLine("Screen disconnected");
+            Console.WriteLine("Screen disconnected: {0}", msg.ScreenID);
             Screen s = GetScreen(msg.ScreenID);
 
             // Gets screen's balloons
-            var balloons = s.GetBalloons();
+            var balloons = s.Balloons;
             // Gets left and right screens
             Screen left = GetPreviousScreen(s);
             Screen right = GetNextScreen(s);
@@ -199,14 +205,26 @@ namespace Balloons.Server
                 // it means that this was the last screen left
                 m_bubbles.Clear();
             } else {
-                foreach(ServerBalloon i in balloons.Values)
+                foreach(ServerBalloon balloon in balloons.Values)
                 {
                     // Choose randomly between left or right screen
                     int random = m_random.Next(1);
+                    Screen newScreen = null;
+                    NewBalloonMessage nbm = null;
                     if(random == 0) {
-                        left.EnqueueMessage(new NewBalloonMessage(i.ID, Direction.Right, 0.1f, ServerBalloon.VelocityLeft), this);
+                        newScreen = left;
+                        nbm = new NewBalloonMessage(balloon.ID, Direction.Right,
+                                                    0.1f, ServerBalloon.VelocityLeft);
                     } else {
-                        right.EnqueueMessage(new NewBalloonMessage(i.ID, Direction.Left, 0.1f, ServerBalloon.VelocityRight), this);
+                        newScreen = right;
+                        nbm = new NewBalloonMessage(balloon.ID, Direction.Left,
+                                                    0.1f, ServerBalloon.VelocityRight);
+                    }
+                    balloon.Screen = newScreen;
+                    if(newScreen != null)
+                    {
+                        newScreen.Balloons.Add(nbm.BalloonID, balloon);
+                        newScreen.Connection.SendMessage(nbm);
                     }
                 }
             }
@@ -214,16 +232,21 @@ namespace Balloons.Server
             return true;
         }
         
-        private bool HandleChangeScreen(ChangeScreenMessage csm) {
+        private bool HandleChangeScreen(ChangeScreenMessage csm)
+        {
             Screen oldScreen = (Screen)csm.Sender;
+            if(oldScreen != null)
+            {
+                oldScreen.Balloons.Remove(csm.BalloonID);
+            }
             Screen newScreen = ChooseNewScreen(oldScreen, csm.Direction);
-            ServerBalloon b = GetBalloon(csm.BalloonID);
-            if(b == null)
+            ServerBalloon balloon = GetBalloon(csm.BalloonID);
+            if(balloon == null)
             {
                 // balloon was removed and client wasn't notified yet
                 return true;
             }
-            b.Screen = newScreen;
+            balloon.Screen = newScreen;
             Direction newDirection = csm.Direction;
             if(csm.Direction == Direction.Left)
             {
@@ -233,7 +256,12 @@ namespace Balloons.Server
             {
                 newDirection = Direction.Left;
             }
-            newScreen.EnqueueMessage(new NewBalloonMessage(csm.BalloonID, newDirection, csm.Y, csm.Velocity), this);
+            if(newScreen != null)
+            {
+                newScreen.Balloons.Add(csm.BalloonID, balloon);
+                newScreen.Connection.SendMessage(new NewBalloonMessage(
+                    csm.BalloonID, newDirection, csm.Y, csm.Velocity));    
+            }
             return true;
         }
         
@@ -248,15 +276,58 @@ namespace Balloons.Server
                 // No screen to display balloon -- sad
                 return true;
             }
-
-            m_bubbles[nbm.BalloonID] = new ServerBalloon(nbm.BalloonID);
-            if(m_screens.Count > 0 ) {
+   
+            ServerBalloon balloon = new ServerBalloon(nbm.BalloonID);
+            m_bubbles[nbm.BalloonID] = balloon;
+            if(m_screens.Count > 0 )
+            {
+                // choose a random screen
                 int screen_idx = m_random.Next(m_screens.Count);
-                m_screens[screen_idx].EnqueueMessage(nbm, this);
-            } else {
-                m_bubbles[nbm.BalloonID].Screen = null;
+                Screen screen = null;
+                if((0 <= screen_idx) || (screen_idx < m_screens.Count))
+                {
+                    screen = m_screens[screen_idx];
+                }
+                if(screen == null)
+                {
+                    Debug.WriteLine(String.Format(
+                        "Warning: random screen ID out of bounds: {0} ({1} screens)",
+                        screen_idx, m_screens.Count));
+                    return true;
+                }
+                balloon.Screen = screen;
+                screen.Balloons.Add(nbm.BalloonID, balloon);
+                screen.Connection.SendMessage(nbm);
+            }
+            else
+            {
+                balloon.Screen = null;
             }
 
+            return true;
+        }
+        
+        private bool HandleGetBalloonContent(GetBalloonContentMessage gbcm)
+        {
+            ServerBalloon b = GetBalloon(gbcm.BalloonID);
+            Screen screen = gbcm.Sender as Screen;
+            if((b != null) && (screen != null))
+            {
+                screen.Connection.SendMessage(new BalloonContentUpdateMessage(
+                    b.ID, b.Type, b.Label, b.Content, b.Url));
+            }
+            return true;
+        }
+
+        private bool HandleGetBalloonDecoration(GetBalloonDecorationMessage gbdm)
+        {
+            ServerBalloon b = GetBalloon(gbdm.BalloonID);
+            Screen screen = gbdm.Sender as Screen;
+            if((b != null) && (screen != null))
+            {
+                screen.Connection.SendMessage(new BalloonDecorationUpdateMessage(
+                    b.ID, b.OverlayType, b.BackgroundColor));
+            }
             return true;
         }
 
@@ -284,13 +355,20 @@ namespace Balloons.Server
             return true;
         }
 
-        private bool HandlePopBalloon(PopBalloonMessage pbm) {
-            if(m_bubbles.ContainsKey(pbm.BalloonID)) {
+        private bool HandlePopBalloon(PopBalloonMessage pbm)
+        {
+            if(m_bubbles.ContainsKey(pbm.BalloonID))
+            {
                 ServerBalloon b = GetBalloon(pbm.BalloonID);
-                m_bubbles.Remove(pbm.BalloonID);
-                if(b.Screen != null) {
-                    b.Screen.EnqueueMessage(pbm, this); // Notify Screen
+                if((b != null) && (b.Screen != null))
+                {
+                    b.Screen.Balloons.Remove(pbm.BalloonID);
+                    if(!(pbm.Sender is Screen))
+                    {
+                        b.Screen.Connection.SendMessage(pbm);
+                    }
                 }
+                m_bubbles.Remove(pbm.BalloonID);
             }
             return true;
         }
