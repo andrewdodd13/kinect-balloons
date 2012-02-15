@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace Balloons.Messaging.Model
@@ -24,7 +25,8 @@ namespace Balloons.Messaging.Model
         // Internal messages
         Connected,
         Disconnected,
-        RefreshFeed
+        RefreshFeed,
+        FeedUpdated
     }
     
     /// <summary>
@@ -297,6 +299,23 @@ namespace Balloons.Messaging.Model
         }
         
         private int m_screenID;
+    }
+    
+    public class FeedUpdatedMessage : Message
+    {
+        public static readonly string Tag = "feed-updated";
+
+        public List<FeedContent> FeedItems
+        {
+            get { return this.m_items; }
+        }
+        
+        public FeedUpdatedMessage(List<FeedContent> items) : base(MessageType.FeedUpdated, Tag)
+        {
+            m_items = items;
+        }
+        
+        private List<FeedContent> m_items;
     }
     
     #endregion

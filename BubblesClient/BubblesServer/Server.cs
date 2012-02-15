@@ -24,7 +24,7 @@ namespace Balloons.Server
             m_nextScreenID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
-            m_feed = new FeedReader(this, FeedUrl, FeedTimeout); // 1 min for now
+            m_feed = new FeedReader(this, FeedUrl, FeedTimeout);
             m_feed.Start();
             
             m_random = new Random();
@@ -51,9 +51,17 @@ namespace Balloons.Server
                 while(true)
                 {
                     Message msg = m_queue.Dequeue();
-                    if(!HandleMessage(msg))
+                    try
                     {
-                        break;
+                        if(!HandleMessage(msg))
+                        {    
+                            break;
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Debug.WriteLine(String.Format("Unhandled exception in server thread: {0}", ex.Message));
+                        Debug.WriteLine(ex.StackTrace);
                     }
                 }
                 Console.WriteLine("Server is stopping.");
@@ -84,7 +92,10 @@ namespace Balloons.Server
         {
             get
             {
-                return m_screens.Count;
+                lock(this)
+                {
+                    return m_screens.Count;    
+                }
             }
         }
 
@@ -152,9 +163,13 @@ namespace Balloons.Server
                 return HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
             case MessageType.BalloonDecorationUpdate:
                 return HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+            case MessageType.FeedUpdated:
+                return HandleFeedUpdated((FeedUpdatedMessage)msg);
             default:
-                // Disconnect when receiving unknown messages
-                return false;
+                // warn about unknown messages
+                Debug.WriteLine(String.Format("Warning: message type not handled by server: {0}",
+                                              msg.Type));
+                return true;
             }
         }
         
@@ -279,6 +294,43 @@ namespace Balloons.Server
             }
             return true;
         }
+        
+        private bool HandleFeedUpdated(FeedUpdatedMessage fm)
+        {
+            List<FeedContent> fromFeed = fm.FeedItems;
+            
+            // Gets news balloons to be displayed
+            Dictionary<string, ServerBalloon> fromServer = m_bubbles;
+            int old = fromServer.Count, popped = 0, added = 0;
+
+            foreach(KeyValuePair<string, ServerBalloon> i in fromServer)
+            {
+                ServerBalloon b = i.Value;
+                // Check if the bubble need to be keept, or deleted
+                if(fromFeed.Find(c => c.ContentID == b.ID) == null) {
+                    // Pop the balloon in the server not present in the feed
+                    EnqueueMessage(new PopBalloonMessage(b.ID), fm.Sender);
+                    popped++;
+                }
+            }
+
+            foreach(FeedContent i in fromFeed)
+            {
+                if(!fromServer.ContainsKey(i.ContentID)) {
+                    // Add the new balloon to the server and send content and decoration
+                    EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
+                        0.2f, ServerBalloon.VelocityLeft), fm.Sender);
+                    EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
+                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
+                    EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
+                        Colour.Parse(i.BalloonColour)), fm.Sender);
+                    added++;
+                }
+            }
+
+            Debug.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
+            return true;
+        }
 
         private void AcceptCompleted(IAsyncResult result)
         {
@@ -294,18 +346,6 @@ namespace Balloons.Server
             }
         }
 
-        private List<ServerBalloon> OrphansBalloons()
-        {
-            var list = new List<ServerBalloon>();
-            foreach(ServerBalloon i in m_bubbles.Values)
-            {
-                if(i.Screen == null) {
-                    list.Add(i);
-                }
-            }
-            return list;
-        }
-         
         private Screen GetNextScreen(Screen s) {
             int screen_idx = ScreenIndex(s);
             if(screen_idx == -1)
