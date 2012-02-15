@@ -299,15 +299,14 @@ namespace BubblesClient
             // Draw all of the balloons
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Texture2D balloonTexture = balloonTextures[balloon.Type][balloon.OverlayType];
-                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloonTexture.Width, ClientBalloon.BalloonHeight));
-                spriteBatch.Draw(balloonTexture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
+                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
+                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
 
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (balloon.Type != BalloonType.Customizable)
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
-                    boxPosition.Y += balloonTexture.Height - (ClientBalloon.BalloonHeight / 2);
+                    boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
                     drawSummaryText(balloon.Label, new Vector2(boxPosition.X + boxTexture.Width / 20, boxPosition.Y + boxTexture.Height * 2 / 3));
@@ -487,6 +486,8 @@ namespace BubblesClient
             {
                 ScreenManager.UpdateBalloonDetails(balloon);
             }
+
+            balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
         }
 
         private void PopBalloon(string balloonID, bool showContent = false)
@@ -589,6 +590,7 @@ namespace BubblesClient
 
             Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
+            b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
 
             balloons.Add(b.ID, b);
             balloonEntities.Add(b, balloonEntity);
