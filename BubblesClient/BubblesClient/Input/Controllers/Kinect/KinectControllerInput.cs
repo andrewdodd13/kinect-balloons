@@ -7,7 +7,8 @@ namespace BubblesClient.Input.Controllers.Kinect
 {
     public class KinectControllerInput : IInputController
     {
-        private int _scaleFactorX, _scaleFactorY;
+        private float _scaleFactorX, _scaleFactorY;
+        private Vector2 halfScreenSize;
 
         private KinectSensor _sensor;
         private bool _sensorConflict = false;
@@ -21,8 +22,10 @@ namespace BubblesClient.Input.Controllers.Kinect
         /// <param name="screenSize">Dimensions of the screen, used to rationalise the values of the Kinect sensor</param>
         public void Initialize(Vector2 screenSize)
         {
-            _scaleFactorX = (int)screenSize.X / 2;
-            _scaleFactorY = (int)screenSize.Y / 2;
+            _scaleFactorX = 1.5f;
+            _scaleFactorY = 2;
+
+            halfScreenSize = screenSize / 2;
 
             KinectSensor.KinectSensors.StatusChanged += this.KinectSensorsStatusChanged;
             if (!this.DiscoverSensor())
@@ -85,10 +88,10 @@ namespace BubblesClient.Input.Controllers.Kinect
                                     // Set the hands positions
                                     hands = _handPositions[skeleton];
                                     SkeletonPoint leftHand = skeleton.Joints[JointType.HandLeft].Position;
-                                    hands[0].Position = new Vector3(_scaleFactorX * leftHand.X + _scaleFactorX, _scaleFactorY * -(leftHand.Y) + _scaleFactorY, leftHand.Z);
+                                    hands[0].Position = new Vector3(convertRawHandToScreen(leftHand), leftHand.Z);
 
                                     SkeletonPoint rightHand = skeleton.Joints[JointType.HandRight].Position;
-                                    hands[1].Position = new Vector3(_scaleFactorX * rightHand.X + _scaleFactorX, _scaleFactorY * -(rightHand.Y) + _scaleFactorY, rightHand.Z);
+                                    hands[1].Position = new Vector3(convertRawHandToScreen(rightHand), rightHand.Z);
 
                                     // Add this skeleton to the list of skeletons matched this frame
                                     matched.Add(skeleton);
@@ -109,6 +112,19 @@ namespace BubblesClient.Input.Controllers.Kinect
         public bool ShouldClosePopup()
         {
             throw new NotImplementedException("Gotta close the popup!");
+        }
+
+        private Vector2 convertRawHandToScreen(SkeletonPoint raw)
+        {
+            return convertRawHandToScreen(new Vector2(raw.X, raw.Y));
+        }
+
+        private Vector2 convertRawHandToScreen(Vector2 raw)
+        {
+            raw.X *= _scaleFactorX;
+            raw.Y *= _scaleFactorY;
+
+            return new Vector2(halfScreenSize.X * raw.X + halfScreenSize.X, halfScreenSize.Y * -(raw.Y) + halfScreenSize.Y);
         }
 
         #region "Kinect Boilerplate Code"
