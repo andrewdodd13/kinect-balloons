@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace Balloons.Messaging.Model
@@ -23,13 +24,15 @@ namespace Balloons.Messaging.Model
 
         // Internal messages
         Connected,
-        Disconnected
+        Disconnected,
+        RefreshFeed,
+        FeedUpdated
     }
     
     /// <summary>
     /// Message that can be sent between a screen and bubble server or within the server.
     /// </summary>
-    public abstract class Message
+    public class Message
     {
         /// <summary>
         /// Identifies the type of the message.
@@ -285,17 +288,26 @@ namespace Balloons.Messaging.Model
     {
         public static readonly string Tag = "disconnected";
 
-        public int ScreenID
+        public DisconnectedMessage() : base(MessageType.Disconnected, Tag)
         {
-            get { return this.m_screenID; }
         }
+    }
+    
+    public class FeedUpdatedMessage : Message
+    {
+        public static readonly string Tag = "feed-updated";
 
-        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected, Tag)
+        public List<FeedContent> FeedItems
         {
-            m_screenID = screenID;
+            get { return this.m_items; }
         }
         
-        private int m_screenID;
+        public FeedUpdatedMessage(List<FeedContent> items) : base(MessageType.FeedUpdated, Tag)
+        {
+            m_items = items;
+        }
+        
+        private List<FeedContent> m_items;
     }
     
     #endregion

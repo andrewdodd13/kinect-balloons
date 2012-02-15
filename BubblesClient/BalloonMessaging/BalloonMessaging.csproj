@@ -36,6 +36,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\Configuration.cs" />
     <Compile Include="Model\FeedContent.cs" />
     <Compile Include="Serialization\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\IMessageSerializer.cs" />

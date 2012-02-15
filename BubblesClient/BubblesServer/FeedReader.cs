@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Timers;
-using System.Collections.Generic;
+using System.Threading;
 using Balloons;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
@@ -12,92 +12,173 @@ namespace Balloons.Server
 {
     public class FeedReader
     {
-        private const int MaxBalloonPerScreen = 2;
         private Server m_server;
         private string m_feedUrl;
         private WebClient m_client;
         private double m_interval;
-        private Timer m_timer;
-        
-        private List<ServerBalloon> m_balloons;
+        private System.Timers.Timer m_timer;
+        private Thread m_thread;
+        private CircularQueue<Message> m_queue;
         
         public FeedReader(Server server, string feedUrl, double pullIntervals)
         {
             this.m_server = server;
             this.m_feedUrl = feedUrl;
             this.m_interval = pullIntervals;
-            this.m_balloons = new List<ServerBalloon>();
+            this.m_queue = new CircularQueue<Message>(64);
             this.m_client = new WebClient();
-            this.m_timer = new Timer(m_interval);
-            this.m_timer.Elapsed += (sender, args) => Update();
-        }
-
-        private void Update()
-        {
-            // Connect to WebServer, gets balloons
-            List<FeedContent> fromFeed = GetFeedContents();
-            
-            // Gets news balloons to be displayed
-            Dictionary<string, ServerBalloon> fromServer = m_server.Balloons();
-            int old = fromServer.Count, popped = 0, added = 0;
-
-            foreach(KeyValuePair<string, ServerBalloon> i in fromServer)
-            {
-                ServerBalloon b = i.Value;
-                // Check if the bubble need to be keept, or deleted
-                if(fromFeed.Find(c => c.ContentID == b.ID) == null) {
-                    // Pop the balloon in the server not present in the feed
-                    m_server.EnqueueMessage(new PopBalloonMessage(b.ID), this);
-                    popped++;
-                }
-            }
-
-            foreach(FeedContent i in fromFeed)
-            {
-                if(!fromServer.ContainsKey(i.ContentID)) {
-                    // Add the new balloon to the server and send content and decoration
-                    m_server.EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
-                        0.2f, ServerBalloon.VelocityLeft), this);
-                    m_server.EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
-                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL));
-                    m_server.EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
-                        Colour.Parse(i.BalloonColour)));
-                    added++;
-                }
-            }
-
-            Debug.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
+            this.m_timer = new System.Timers.Timer(m_interval);
+            this.m_timer.Elapsed += (sender, args) => Refresh();
+            this.m_thread = new Thread(Run);
+            this.m_thread.Start();
         }
         
-        public void Start() {
-            m_timer.Enabled = true;
+        /// <summary>
+        /// Start refreshing the feed at regular intervals.
+        /// </summary>
+        public void Start()
+        {
+            lock(this)
+            {
+                m_timer.Enabled = true;    
+            }
         }
-
+        
+        /// <summary>
+        /// Stop the regular feed updates.
+        /// </summary>
+        public void Stop()
+        {
+            lock(this)
+            {
+                m_timer.Enabled = false;    
+            }
+        }
+  
+        /// <summary>
+        /// Schedule an update of the feed.
+        /// </summary>
         public void Refresh()
         {
-            System.Threading.ThreadPool.QueueUserWorkItem(state => Update());
+            EnqueueMessage(new Message(MessageType.RefreshFeed, "refresh-feed"));
+        }
+        
+        /// <summary>
+        /// Send a message to the feed reader. It will be handled in the reader's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message)
+        {
+            m_queue.Enqueue(message);
+        }
+
+        /// <summary>
+        /// Send a message to the feed reader, changing its sender. It will be handled in the reader's thread.
+        /// </summary>
+        public void EnqueueMessage(Message message, object sender)
+        {
+            if(message != null && sender != null)
+            {
+                message.Sender = sender;
+            }
+            m_queue.Enqueue(message);
+        }
+        
+        /// <summary>
+        /// Thread Main.
+        /// </summary>
+        private void Run()
+        {
+            while(true)
+            {
+                Message msg = m_queue.Dequeue();
+                try
+                {
+                    if(!HandleMessage(msg))
+                    {    
+                        break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Trace.WriteLine(String.Format("Unhandled exception in feed thread: {0}", ex.Message));
+                    Trace.WriteLine(ex.StackTrace);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Handles a message. Must be called from the screen reader's thread.
+        /// </summary>
+        /// <returns>
+        /// True if the message has been handled, false if messages should stop being processed.
+        /// </returns>
+        private bool HandleMessage(Message msg)
+        {
+            if(msg == null)
+            {
+                return false;
+            }
+            else if(msg.Type == MessageType.RefreshFeed)
+            {
+                DoRefresh();
+            }
+            else
+            {
+                // warn about unknown messages
+                Trace.WriteLine(String.Format("Warning: message type not handled by feed: {0}",
+                                              msg.Type));
+            }
+            return true;
+        }
+
+        private void DoRefresh()
+        {
+            // Retrieve updated feed contents
+            List<FeedContent> fromFeed = GetFeedContents();
+            
+            // Notify server of new feed contents if we managed to retrieve any
+            if(fromFeed != null)
+            {
+                m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
+            }
         }
 
         internal List<FeedContent> GetFeedContents()
         {
-            int numBalloons = m_server.ScreenCount * MaxBalloonPerScreen;
+            // figure out how many balloons/feed items we want
+            int numBalloons = m_server.ScreenCount * Configuration.MaxBalloonsPerScreen;
             if(numBalloons == 0)
             {
+                // do not refresh the feed for zero balloons
                 return new List<FeedContent>();
             }
             string url = String.Format(m_feedUrl, numBalloons);
-            Debug.Write(String.Format("Refreshing feed '{0}' ... ", url));
-            string jsonText = m_client.DownloadString(url);
-            Debug.Write("done");
-            var contents = FeedContent.ParseList(jsonText);
-            Debug.WriteLine(String.Format(" -> {0} items", contents.Count));
-            return contents;
-        }
+            Trace.Write(String.Format("Refreshing feed '{0}' ... ", url));
 
-        public List<ServerBalloon> Balloons()
-        {
-            return m_balloons;
+            // download the JSON-encoded feed items
+            string jsonText;
+            try
+            {
+                jsonText = m_client.DownloadString(url);
+            }
+            catch(WebException we)
+            {
+                Trace.WriteLine(String.Format("error: {0}.", we.Message));
+                return null;
+            }
+
+            // convert the JSON data to a list of feed items
+            try
+            {
+                var contents = FeedContent.ParseList(jsonText);
+                Trace.WriteLine(String.Format(" done -> {0} items", contents.Count));
+                return contents;
+            }
+            catch(Exception e)
+            {
+                Trace.WriteLine(String.Format("error: {0}.", e.Message));
+                return null;
+            }
         }
     }
 }
-

@@ -44,6 +44,16 @@ namespace Balloons.Serialization
 
         public byte[] Serialize(Message msg)
         {
+            string line = Format(msg);
+            if(Configuration.LogNetworkMessages)
+            {
+                Trace.WriteLine(String.Format(">> {0}", line));
+            }
+            return m_encoding.GetBytes(line + "\n");
+        }
+
+        public string Format(Message msg)
+        {
             MessageFormatter formatter;
             if(!m_formatters.TryGetValue(msg.TypeTag, out formatter))
             {
@@ -52,9 +62,7 @@ namespace Balloons.Serialization
             JArray args = new JArray();
             args.Add(JValue.CreateString(msg.TypeTag));
             formatter(args, msg);
-            string line = args.ToString(Formatting.None);
-            Debug.WriteLine(String.Format(">> {0}", line));
-            return m_encoding.GetBytes(line + "\n");
+            return args.ToString(Formatting.None);
         }
 
         private void FormatNewBalloon(JArray args, Message m)
@@ -129,7 +137,10 @@ namespace Balloons.Serialization
             byte[] messageData = new byte[lineSize];
             buffer.Read(messageData, 0, lineSize);
             string line = m_encoding.GetString(messageData);
-            Debug.WriteLine(String.Format("<< {0}", line.Substring(0, line.Length - 1)));
+            if(Configuration.LogNetworkMessages)
+            {
+                Trace.WriteLine(String.Format("<< {0}", line.Substring(0, line.Length - 1)));
+            }
             return ParseMessage(line);
         }
 
