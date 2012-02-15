@@ -7,7 +7,8 @@ namespace BubblesClient.Input.Controllers.Kinect
 {
     public class KinectControllerInput : IInputController
     {
-        private int _scaleFactorX, _scaleFactorY;
+        private float _scaleFactorX, _scaleFactorY;
+        private Vector2 halfScreenSize;
 
         private KinectSensor _sensor;
         private bool _sensorConflict = false;
@@ -21,8 +22,10 @@ namespace BubblesClient.Input.Controllers.Kinect
         /// <param name="screenSize">Dimensions of the screen, used to rationalise the values of the Kinect sensor</param>
         public void Initialize(Vector2 screenSize)
         {
-            _scaleFactorX = (int)screenSize.X / 2;
-            _scaleFactorY = (int)screenSize.Y / 2;
+            _scaleFactorX = 1.5f;
+            _scaleFactorY = 2;
+
+            halfScreenSize = screenSize / 2;
 
             KinectSensor.KinectSensors.StatusChanged += this.KinectSensorsStatusChanged;
             if (!this.DiscoverSensor())
@@ -113,7 +116,10 @@ namespace BubblesClient.Input.Controllers.Kinect
 
         private Vector2 convertRawHandToScreen(Vector2 raw)
         {
-            return new Vector2(_scaleFactorX * raw.X + _scaleFactorX, _scaleFactorY * -(raw.Y) + _scaleFactorY);
+            raw.X *= _scaleFactorX;
+            raw.Y *= _scaleFactorY;
+
+            return new Vector2(halfScreenSize.X * raw.X + halfScreenSize.X, halfScreenSize.Y * -(raw.Y) + halfScreenSize.Y);
         }
 
         #region "Kinect Boilerplate Code"
