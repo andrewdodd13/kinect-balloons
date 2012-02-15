@@ -30,6 +30,8 @@ namespace BubblesClient
         private Texture2D boxTexture;
         private SpriteFont textContent, textSummary;
 
+        private Dictionary<string, Texture2D> balloonQRCache = new Dictionary<string, Texture2D>();
+
         // Network
         public ScreenManager ScreenManager { get; private set; }
 
@@ -57,8 +59,7 @@ namespace BubblesClient
 
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
-        private string poppedBalloonID = null;
-        private string poppedBalloonContent = null;
+        private ClientBalloon poppedBalloon = null;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
@@ -108,11 +109,8 @@ namespace BubblesClient
             // Lol roof!
             physicsManager.CreateRoof((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
 
-            //Load buckets
-            //Note to self: Prettify - William
-            // TODO: Should this be the first line... or the second? :P
-            float gapBetweenBuckets = (screenDimensions.Y - (Bucket.BucketWidth * 5)) / 6;
-            gapBetweenBuckets = 121;
+            // Load buckets
+            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
             for (int i = 0; i < 5; i++)
             {
                 float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
@@ -206,7 +204,7 @@ namespace BubblesClient
             ProcessNetworkMessages();
 
             // Query the Input Library if there isn't currently a message displayed.
-            if (poppedBalloonID == null)
+            if (poppedBalloon == null)
             {
                 this.HandleInput();
             }
@@ -214,7 +212,7 @@ namespace BubblesClient
             {
                 if (input.ShouldClosePopup())
                 {
-                    poppedBalloonID = null;
+                    poppedBalloon = null;
                 }
             }
 
@@ -321,11 +319,12 @@ namespace BubblesClient
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (poppedBalloonID != null)
+            if (poppedBalloon != null)
             {
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
                 spriteBatch.Draw(contentBox, position, Color.White);
-                drawContentText(poppedBalloonContent, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
+                drawContentText(poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
+                spriteBatch.Draw(poppedBalloon.QrCodeTexture, position + new Vector2(24, 24), Color.White);
             }
             else
             {
@@ -505,13 +504,12 @@ namespace BubblesClient
             // Display content only asked and if balloon is not customizable type
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
-                poppedBalloonID = balloonID;
-                poppedBalloonContent = balloon.Content;
+                poppedBalloon = balloon;
 
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
-                    poppedBalloonID = null;
+                    poppedBalloon = null;
                     timer.Stop();
                 };
                 timer.Interval = MessageDisplayTime;
@@ -620,6 +618,15 @@ namespace BubblesClient
             Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
+
+            // Get the QR Code from the cache
+            if (!balloonQRCache.ContainsKey(b.ID))
+            {
+                Texture2D qrTexture = QRGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url);
+                balloonQRCache.Add(b.ID, qrTexture);
+            }
+
+            b.QrCodeTexture = balloonQRCache[b.ID];
 
             balloons.Add(b.ID, b);
             balloonEntities.Add(b, balloonEntity);
