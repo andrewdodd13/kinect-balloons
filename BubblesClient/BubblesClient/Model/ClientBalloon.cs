@@ -16,10 +16,12 @@ namespace BubblesClient.Model
         public const float BalloonHeight = 192f;
 
         public Texture2D Texture { get; set; }
+        public bool Popped { get; set; }
 
         public ClientBalloon(Balloon parent)
             : base(parent)
         {
+            Popped = false;
         }
     }
 }

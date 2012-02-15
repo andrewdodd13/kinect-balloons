@@ -25,6 +25,7 @@ namespace BubblesClient
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
         private Texture2D[] bucketTextures = new Texture2D[5];
+        private Texture2D[] balloonPopTextures;
 
         private Texture2D boxTexture;
         private SpriteFont textContent, textSummary;
@@ -57,6 +58,7 @@ namespace BubblesClient
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
         private string poppedBalloonID = null;
+        private string poppedBalloonContent = null;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
@@ -172,6 +174,10 @@ namespace BubblesClient
                 } }
             };
 
+            balloonPopTextures = new Texture2D[] {
+                Content.Load<Texture2D>("Images/BalloonPop")
+            };
+
             boxTexture = Content.Load<Texture2D>("Images/Box");
             bucketTextures[0] = Content.Load<Texture2D>("Images/BucketRed");
             bucketTextures[2] = Content.Load<Texture2D>("Images/bucketGreen");
@@ -208,11 +214,6 @@ namespace BubblesClient
             {
                 if (input.ShouldClosePopup())
                 {
-                    // Remove the balloon, and notify the server
-                    ClientBalloon balloon = balloons[poppedBalloonID];
-                    this.RemoveBalloon(balloon);
-                    ScreenManager.NotifyBalloonPopped(balloon);
-
                     poppedBalloonID = null;
                 }
             }
@@ -242,7 +243,7 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x => this.RemoveBalloon(x));
+            removals.ForEach(x => this.RemoveBalloon(x, false));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -303,7 +304,7 @@ namespace BubblesClient
                 spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
 
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloon.Type != BalloonType.Customizable)
+                if (balloon.Type != BalloonType.Customizable && !balloon.Popped)
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
@@ -324,7 +325,7 @@ namespace BubblesClient
             {
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
                 spriteBatch.Draw(contentBox, position, Color.White);
-                drawContentText(balloons[poppedBalloonID].Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
+                drawContentText(poppedBalloonContent, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
             }
             else
             {
@@ -490,6 +491,7 @@ namespace BubblesClient
             balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
         }
 
+        #region "Balloon Popping"
         private void PopBalloon(string balloonID, bool showContent = false)
         {
             ClientBalloon balloon = balloons[balloonID];
@@ -498,40 +500,67 @@ namespace BubblesClient
                 throw new ArgumentOutOfRangeException("e", "No such balloon in received message.");
             }
 
+            balloon.Popped = true;
+
             // Display content only asked and if balloon is not customizable type
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
                 poppedBalloonID = balloonID;
+                poppedBalloonContent = balloon.Content;
 
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
                     poppedBalloonID = null;
                     timer.Stop();
-
-                    // Remove balloon from screen, and server
-                    this.RemoveBalloon(balloon);
-                    ScreenManager.NotifyBalloonPopped(balloon);
                 };
                 timer.Interval = MessageDisplayTime;
                 timer.Start();
+
+                // Remove balloon from screen, and server
+                ScreenManager.NotifyBalloonPopped(balloon);
             }
-            else
-            {
-                this.RemoveBalloon(balloon);
-            }
+
+            this.RemoveBalloon(balloon, true);
         }
 
         /// <summary>
         /// Removes the given balloon from the physics world and screen.
         /// </summary>
         /// <param name="balloon"></param>
-        private void RemoveBalloon(ClientBalloon balloon)
+        private void RemoveBalloon(ClientBalloon balloon, bool timed)
+        {
+            // Set the texture to the kapow! texture
+            balloon.Texture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
+            balloon.BackgroundColor = new Colour(255, 255, 255, 255);
+
+            if (timed)
+            {
+                // Disable the body's physics
+                balloonEntities[balloon].Body.Enabled = false;
+
+                Timer timer = new Timer();
+                timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
+                {
+                    this.RemoveBalloonFromMappings(balloon);
+                    timer.Stop();
+                };
+                timer.Interval = 2500;
+                timer.Start();
+            }
+            else
+            {
+                this.RemoveBalloonFromMappings(balloon);
+            }
+        }
+
+        private void RemoveBalloonFromMappings(ClientBalloon balloon)
         {
             physicsManager.RemoveEntity(balloonEntities[balloon]);
             balloonEntities.Remove(balloon);
             balloons.Remove(balloon.ID);
         }
+        #endregion
 
         #region "Networking"
         public void ProcessNetworkMessages()
