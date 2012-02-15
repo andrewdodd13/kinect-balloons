@@ -134,27 +134,52 @@ namespace Balloons.Server
 
         private void DoRefresh()
         {
-            // Connect to WebServer, gets balloons
+            // Retrieve updated feed contents
             List<FeedContent> fromFeed = GetFeedContents();
             
-            // Notify server of new feed contents
-            m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
+            // Notify server of new feed contents if we managed to retrieve any
+            if(fromFeed != null)
+            {
+                m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
+            }
         }
 
         internal List<FeedContent> GetFeedContents()
         {
+            // figure out how many balloons/feed items we want
             int numBalloons = m_server.ScreenCount * MaxBalloonPerScreen;
             if(numBalloons == 0)
             {
+                // do not refresh the feed for zero balloons
                 return new List<FeedContent>();
             }
             string url = String.Format(m_feedUrl, numBalloons);
             Debug.Write(String.Format("Refreshing feed '{0}' ... ", url));
-            string jsonText = m_client.DownloadString(url);
-            Debug.Write("done");
-            var contents = FeedContent.ParseList(jsonText);
-            Debug.WriteLine(String.Format(" -> {0} items", contents.Count));
-            return contents;
+
+            // download the JSON-encoded feed items
+            string jsonText;
+            try
+            {
+                jsonText = m_client.DownloadString(url);
+            }
+            catch(WebException we)
+            {
+                Debug.WriteLine(String.Format("error: {0}.", we.Message));
+                return null;
+            }
+
+            // convert the JSON data to a list of feed items
+            try
+            {
+                var contents = FeedContent.ParseList(jsonText);
+                Debug.WriteLine(String.Format(" done -> {0} items", contents.Count));
+                return contents;
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine(String.Format("error: {0}.", e.Message));
+                return null;
+            }
         }
     }
 }
