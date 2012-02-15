@@ -12,7 +12,6 @@ namespace Balloons.Server
 {
     public class FeedReader
     {
-        private const int MaxBalloonPerScreen = 5;
         private Server m_server;
         private string m_feedUrl;
         private WebClient m_client;
@@ -147,7 +146,7 @@ namespace Balloons.Server
         internal List<FeedContent> GetFeedContents()
         {
             // figure out how many balloons/feed items we want
-            int numBalloons = m_server.ScreenCount * MaxBalloonPerScreen;
+            int numBalloons = m_server.ScreenCount * Configuration.MaxBalloonsPerScreen;
             if(numBalloons == 0)
             {
                 // do not refresh the feed for zero balloons

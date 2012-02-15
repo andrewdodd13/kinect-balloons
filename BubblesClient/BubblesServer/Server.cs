@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Balloons;
@@ -12,11 +13,9 @@ namespace Balloons.Server
 	public class Server
 	{
         #region Public interface
-        private const string FeedUrl = "http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/{0}";
-        private const int FeedTimeout = 1000 * 60 * 1; // 1 min for now
-
-        public Server(int port)
+        public Server(IPAddress address, int port)
         {
+            m_address = address;
             m_port = port;
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
                                   ProtocolType.Tcp);
@@ -24,7 +23,7 @@ namespace Balloons.Server
             m_nextScreenID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
-            m_feed = new FeedReader(this, FeedUrl, FeedTimeout);
+            m_feed = new FeedReader(this, Configuration.FeedURL, Configuration.FeedTimeout);
             m_feed.Start();
             
             m_random = new Random();
@@ -32,10 +31,18 @@ namespace Balloons.Server
         
         public static void Main(string[] args)
         {
-#if DEBUG
-            Debug.Listeners.Add(new ConsoleTraceListener());
-#endif
-            Server server = new Server(4000);
+            // Load the configuration file
+            if(args.Length > 1)
+            {
+                if(File.Exists(args[1]))
+                {
+                    Configuration.ConfigPath = args[1];
+                }
+            }
+            Configuration.Load();
+
+            // Start the server
+            Server server = new Server(Configuration.LocalIPAddress, Configuration.LocalPort);
             server.Run();
         }
         
@@ -43,8 +50,8 @@ namespace Balloons.Server
         {
             using(m_socket)
             {
-                // Listen on the given port
-                m_socket.Bind(new IPEndPoint(IPAddress.Any, m_port));
+                // Listen on the given address and port
+                m_socket.Bind(new IPEndPoint(m_address, m_port));
                 m_socket.Listen(0);
                 Console.WriteLine("Waiting for clients to connect...");
                 m_socket.BeginAccept(AcceptCompleted, null);
@@ -125,6 +132,7 @@ namespace Balloons.Server
        
         #endregion
         #region Implementation
+        private IPAddress m_address;
         private int m_port;
         private Socket m_socket;
         private CircularQueue<Message> m_queue;
@@ -218,11 +226,11 @@ namespace Balloons.Server
                     if(random == 0) {
                         newScreen = left;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Right,
-                                                    0.1f, ServerBalloon.VelocityLeft);
+                                                    0.1f, Configuration.VelocityLeft);
                     } else {
                         newScreen = right;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Left,
-                                                    0.1f, ServerBalloon.VelocityRight);
+                                                    0.1f, Configuration.VelocityRight);
                     }
                     balloon.Screen = newScreen;
                     if(newScreen != null)
@@ -401,7 +409,7 @@ namespace Balloons.Server
                 if(!fromServer.ContainsKey(i.ContentID)) {
                     // Add the new balloon to the server and send content and decoration
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
-                        0.2f, ServerBalloon.VelocityLeft), fm.Sender);
+                        0.2f, Configuration.VelocityLeft), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
                     EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,

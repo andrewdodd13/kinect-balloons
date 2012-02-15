@@ -52,9 +52,6 @@ namespace BubblesClient
         private bool showBuckets = true;
         private int oldBucketID = 5; //buckets 0-4
 
-        // The time to display a message for, in milliseconds
-        private const int MessageDisplayTime = 30000;
-
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
         private string poppedBalloonID = null;
@@ -63,9 +60,14 @@ namespace BubblesClient
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
-            graphics.PreferredBackBufferHeight = 768;
-            graphics.PreferredBackBufferWidth = 1366;
-
+            if(Configuration.ScreenWidth > 0)
+            {
+                graphics.PreferredBackBufferWidth = Configuration.ScreenWidth;
+            }
+            if(Configuration.ScreenHeight > 0)
+            {
+                graphics.PreferredBackBufferHeight = Configuration.ScreenHeight;
+            }
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Initialise Input
@@ -510,7 +512,7 @@ namespace BubblesClient
                     timer.Stop();
                     this.RemoveBalloon(balloon);
                 };
-                timer.Interval = MessageDisplayTime;
+                timer.Interval = Configuration.MessageDisplayTime;
                 timer.Start();
             }
             else
