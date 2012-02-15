@@ -307,7 +307,7 @@ namespace BubblesClient
                 if (balloon.Type != BalloonType.Customizable)
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
-                    boxPosition.Y += balloonTexture.Height - (ClientBalloon.BalloonWidth / 2);
+                    boxPosition.Y += balloonTexture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
                     drawSummaryText(balloon.Label, new Vector2(boxPosition.X + boxTexture.Width / 20, boxPosition.Y + boxTexture.Height * 2 / 3));
