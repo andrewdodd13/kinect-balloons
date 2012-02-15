@@ -56,9 +56,15 @@ namespace BubblesClient
             balloon.OffScreen = true;
         }
 
-        public void NotifyBalloonPopped(Balloon balloon)
+        public void NotifyBalloonPopped(ClientBalloon balloon)
         {
-            throw new NotImplementedException();
+            if (balloon.OffScreen)
+            {
+                return;
+            }
+
+            m_conn.SendMessage(new PopBalloonMessage(balloon.ID));
+            balloon.OffScreen = true;
         }
 
         public Balloon GetBalloonDetails(string balloonID)
