@@ -208,7 +208,11 @@ namespace BubblesClient
             {
                 if (input.ShouldClosePopup())
                 {
-                    this.RemoveBalloon(balloons[poppedBalloonID]);
+                    // Remove the balloon, and notify the server
+                    ClientBalloon balloon = balloons[poppedBalloonID];
+                    this.RemoveBalloon(balloon);
+                    ScreenManager.NotifyBalloonPopped(balloon);
+
                     poppedBalloonID = null;
                 }
             }
@@ -238,11 +242,7 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x =>
-            {
-                balloons.Remove(x.ID);
-                physicsManager.RemoveEntity(balloonEntities[x]);
-            });
+            removals.ForEach(x => this.RemoveBalloon(x));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -507,7 +507,10 @@ namespace BubblesClient
                 {
                     poppedBalloonID = null;
                     timer.Stop();
+
+                    // Remove balloon from screen, and server
                     this.RemoveBalloon(balloon);
+                    ScreenManager.NotifyBalloonPopped(balloon);
                 };
                 timer.Interval = MessageDisplayTime;
                 timer.Start();
@@ -527,7 +530,6 @@ namespace BubblesClient
             physicsManager.RemoveEntity(balloonEntities[balloon]);
             balloonEntities.Remove(balloon);
             balloons.Remove(balloon.ID);
-            ScreenManager.NotifyBalloonPopped(balloon);
         }
 
         #region "Networking"
@@ -599,7 +601,10 @@ namespace BubblesClient
         /// <param name="e"></param>
         public void OnPopBalloon(PopBalloonMessage m)
         {
-            PopBalloon(m.BalloonID);
+            if (balloons.ContainsKey(m.BalloonID))
+            {
+                PopBalloon(m.BalloonID);
+            }
         }
 
         public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
