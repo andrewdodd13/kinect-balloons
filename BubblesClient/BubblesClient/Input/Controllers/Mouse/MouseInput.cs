@@ -53,5 +53,14 @@ namespace BubblesClient.Input.Controllers.Mouse
                 return new Hand[] { _hand };
             }
         }
+
+        /// <summary>
+        /// Returns true if the middle mouse button is clicked.
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldClosePopup()
+        {
+            return (XnaMouse.GetState().MiddleButton == ButtonState.Pressed);
+        }
     }
 }

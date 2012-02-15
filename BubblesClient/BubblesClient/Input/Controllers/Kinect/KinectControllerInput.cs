@@ -106,6 +106,11 @@ namespace BubblesClient.Input.Controllers.Kinect
             }
         }
 
+        public bool ShouldClosePopup()
+        {
+            throw new NotImplementedException("Gotta close the popup!");
+        }
+
         #region "Kinect Boilerplate Code"
         private bool DiscoverSensor()
         {
