@@ -5,6 +5,7 @@ using System.Timers;
 using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Input.Controllers.Mouse;
+using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
@@ -98,7 +99,7 @@ namespace BubblesClient
 
             // Initialise Input
             // Use this line to enable the Kinect
-            //_input = new KinectControllerInput();
+            //input = new KinectControllerInput();
 
             // And this one to enable the Mouse (if you use both, Mouse is used)
             input = new MouseInput();

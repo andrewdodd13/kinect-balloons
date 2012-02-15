@@ -192,8 +192,12 @@ namespace Balloons.Server
         
         private bool HandleScreenDisconnected(DisconnectedMessage msg)
         {
-            Console.WriteLine("Screen disconnected: {0}", msg.ScreenID);
-            Screen s = GetScreen(msg.ScreenID);
+            Screen s = msg.Sender as Screen;
+            if(s == null)
+            {
+                return true;
+            }
+            Console.WriteLine("Screen disconnected: {0}", s.ID);
 
             // Gets screen's balloons
             var balloons = s.Balloons;
@@ -420,7 +424,7 @@ namespace Balloons.Server
             }
             catch(Exception e)
             {
-                Console.WriteLine("Error with accept: {0}", e);
+                Debug.WriteLine(String.Format("Error with accept: {0}", e));
             }
         }
 

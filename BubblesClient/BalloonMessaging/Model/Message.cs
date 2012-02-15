@@ -288,17 +288,9 @@ namespace Balloons.Messaging.Model
     {
         public static readonly string Tag = "disconnected";
 
-        public int ScreenID
+        public DisconnectedMessage() : base(MessageType.Disconnected, Tag)
         {
-            get { return this.m_screenID; }
         }
-
-        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected, Tag)
-        {
-            m_screenID = screenID;
-        }
-        
-        private int m_screenID;
     }
     
     public class FeedUpdatedMessage : Message

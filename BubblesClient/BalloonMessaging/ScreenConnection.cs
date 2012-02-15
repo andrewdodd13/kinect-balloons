@@ -138,7 +138,9 @@ namespace Balloons.Messaging
         {
             if(m_receiveQueue != null)
             {
-                m_receiveQueue.Enqueue(null);
+                var msg = new DisconnectedMessage();
+                msg.Sender = Sender;
+                m_receiveQueue.Enqueue(msg);
             }
 
             EventHandler handler = Disconnected;
