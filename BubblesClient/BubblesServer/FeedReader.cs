@@ -100,8 +100,8 @@ namespace Balloons.Server
                 }
                 catch(Exception ex)
                 {
-                    Debug.WriteLine(String.Format("Unhandled exception in feed thread: {0}", ex.Message));
-                    Debug.WriteLine(ex.StackTrace);
+                    Trace.WriteLine(String.Format("Unhandled exception in feed thread: {0}", ex.Message));
+                    Trace.WriteLine(ex.StackTrace);
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace Balloons.Server
             else
             {
                 // warn about unknown messages
-                Debug.WriteLine(String.Format("Warning: message type not handled by feed: {0}",
+                Trace.WriteLine(String.Format("Warning: message type not handled by feed: {0}",
                                               msg.Type));
             }
             return true;
@@ -153,7 +153,7 @@ namespace Balloons.Server
                 return new List<FeedContent>();
             }
             string url = String.Format(m_feedUrl, numBalloons);
-            Debug.Write(String.Format("Refreshing feed '{0}' ... ", url));
+            Trace.Write(String.Format("Refreshing feed '{0}' ... ", url));
 
             // download the JSON-encoded feed items
             string jsonText;
@@ -163,7 +163,7 @@ namespace Balloons.Server
             }
             catch(WebException we)
             {
-                Debug.WriteLine(String.Format("error: {0}.", we.Message));
+                Trace.WriteLine(String.Format("error: {0}.", we.Message));
                 return null;
             }
 
@@ -171,12 +171,12 @@ namespace Balloons.Server
             try
             {
                 var contents = FeedContent.ParseList(jsonText);
-                Debug.WriteLine(String.Format(" done -> {0} items", contents.Count));
+                Trace.WriteLine(String.Format(" done -> {0} items", contents.Count));
                 return contents;
             }
             catch(Exception e)
             {
-                Debug.WriteLine(String.Format("error: {0}.", e.Message));
+                Trace.WriteLine(String.Format("error: {0}.", e.Message));
                 return null;
             }
         }

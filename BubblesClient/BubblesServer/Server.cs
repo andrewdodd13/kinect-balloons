@@ -53,7 +53,7 @@ namespace Balloons.Server
                 // Listen on the given address and port
                 m_socket.Bind(new IPEndPoint(m_address, m_port));
                 m_socket.Listen(0);
-                Console.WriteLine("Waiting for clients to connect...");
+                Trace.WriteLine("Waiting for clients to connect...");
                 m_socket.BeginAccept(AcceptCompleted, null);
                 while(true)
                 {
@@ -67,11 +67,11 @@ namespace Balloons.Server
                     }
                     catch(Exception ex)
                     {
-                        Debug.WriteLine(String.Format("Unhandled exception in server thread: {0}", ex.Message));
-                        Debug.WriteLine(ex.StackTrace);
+                        Trace.WriteLine(String.Format("Unhandled exception in server thread: {0}", ex.Message));
+                        Trace.WriteLine(ex.StackTrace);
                     }
                 }
-                Console.WriteLine("Server is stopping.");
+                Trace.WriteLine("Server is stopping.");
             }
         }
         
@@ -179,7 +179,7 @@ namespace Balloons.Server
                 return HandleFeedUpdated((FeedUpdatedMessage)msg);
             default:
                 // warn about unknown messages
-                Debug.WriteLine(String.Format("Warning: message type not handled by server: {0}",
+                Trace.WriteLine(String.Format("Warning: message type not handled by server: {0}",
                                               msg.Type));
                 return true;
             }
@@ -193,7 +193,7 @@ namespace Balloons.Server
             conn.Sender = screen;
             conn.StartReceivingMessages();
             m_screens.Add(screen);
-            Console.WriteLine("Screen connected: {0}", screenID);
+            Trace.WriteLine(String.Format("Screen connected: {0}", screenID));
             m_feed.Refresh();
             return true;
         }
@@ -205,7 +205,7 @@ namespace Balloons.Server
             {
                 return true;
             }
-            Console.WriteLine("Screen disconnected: {0}", s.ID);
+            Trace.WriteLine(String.Format("Screen disconnected: {0}", s.ID));
 
             // Gets screen's balloons
             var balloons = s.Balloons;
@@ -281,7 +281,7 @@ namespace Balloons.Server
         {
             if(m_bubbles.ContainsKey(nbm.BalloonID)) {
                 // Balloon already present !
-                Debug.WriteLine(String.Format("Balloon {0} already present!", nbm.BalloonID));
+                Trace.WriteLine(String.Format("Balloon {0} already present!", nbm.BalloonID));
                 return true;
             }
             if(m_screens.Count == 0) {
@@ -302,7 +302,7 @@ namespace Balloons.Server
                 }
                 if(screen == null)
                 {
-                    Debug.WriteLine(String.Format(
+                    Trace.WriteLine(String.Format(
                         "Warning: random screen ID out of bounds: {0} ({1} screens)",
                         screen_idx, m_screens.Count));
                     return true;
@@ -418,7 +418,7 @@ namespace Balloons.Server
                 }
             }
 
-            Debug.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
+            Trace.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
             return true;
         }
 
@@ -432,7 +432,7 @@ namespace Balloons.Server
             }
             catch(Exception e)
             {
-                Debug.WriteLine(String.Format("Error with accept: {0}", e));
+                Trace.WriteLine(String.Format("Error with accept: {0}", e));
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using Balloons.Messaging;
 using Balloons.Messaging.Model;
@@ -44,7 +45,7 @@ namespace BubblesClient
 
         public void MoveBalloonOffscreen(ClientBalloon balloon, Direction direction, float exitHeight, Vector2 velocity)
         {
-            Console.WriteLine("Sending balloon away!");
+            Trace.WriteLine("Sending balloon away!");
             // Did we already notify the server that the balloon is off-screen?
             if (balloon.OffScreen)
             {
@@ -91,13 +92,13 @@ namespace BubblesClient
 
         private void OnConnectFailed(object sender, EventArgs args)
         {
-            Console.WriteLine("Could not connect to the server");
+            Trace.WriteLine("Could not connect to the server");
             Environment.Exit(1);
         }
 
         private void OnDisconnected(object sender, EventArgs args)
         {
-            Console.WriteLine("Disconnected from the server");
+            Trace.WriteLine("Disconnected from the server");
             Environment.Exit(1);
         }
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace Balloons.Messaging.Model
 {
@@ -23,7 +25,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Where to find the configuration file.
         /// </summary>
-        public static string ConfigPath = "balloons.js";
+        public static string ConfigPath = "Balloons.conf";
         /// <summary>
         /// Are application events and errors (from Trace) written to the console?
         /// </summary>
@@ -35,7 +37,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Which file application events and errors (from Trace) should be logged to.
         /// </summary>
-        public static string LogFile = null;
+        public static string LogFilePath = null;
         /// <summary>
         /// Which input type should be used for manipulating balloons.
         /// </summary>
@@ -89,7 +91,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Minimum number of balloons that triggers updating the feed before it times out.
         /// </summary>
-        public static int MinBalloonPerScreen = 1;
+        public static int MinBalloonsPerScreen = 1;
         /// <summary>
         /// Maximum number of balloons per screen (not enforced per-screen but globally).
         /// </summary>
@@ -114,11 +116,75 @@ namespace Balloons.Messaging.Model
         /// <returns> False on error. </returns>
         public static bool Load()
         {
+            if(File.Exists(ConfigPath))
+            {
+
+            }
+            else
+            {
+                // dump the default settings to a file so that they can be easily edited
+                Save(ConfigPath);
+            }
+
+            // Setup logging
             if(LogToConsole)
             {
-                Debug.Listeners.Add(new ConsoleTraceListener());
+                Trace.Listeners.Add(new ConsoleTraceListener());
+                Trace.AutoFlush = true;
+            }
+            if(LogToFile)
+            {
+                Trace.Listeners.Add(new TextWriterTraceListener(LogFilePath));
             }
             return false;
+        }
+
+        /// <summary>
+        /// Save the current configuration to a file.
+        /// </summary>
+        public static bool Save(string path)
+        {
+            //Dictionary<string, object> settings = new Dictionary<string, object>();
+            JObject settings = new JObject();
+
+            // common settings
+            settings["LogToConsole"] = JValue.FromObject(LogToConsole);
+            settings["LogToFile"] = JValue.FromObject(LogToFile);
+            settings["LogFilePath"] = (LogFilePath == null) ? null : JValue.FromObject(LogFilePath);
+
+            // client settings
+            settings["InputType"] = JValue.FromObject(InputType.ToString());
+            settings["FullScreen"] = JValue.FromObject(FullScreen);
+            settings["ScreenWidth"] = JValue.FromObject(ScreenWidth);
+            settings["ScreenHeight"] = JValue.FromObject(ScreenHeight);
+            settings["MessageDisplayTime"] = JValue.FromObject(MessageDisplayTime);
+            settings["RemoteIPAddress"] = JValue.FromObject(RemoteIPAddress.ToString());
+            settings["RemotePort"] = JValue.FromObject(RemotePort);
+
+            // server settings
+            settings["LocalIPAddress"] = JValue.FromObject(LocalIPAddress.ToString());
+            settings["LocalPort"] = JValue.FromObject(LocalPort);
+            settings["FeedURL"] = (FeedURL == null) ? null : JValue.FromObject(FeedURL);
+            settings["FeedTimeout"] = JValue.FromObject(FeedTimeout);
+            settings["MinBalloonsPerScreen"] = JValue.FromObject(MinBalloonsPerScreen);
+            settings["MaxBalloonsPerScreen"] = JValue.FromObject(MaxBalloonsPerScreen);
+            settings["VelocityLeftX"] = JValue.FromObject(VelocityLeft.X);
+            settings["VelocityLeftY"] = JValue.FromObject(VelocityLeft.Y);
+            settings["VelocityRightX"] = JValue.FromObject(VelocityRight.X);
+            settings["VelocityRightY"] = JValue.FromObject(VelocityRight.Y);
+
+            // write the settings to the configuration file, as JSON
+            string jsonText = settings.ToString();
+            try
+            {
+                File.WriteAllText(ConfigPath, jsonText);
+                return true;
+            }
+            catch(Exception e)
+            {
+                Trace.WriteLine(String.Format("Error when writing configuration file: {0}", e));
+                return false;
+            }
         }
         #endregion
     }

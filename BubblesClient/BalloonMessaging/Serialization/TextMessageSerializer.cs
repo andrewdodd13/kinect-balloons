@@ -53,7 +53,7 @@ namespace Balloons.Serialization
             args.Add(JValue.CreateString(msg.TypeTag));
             formatter(args, msg);
             string line = args.ToString(Formatting.None);
-            Debug.WriteLine(String.Format(">> {0}", line));
+            Trace.WriteLine(String.Format(">> {0}", line));
             return m_encoding.GetBytes(line + "\n");
         }
 
@@ -129,7 +129,7 @@ namespace Balloons.Serialization
             byte[] messageData = new byte[lineSize];
             buffer.Read(messageData, 0, lineSize);
             string line = m_encoding.GetString(messageData);
-            Debug.WriteLine(String.Format("<< {0}", line.Substring(0, line.Length - 1)));
+            Trace.WriteLine(String.Format("<< {0}", line.Substring(0, line.Length - 1)));
             return ParseMessage(line);
         }
 
