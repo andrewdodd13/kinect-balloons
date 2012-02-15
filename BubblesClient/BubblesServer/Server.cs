@@ -32,14 +32,13 @@ namespace Balloons.Server
         public static void Main(string[] args)
         {
             // Load the configuration file
+            string configPath = "BalloonServer.conf";
             if(args.Length > 1)
             {
-                if(File.Exists(args[1]))
-                {
-                    Configuration.ConfigPath = args[1];
-                }
+                configPath = args[1];
             }
-            Configuration.Load();
+            // If this path doesn't exist, the config file will be created with default values
+            Configuration.Load(configPath);
 
             // Start the server
             Server server = new Server(Configuration.LocalIPAddress, Configuration.LocalPort);

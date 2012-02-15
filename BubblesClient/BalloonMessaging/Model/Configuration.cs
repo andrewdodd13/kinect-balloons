@@ -32,10 +32,6 @@ namespace Balloons.Messaging.Model
     {
         #region Common settings
         /// <summary>
-        /// Where to find the configuration file.
-        /// </summary>
-        public static string ConfigPath = "Balloons.conf";
-        /// <summary>
         /// Are application events and errors (from Trace) written to the console?
         /// </summary>
         public static bool LogToConsole = true;
@@ -131,17 +127,17 @@ namespace Balloons.Messaging.Model
         /// Setup logging if needed.
         /// </summary>
         /// <returns> False on error. </returns>
-        public static bool Load()
+        public static bool Load(string configPath)
         {
-            if(File.Exists(ConfigPath))
+            if(File.Exists(configPath))
             {
-                JObject settings = LoadConfigFile(ConfigPath);
+                JObject settings = LoadConfigFile(configPath);
                 LoadValues(settings);
             }
             else
             {
                 // dump the default settings to a file so that they can be easily edited
-                Save(ConfigPath);
+                Save(configPath);
             }
 
             // Setup logging
@@ -195,7 +191,7 @@ namespace Balloons.Messaging.Model
             string jsonText = settings.ToString();
             try
             {
-                File.WriteAllText(ConfigPath, jsonText);
+                File.WriteAllText(path, jsonText);
                 return true;
             }
             catch(Exception e)
