@@ -293,16 +293,13 @@ namespace BubblesClient
 
             spriteBatch.Draw(skyTexture, new Vector2(0, 0), Color.White);
 
-            // Draw all of the balloons
+            // Draw all of the boxes first
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
-                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
-
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (balloon.Type != BalloonType.Customizable && !balloon.Popped)
                 {
-                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
+                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
@@ -318,6 +315,13 @@ namespace BubblesClient
 
                     drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
+            }
+
+            // Draw all of the balloons
+            foreach (ClientBalloon balloon in balloons.Values)
+            {
+                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
+                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
             }
 
             // Draw all buckets
