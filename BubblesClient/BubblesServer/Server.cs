@@ -325,7 +325,7 @@ namespace Balloons.Server
             if((b != null) && (screen != null))
             {
                 screen.Connection.SendMessage(new BalloonContentUpdateMessage(
-                    b.ID, b.Type, b.Label, b.Content, b.Url));
+                    b.ID, b.Type, b.Label, b.Content, b.Url, b.ImageUrl));
             }
             return true;
         }
@@ -351,6 +351,7 @@ namespace Balloons.Server
                 b.Content = bcm.Content;
                 b.Type = bcm.BalloonType;
                 b.Url = bcm.Url;
+                b.ImageUrl = bcm.ImageUrl;
             }
             return true;
         }
@@ -410,7 +411,7 @@ namespace Balloons.Server
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
                         0.2f, Configuration.VelocityLeft), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
-                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
+                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL, i.ImageURL), fm.Sender);
                     EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
                         Colour.Parse(i.BalloonColour)), fm.Sender);
                     added++;

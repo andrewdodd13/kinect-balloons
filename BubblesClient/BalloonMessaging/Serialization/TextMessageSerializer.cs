@@ -104,6 +104,7 @@ namespace Balloons.Serialization
             args.Add(JValue.CreateString(bcm.Label));
             args.Add(JValue.CreateString(bcm.Content));
             args.Add(JValue.CreateString(bcm.Url));
+            args.Add(JValue.CreateString(bcm.ImageUrl));
         }
 
         private void FormatBalloon(JArray args, Message m)
@@ -193,7 +194,8 @@ namespace Balloons.Serialization
             string label = args[3].ToObject<string>();
             string content = args[4].ToObject<string>();
             string url = args[5].ToObject<string>();
-            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+            string imageUrl = args[6].ToObject<string>();
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url, imageUrl);
         }
 
         private Message ParseBalloon(JArray args)

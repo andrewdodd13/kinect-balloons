@@ -125,6 +125,7 @@ namespace Balloons.Serialization
             writer.Write(bcm.Label == null ? "" : bcm.Label);
             writer.Write(bcm.Content == null ? "" : bcm.Content);
             writer.Write(bcm.Url == null ? "" : bcm.Url);
+            writer.Write(bcm.ImageUrl == null ? "" : bcm.ImageUrl);
         }
         
         private void SerializeBalloon(BinaryWriter writer, Message msg)
@@ -210,7 +211,8 @@ namespace Balloons.Serialization
             string label = reader.ReadString();
             string content = reader.ReadString();
             string url = reader.ReadString();
-            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url);
+            string imageUrl = reader.ReadString();
+            return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url, imageUrl);
         }
         
         private Message DecodeBalloon(BinaryReader reader, MessageType type)

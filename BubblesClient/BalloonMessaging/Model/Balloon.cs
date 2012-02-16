@@ -34,6 +34,7 @@ namespace Balloons.Messaging.Model
         public string Label { get; set; }
         public string Content { get; set; }
         public string Url { get; set; }
+        public string ImageUrl { get; set; }
 
         public OverlayType OverlayType { get; set; }
         public BalloonType Type { get; set; }
