@@ -176,7 +176,7 @@ namespace BubblesClient.Physics
         }
         #endregion
 
-        public WorldEntity CreateRoof(int width, Vector2 position)
+        public WorldEntity CreateBoundary(int width, Vector2 position)
         {
             Body roofBody = BodyFactory.CreateRectangle(world, width / MeterInPixels, 1 / MeterInPixels, 1f, position / MeterInPixels);
             roofBody.IsStatic = true;
