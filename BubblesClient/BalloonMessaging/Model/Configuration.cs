@@ -264,7 +264,7 @@ namespace Balloons.Messaging.Model
                         val = (T)Enum.Parse(typeof(T), text);
                         return true;
                     }
-                    catch(Exception e)
+                    catch(Exception)
                     {
                     }
                 }

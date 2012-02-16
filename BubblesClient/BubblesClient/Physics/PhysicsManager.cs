@@ -177,7 +177,7 @@ namespace BubblesClient.Physics
             };
 
             FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
-            handJoint.MaxForce = 1000f;
+            handJoint.MaxForce = 10000f;
             world.AddJoint(handJoint);
 
             WorldEntity handEntity = new WorldEntity(handBody, handJoint, WorldEntity.EntityType.Hand);
