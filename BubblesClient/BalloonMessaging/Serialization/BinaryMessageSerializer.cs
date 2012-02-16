@@ -22,19 +22,19 @@ namespace Balloons.Serialization
             m_decoders.Add(MessageType.NewBalloon, DecodeNewBalloon);
             m_decoders.Add(MessageType.ChangeScreen, DecodeChangeScreen);
             m_decoders.Add(MessageType.BalloonContentUpdate, DecodeBalloonContentUpdate);
-            m_decoders.Add(MessageType.BalloonDecorationUpdate, DecodeBalloonDecorationUpdate);
+            m_decoders.Add(MessageType.BalloonStateUpdate, DecodeBalloonStateUpdate);
             m_decoders.Add(MessageType.PopBalloon, DecodeBalloon);
             m_decoders.Add(MessageType.GetBalloonContent, DecodeBalloon);
-            m_decoders.Add(MessageType.GetBalloonDecoration, DecodeBalloon);
+            m_decoders.Add(MessageType.GetBalloonState, DecodeBalloon);
 
             m_encoders = new Dictionary<MessageType, MessageEncoder>();
             m_encoders.Add(MessageType.NewBalloon, SerializeNewBalloon);
             m_encoders.Add(MessageType.ChangeScreen, SerializeChangeScreen);
             m_encoders.Add(MessageType.BalloonContentUpdate, SerializeBalloonContentUpdate);
-            m_encoders.Add(MessageType.BalloonDecorationUpdate, SerializeBalloonDecorationUpdate);
+            m_encoders.Add(MessageType.BalloonStateUpdate, SerializeBalloonStateUpdate);
             m_encoders.Add(MessageType.PopBalloon, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonContent, SerializeBalloon);
-            m_encoders.Add(MessageType.GetBalloonDecoration, SerializeBalloon);
+            m_encoders.Add(MessageType.GetBalloonState, SerializeBalloon);
 
             if(Configuration.LogNetworkMessages)
             {
@@ -106,15 +106,16 @@ namespace Balloons.Serialization
             writer.Write(csm.Velocity.Y);
         }
 
-        private void SerializeBalloonDecorationUpdate(BinaryWriter writer, Message msg)
+        private void SerializeBalloonStateUpdate(BinaryWriter writer, Message msg)
         {
-            BalloonDecorationUpdateMessage bdm = (BalloonDecorationUpdateMessage)msg;
+            BalloonStateUpdateMessage bdm = (BalloonStateUpdateMessage)msg;
             writer.Write(bdm.BalloonID);
             writer.Write((int)bdm.OverlayType);
             writer.Write(bdm.BackgroundColor.Red);
             writer.Write(bdm.BackgroundColor.Green);
             writer.Write(bdm.BackgroundColor.Blue);
             writer.Write(bdm.BackgroundColor.Alpha);
+            writer.Write(bdm.Votes);
         }
         
         private void SerializeBalloonContentUpdate(BinaryWriter writer, Message msg)
@@ -192,7 +193,7 @@ namespace Balloons.Serialization
             return new ChangeScreenMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
         }
 
-        private Message DecodeBalloonDecorationUpdate(BinaryReader reader, MessageType type)
+        private Message DecodeBalloonStateUpdate(BinaryReader reader, MessageType type)
         {
             string balloonID = reader.ReadString();
             OverlayType overlayType = (OverlayType)reader.ReadInt32();
@@ -201,7 +202,8 @@ namespace Balloons.Serialization
             byte b = reader.ReadByte();
             byte a = reader.ReadByte();
             Colour c = new Colour(r, g, b, a);
-            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+            int votes = reader.ReadInt32();
+            return new BalloonStateUpdateMessage(balloonID, overlayType, c, votes);
         }
         
         private Message DecodeBalloonContentUpdate(BinaryReader reader, MessageType type)
@@ -224,8 +226,8 @@ namespace Balloons.Serialization
                 return new PopBalloonMessage(balloonID);
             case MessageType.GetBalloonContent:
                 return new GetBalloonContentMessage(balloonID);
-            case MessageType.GetBalloonDecoration:
-                return new GetBalloonDecorationMessage(balloonID);
+            case MessageType.GetBalloonState:
+                return new GetBalloonStateMessage(balloonID);
             default:
                 throw new ArgumentOutOfRangeException("type");
             }

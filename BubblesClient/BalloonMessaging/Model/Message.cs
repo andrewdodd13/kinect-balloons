@@ -16,11 +16,11 @@ namespace Balloons.Messaging.Model
         // Messages sent by the client
         ChangeScreen,
         GetBalloonContent,
-        GetBalloonDecoration,
+        GetBalloonState,
 
         // Messages sent by both
         PopBalloon,
-        BalloonDecorationUpdate,
+        BalloonStateUpdate,
 
         // Internal messages
         Connected,
@@ -173,6 +173,24 @@ namespace Balloons.Messaging.Model
             m_url = url;
             m_imageUrl = imageURL;
         }
+        
+        public BalloonContentUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.Type, balloon.Label, balloon.Content, balloon.Url, balloon.ImageUrl)
+        {
+        }
+        
+        public void UpdateContent(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.Type = BalloonType;
+            balloon.Label = Label;
+            balloon.Content = Content;
+            balloon.Url = Url;
+            balloon.ImageUrl = ImageUrl;
+        }
 
         private BalloonType m_type;
         private string m_label;
@@ -225,12 +243,12 @@ namespace Balloons.Messaging.Model
         }
     }
 
-    public class GetBalloonDecorationMessage : BalloonMessage
+    public class GetBalloonStateMessage : BalloonMessage
     {
-        public const string Tag = "get-balloon-decoration";
+        public const string Tag = "get-balloon-state";
 
-        public GetBalloonDecorationMessage(string balloonID)
-            : base(MessageType.GetBalloonDecoration, Tag, balloonID)
+        public GetBalloonStateMessage(string balloonID)
+            : base(MessageType.GetBalloonState, Tag, balloonID)
         {
         }
     }
@@ -247,9 +265,9 @@ namespace Balloons.Messaging.Model
         }
     }
 
-    public class BalloonDecorationUpdateMessage : BalloonMessage
+    public class BalloonStateUpdateMessage : BalloonMessage
     {
-        public const string Tag = "balloon-decoration-update";
+        public const string Tag = "balloon-state-update";
 
         public OverlayType OverlayType
         {
@@ -261,15 +279,38 @@ namespace Balloons.Messaging.Model
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor)
-            : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
+        public int Votes
+        {
+            get { return this.m_votes; }
+        }
+
+        public BalloonStateUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor, int votes)
+            : base(MessageType.BalloonStateUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;
             m_bgColor = bgColor;
+            m_votes = votes;
+        }
+        
+        public BalloonStateUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.OverlayType, balloon.BackgroundColor, balloon.Votes)
+        {
+        }
+        
+        public void UpdateState(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.OverlayType = OverlayType;
+            balloon.BackgroundColor = BackgroundColor;
+            balloon.Votes = Votes;
         }
 
         private OverlayType m_overlayType;
         private Colour m_bgColor;
+        private int m_votes;
     }
     #endregion
 
@@ -316,6 +357,5 @@ namespace Balloons.Messaging.Model
         
         private List<FeedContent> m_items;
     }
-    
     #endregion
 }

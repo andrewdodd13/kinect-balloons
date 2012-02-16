@@ -88,8 +88,9 @@ namespace BubblesClient
             }
             cachedBalloon.OverlayType = balloon.OverlayType;
             cachedBalloon.BackgroundColor = balloon.BackgroundColor;
-            m_conn.SendMessage(new BalloonDecorationUpdateMessage(balloon.ID,
-                balloon.OverlayType, balloon.BackgroundColor));
+            cachedBalloon.Votes = balloon.Votes;
+            m_conn.SendMessage(new BalloonStateUpdateMessage(balloon.ID,
+                balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
         private void OnConnected(object sender, EventArgs args)
@@ -119,8 +120,8 @@ namespace BubblesClient
             case MessageType.BalloonContentUpdate:
                 HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
                 break;
-            case MessageType.BalloonDecorationUpdate:
-                HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+            case MessageType.BalloonStateUpdate:
+                HandleBalloonStateUpdate((BalloonStateUpdateMessage)msg);
                 break;
             }
         }
@@ -134,9 +135,9 @@ namespace BubblesClient
                 m_conn.SendMessage(new GetBalloonContentMessage(nbm.BalloonID));
             }
 
-            // ask the server to send updated decoration details
+            // ask the server to send up-to-date state
             // TODO: only do this if the details have been changed
-            m_conn.SendMessage(new GetBalloonDecorationMessage(nbm.BalloonID));
+            m_conn.SendMessage(new GetBalloonStateMessage(nbm.BalloonID));
         }
 
         private void HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
@@ -152,13 +153,14 @@ namespace BubblesClient
             }
         }
 
-        private void HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        private void HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             Balloon balloon = null;
             if(balloonCache.TryGetValue(bdm.BalloonID, out balloon))
             {
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
+                balloon.Votes = bdm.Votes;
             }
         }
     }

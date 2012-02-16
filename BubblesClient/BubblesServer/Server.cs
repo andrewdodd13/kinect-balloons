@@ -168,12 +168,12 @@ namespace Balloons.Server
                 return HandlePopBalloon((PopBalloonMessage)msg);
             case MessageType.GetBalloonContent:
                 return HandleGetBalloonContent((GetBalloonContentMessage)msg);
-            case MessageType.GetBalloonDecoration:
-                return HandleGetBalloonDecoration((GetBalloonDecorationMessage)msg);
+            case MessageType.GetBalloonState:
+                return HandleGetBalloonState((GetBalloonStateMessage)msg);
             case MessageType.BalloonContentUpdate:
                 return HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-            case MessageType.BalloonDecorationUpdate:
-                return HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+            case MessageType.BalloonStateUpdate:
+                return HandleBalloonStateUpdate((BalloonStateUpdateMessage)msg);
             case MessageType.FeedUpdated:
                 return HandleFeedUpdated((FeedUpdatedMessage)msg);
             default:
@@ -320,50 +320,35 @@ namespace Balloons.Server
         
         private bool HandleGetBalloonContent(GetBalloonContentMessage gbcm)
         {
-            ServerBalloon b = GetBalloon(gbcm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbcm.BalloonID);
             Screen screen = gbcm.Sender as Screen;
-            if((b != null) && (screen != null))
+            if((balloon != null) && (screen != null))
             {
-                screen.Connection.SendMessage(new BalloonContentUpdateMessage(
-                    b.ID, b.Type, b.Label, b.Content, b.Url, b.ImageUrl));
+                screen.Connection.SendMessage(new BalloonContentUpdateMessage(balloon));
             }
             return true;
         }
 
-        private bool HandleGetBalloonDecoration(GetBalloonDecorationMessage gbdm)
+        private bool HandleGetBalloonState(GetBalloonStateMessage gbdm)
         {
-            ServerBalloon b = GetBalloon(gbdm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbdm.BalloonID);
             Screen screen = gbdm.Sender as Screen;
-            if((b != null) && (screen != null))
+            if((balloon != null) && (screen != null))
             {
-                screen.Connection.SendMessage(new BalloonDecorationUpdateMessage(
-                    b.ID, b.OverlayType, b.BackgroundColor));
+                screen.Connection.SendMessage(new BalloonStateUpdateMessage(balloon));
             }
             return true;
         }
 
         private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
-            ServerBalloon b = GetBalloon(bcm.BalloonID);
-            if(b != null)
-            {
-                b.Label = bcm.Label;
-                b.Content = bcm.Content;
-                b.Type = bcm.BalloonType;
-                b.Url = bcm.Url;
-                b.ImageUrl = bcm.ImageUrl;
-            }
+            bcm.UpdateContent(GetBalloon(bcm.BalloonID));
             return true;
         }
 
-        private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        private bool HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
-            ServerBalloon b = GetBalloon(bdm.BalloonID);
-            if(b != null)
-            {
-                b.OverlayType = bdm.OverlayType;
-                b.BackgroundColor = bdm.BackgroundColor;
-            }
+            bdm.UpdateState(GetBalloon(bdm.BalloonID));
             return true;
         }
 
@@ -375,9 +360,16 @@ namespace Balloons.Server
                 if((b != null) && (b.Screen != null))
                 {
                     b.Screen.Balloons.Remove(pbm.BalloonID);
-                    if(!(pbm.Sender is Screen))
+                    if (!(pbm.Sender is Screen))
                     {
                         b.Screen.Connection.SendMessage(pbm);
+                    }
+                    else
+                    {
+                        if (m_bubbles.Count <= (Configuration.MinBalloonsPerScreen * m_screens.Count))
+                        {
+                            m_feed.Refresh();
+                        }
                     }
                 }
                 m_bubbles.Remove(pbm.BalloonID);
@@ -407,13 +399,13 @@ namespace Balloons.Server
             foreach(FeedContent i in fromFeed)
             {
                 if(!fromServer.ContainsKey(i.ContentID)) {
-                    // Add the new balloon to the server and send content and decoration
+                    // Add the new balloon to the server and send content and state
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
                         0.2f, Configuration.VelocityLeft), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL, i.ImageURL), fm.Sender);
-                    EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
-                        Colour.Parse(i.BalloonColour)), fm.Sender);
+                    EnqueueMessage(new BalloonStateUpdateMessage(i.ContentID, 0,
+                        Colour.Parse(i.BalloonColour), i.Votes), fm.Sender);
                     added++;
                 }
             }
