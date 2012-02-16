@@ -176,7 +176,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Images\BalloonPop.jpg">
+    <Compile Include="Images\BalloonPop.png">
       <Name>BalloonPop</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
