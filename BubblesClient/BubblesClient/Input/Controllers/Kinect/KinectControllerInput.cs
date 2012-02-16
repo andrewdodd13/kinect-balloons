@@ -82,7 +82,25 @@ namespace BubblesClient.Input.Controllers.Kinect
                                     if (!_handPositions.ContainsKey(skeleton))
                                     {
                                         // If not, add new hand objects to the list
-                                        _handPositions.Add(skeleton, new Hand[2] { new Hand(), new Hand() });
+                                        // Get the first unused id (in normal use case this is just 0 or 1)
+                                        int id = 0;
+                                        while (true)
+                                        {
+                                            bool found = false;
+                                            foreach (Hand[] handpair in _handPositions.Values)
+                                            {
+                                                if (handpair[0].ID == id)
+                                                {
+                                                    found = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!found)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        _handPositions.Add(skeleton, new Hand[2] { new Hand() { ID = id, Side = Side.Left}, new Hand() { ID = id, Side = Side.Right} });
                                     }
 
                                     // Set the hands positions

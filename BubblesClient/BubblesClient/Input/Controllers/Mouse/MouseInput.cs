@@ -9,8 +9,8 @@ namespace BubblesClient.Input.Controllers.Mouse
     /// </summary>
     public class MouseInput : IInputController
     {
-        private Hand _hand = new Hand();
-        private Hand _altHand = new Hand();
+        private Hand _hand = new Hand() { ID = 0, Side = Side.Left };
+        private Hand _altHand = new Hand() { ID = 0, Side = Side.Right };
         private float Seperation = 0, MaxSeperation = 200;
         private bool anim = false;
 
