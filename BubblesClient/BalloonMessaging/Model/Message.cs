@@ -254,15 +254,22 @@ namespace Balloons.Messaging.Model
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor)
+        public int Votes
+        {
+            get { return this.m_votes; }
+        }
+
+        public BalloonDecorationUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor, int votes)
             : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;
             m_bgColor = bgColor;
+            m_votes = votes;
         }
 
         private OverlayType m_overlayType;
         private Colour m_bgColor;
+        private int m_votes;
     }
     #endregion
 

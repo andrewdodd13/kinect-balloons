@@ -26,6 +26,8 @@ namespace Balloons.Messaging.Model
         public int Type;
         [JsonProperty]
         public string Excerpt;
+        [JsonProperty]
+        public int Votes;
 
         public static List<FeedContent> ParseList(string jsonText)
         {

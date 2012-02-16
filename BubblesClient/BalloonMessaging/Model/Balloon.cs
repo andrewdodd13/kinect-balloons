@@ -38,12 +38,14 @@ namespace Balloons.Messaging.Model
         public OverlayType OverlayType { get; set; }
         public BalloonType Type { get; set; }
         public Colour BackgroundColor { get; set; }
+        public int Votes { get; set; }
 
         public Balloon(string id)
         {
             this.ID = id;
 
             BackgroundColor = new Colour(255, 255, 255, 255);
+            Votes = 0;
         }
 
         public Balloon(Balloon parent) : this(parent.ID)

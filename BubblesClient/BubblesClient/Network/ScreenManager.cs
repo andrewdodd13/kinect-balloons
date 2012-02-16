@@ -89,7 +89,7 @@ namespace BubblesClient
             cachedBalloon.OverlayType = balloon.OverlayType;
             cachedBalloon.BackgroundColor = balloon.BackgroundColor;
             m_conn.SendMessage(new BalloonDecorationUpdateMessage(balloon.ID,
-                balloon.OverlayType, balloon.BackgroundColor));
+                balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
         private void OnConnected(object sender, EventArgs args)

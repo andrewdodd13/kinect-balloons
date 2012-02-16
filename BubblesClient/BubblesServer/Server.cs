@@ -337,7 +337,7 @@ namespace Balloons.Server
             if((b != null) && (screen != null))
             {
                 screen.Connection.SendMessage(new BalloonDecorationUpdateMessage(
-                    b.ID, b.OverlayType, b.BackgroundColor));
+                    b.ID, b.OverlayType, b.BackgroundColor, b.Votes));
             }
             return true;
         }
@@ -419,7 +419,7 @@ namespace Balloons.Server
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
                     EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
-                        Colour.Parse(i.BalloonColour)), fm.Sender);
+                        Colour.Parse(i.BalloonColour), i.Votes), fm.Sender);
                     added++;
                 }
             }

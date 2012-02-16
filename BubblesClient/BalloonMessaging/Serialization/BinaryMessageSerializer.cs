@@ -115,6 +115,7 @@ namespace Balloons.Serialization
             writer.Write(bdm.BackgroundColor.Green);
             writer.Write(bdm.BackgroundColor.Blue);
             writer.Write(bdm.BackgroundColor.Alpha);
+            writer.Write(bdm.Votes);
         }
         
         private void SerializeBalloonContentUpdate(BinaryWriter writer, Message msg)
@@ -200,7 +201,8 @@ namespace Balloons.Serialization
             byte b = reader.ReadByte();
             byte a = reader.ReadByte();
             Colour c = new Colour(r, g, b, a);
-            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c);
+            int votes = reader.ReadInt32();
+            return new BalloonDecorationUpdateMessage(balloonID, overlayType, c, votes);
         }
         
         private Message DecodeBalloonContentUpdate(BinaryReader reader, MessageType type)
