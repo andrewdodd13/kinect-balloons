@@ -97,6 +97,7 @@
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml">
       <Private>False</Private>
     </Reference>
@@ -109,6 +110,9 @@
     <Reference Include="System.Net">
       <Private>False</Private>
     </Reference>
+    <Reference Include="ThoughtWorks.QRCode">
+      <HintPath>..\..\Libraries\ThoughtWorks.QRCode.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Input\Controllers\Hand.cs" />
@@ -116,6 +120,7 @@
     <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
     <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
+    <Compile Include="Model\BalloonContentCache.cs" />
     <Compile Include="Model\Bucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
     <Compile Include="Network\ScreenManager.cs" />
@@ -124,6 +129,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />
+    <Compile Include="Utility\ImageGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />
