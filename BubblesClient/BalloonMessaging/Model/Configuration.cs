@@ -86,6 +86,22 @@ namespace Balloons.Messaging.Model
         /// Controls if hands from different users can trigger a clap
         /// </summary>
         public static bool EnableHighFive = false;
+        /// <summary>
+        /// The minimum speed a hand must be moving to be valid to clap
+        /// Units are meters/sec
+        /// </summary>
+        public static float KinectMovementThreshold = 10;
+        /// <summary>
+        /// The minimum range a hand must be from a balloon before it is valid to burt it
+        /// Units are meters
+        /// </summary>
+        public static float KinectMaxHandRange = 2;
+        /// <summary>
+        /// The minimum angle of attack that a hand must hit a balloon at to be valid for bursting
+        /// Also used as tolerance angle for if hands are moving towards each other
+        /// Unit is cos(angle) [Range 0 to 1]
+        /// </summary>
+        public static double KinectMinAttackAngle = 0.5;
         #endregion
 
         #region Server settings
@@ -180,6 +196,9 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
             StoreValue(settings, "EnableHighFive", EnableHighFive);
+            StoreValue(settings, "KinectMovementThreshold", KinectMovementThreshold);
+            StoreValue(settings, "KinectMaxHandRange", KinectMaxHandRange);
+            StoreValue(settings, "KinectMinAttackAngle", KinectMinAttackAngle);
 
             // server settings
             StoreValue(settings, "LocalIPAddress", LocalIPAddress);
@@ -244,6 +263,9 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "RemoteIPAddress", out RemoteIPAddress);
             LoadValue(settings, "RemotePort", out RemotePort);
             LoadValue(settings, "EnableHighFive", out EnableHighFive);
+            LoadValue(settings, "KinectMovementThreshold", out KinectMovementThreshold);
+            LoadValue(settings, "KinectMaxHandRange", out KinectMaxHandRange);
+            LoadValue(settings, "KinectMinAttackAngle", out KinectMinAttackAngle);
 
             // server settings
             LoadValue(settings, "LocalIPAddress", out LocalIPAddress);

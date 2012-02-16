@@ -100,9 +100,9 @@ namespace BubblesClient.Physics
             }
             else if (B.Type == WorldEntity.EntityType.Hand)
             {
-                // Clap detection tweak values
-                float movementThreshold = 10, altHandRange = 2;
-                double minimumAttackAngle = 0.5;
+                float movementThreshold = Configuration.KinectMovementThreshold;
+                float altHandRange = Configuration.KinectMaxHandRange;
+                double minimumAttackAngle = Configuration.KinectMinAttackAngle;
 
                 // First we get the hand that has collided with the balloon and check that it is
                 // moving fast enough and at a direct enough angle towards the balloon to trigger the clap
