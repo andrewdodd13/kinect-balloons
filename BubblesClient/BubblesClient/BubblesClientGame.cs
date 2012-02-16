@@ -336,7 +336,10 @@ namespace BubblesClient
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
                 spriteBatch.Draw(contentBox, position, Color.White);
                 drawTextLabel(contentFont, poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
-                spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(24, 24), Color.White);
+                if(poppedBalloon.BalloonContentCache.QRCode != null)
+                {
+                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(24, 24), Color.White);
+                }
             }
             else
             {
