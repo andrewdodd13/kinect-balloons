@@ -309,7 +309,17 @@ namespace BubblesClient
                     // and save it back
                     if (!balloon.IsLabelCached)
                     {
-                        balloon.Label = wrapText(summaryFont, balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
+                        string labelText = balloon.Label;
+                        balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
+
+                        if (balloon.Content.Trim() == string.Empty)
+                        {
+                            balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
+                        }
+                        else
+                        {
+                            balloon.Content = wrapText(contentFont, balloon.Content, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
+                        }
                         balloon.IsLabelCached = true;
                     }
 
@@ -333,10 +343,22 @@ namespace BubblesClient
             //display content page if balloonPopped is true (should only be true for 30 seconds)
             if (poppedBalloon != null)
             {
+                // Position contains the co-ordinate of the top-left corner of the box
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
+
+                // Draw the box itself
                 spriteBatch.Draw(contentBox, position, Color.White);
-                drawTextLabel(contentFont, poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
-                spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(24, 24), Color.White);
+
+                // Draw the text
+                drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
+
+                // Draw the QR Code
+                spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(contentBox.Width - 280, 24), Color.White);
+
+                // Draw the Image
+                spriteBatch.Draw(poppedBalloon.BalloonContentCache.Image,
+                    position + new Vector2(contentBox.Width - 280, contentBox.Height - poppedBalloon.BalloonContentCache.Image.Height - 24),
+                    Color.White);
             }
             else
             {
@@ -558,7 +580,7 @@ namespace BubblesClient
                 {
                     ID = b.ID,
                     QRCode = ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
-                    // Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.);
+                    Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.ImageUrl)
                 };
 
                 balloonTextureCache.Add(b.ID, cacheEntry);
