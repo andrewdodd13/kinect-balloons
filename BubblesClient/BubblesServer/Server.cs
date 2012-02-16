@@ -168,12 +168,12 @@ namespace Balloons.Server
                 return HandlePopBalloon((PopBalloonMessage)msg);
             case MessageType.GetBalloonContent:
                 return HandleGetBalloonContent((GetBalloonContentMessage)msg);
-            case MessageType.GetBalloonDecoration:
-                return HandleGetBalloonDecoration((GetBalloonDecorationMessage)msg);
+            case MessageType.GetBalloonState:
+                return HandleGetBalloonState((GetBalloonStateMessage)msg);
             case MessageType.BalloonContentUpdate:
                 return HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-            case MessageType.BalloonDecorationUpdate:
-                return HandleBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+            case MessageType.BalloonStateUpdate:
+                return HandleBalloonStateUpdate((BalloonStateUpdateMessage)msg);
             case MessageType.FeedUpdated:
                 return HandleFeedUpdated((FeedUpdatedMessage)msg);
             default:
@@ -330,13 +330,13 @@ namespace Balloons.Server
             return true;
         }
 
-        private bool HandleGetBalloonDecoration(GetBalloonDecorationMessage gbdm)
+        private bool HandleGetBalloonState(GetBalloonStateMessage gbdm)
         {
             ServerBalloon b = GetBalloon(gbdm.BalloonID);
             Screen screen = gbdm.Sender as Screen;
             if((b != null) && (screen != null))
             {
-                screen.Connection.SendMessage(new BalloonDecorationUpdateMessage(
+                screen.Connection.SendMessage(new BalloonStateUpdateMessage(
                     b.ID, b.OverlayType, b.BackgroundColor, b.Votes));
             }
             return true;
@@ -355,7 +355,7 @@ namespace Balloons.Server
             return true;
         }
 
-        private bool HandleBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        private bool HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             ServerBalloon b = GetBalloon(bdm.BalloonID);
             if(b != null)
@@ -413,12 +413,12 @@ namespace Balloons.Server
             foreach(FeedContent i in fromFeed)
             {
                 if(!fromServer.ContainsKey(i.ContentID)) {
-                    // Add the new balloon to the server and send content and decoration
+                    // Add the new balloon to the server and send content and state
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
                         0.2f, Configuration.VelocityLeft), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
-                    EnqueueMessage(new BalloonDecorationUpdateMessage(i.ContentID, 0,
+                    EnqueueMessage(new BalloonStateUpdateMessage(i.ContentID, 0,
                         Colour.Parse(i.BalloonColour), i.Votes), fm.Sender);
                     added++;
                 }

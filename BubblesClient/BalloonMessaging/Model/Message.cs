@@ -16,11 +16,11 @@ namespace Balloons.Messaging.Model
         // Messages sent by the client
         ChangeScreen,
         GetBalloonContent,
-        GetBalloonDecoration,
+        GetBalloonState,
 
         // Messages sent by both
         PopBalloon,
-        BalloonDecorationUpdate,
+        BalloonStateUpdate,
 
         // Internal messages
         Connected,
@@ -218,12 +218,12 @@ namespace Balloons.Messaging.Model
         }
     }
 
-    public class GetBalloonDecorationMessage : BalloonMessage
+    public class GetBalloonStateMessage : BalloonMessage
     {
-        public const string Tag = "get-balloon-decoration";
+        public const string Tag = "get-balloon-state";
 
-        public GetBalloonDecorationMessage(string balloonID)
-            : base(MessageType.GetBalloonDecoration, Tag, balloonID)
+        public GetBalloonStateMessage(string balloonID)
+            : base(MessageType.GetBalloonState, Tag, balloonID)
         {
         }
     }
@@ -240,9 +240,9 @@ namespace Balloons.Messaging.Model
         }
     }
 
-    public class BalloonDecorationUpdateMessage : BalloonMessage
+    public class BalloonStateUpdateMessage : BalloonMessage
     {
-        public const string Tag = "balloon-decoration-update";
+        public const string Tag = "balloon-state-update";
 
         public OverlayType OverlayType
         {
@@ -259,8 +259,8 @@ namespace Balloons.Messaging.Model
             get { return this.m_votes; }
         }
 
-        public BalloonDecorationUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor, int votes)
-            : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
+        public BalloonStateUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor, int votes)
+            : base(MessageType.BalloonStateUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;
             m_bgColor = bgColor;

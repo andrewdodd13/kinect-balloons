@@ -612,8 +612,8 @@ namespace BubblesClient
                     case MessageType.BalloonContentUpdate:
                         OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
                         break;
-                    case MessageType.BalloonDecorationUpdate:
-                        OnBalloonDecorationUpdate((BalloonDecorationUpdateMessage)msg);
+                    case MessageType.BalloonStateUpdate:
+                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
                         break;
                 }
             }
@@ -654,7 +654,8 @@ namespace BubblesClient
                 BalloonContentCache cacheEntry = new BalloonContentCache()
                 {
                     ID = b.ID,
-                    QRCode = ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
+                    QRCode = String.IsNullOrEmpty(b.Url) ? null :
+                        ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
                     // Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.);
                 };
 
@@ -692,13 +693,14 @@ namespace BubblesClient
             }
         }
 
-        public void OnBalloonDecorationUpdate(BalloonDecorationUpdateMessage bdm)
+        public void OnBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             ClientBalloon balloon;
             if (balloons.TryGetValue(bdm.BalloonID, out balloon))
             {
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
+                balloon.Votes = bdm.Votes;
             }
         }
         #endregion
