@@ -20,7 +20,7 @@ namespace BubblesClient.Model
         /// When the wrapping has been doen once this will be set to true 
         /// so that it does not happen again every time the screen is drawn
         /// </summary>
-        public bool labelCached { get; set; }
+        public bool IsLabelCached { get; set; }
 
         public const float BalloonWidth = 162f;
         public const float BalloonHeight = 192f;
@@ -34,7 +34,7 @@ namespace BubblesClient.Model
             : base(parent)
         {
             this.Popped = false;
-            this.labelCached = false;
+            this.IsLabelCached = false;
         }
     }
 }
