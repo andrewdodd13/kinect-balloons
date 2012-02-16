@@ -12,6 +12,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Text;
 
 namespace BubblesClient
 {
@@ -29,7 +30,7 @@ namespace BubblesClient
         private Texture2D[] balloonPopTextures;
 
         private Texture2D boxTexture;
-        private SpriteFont textContent, textSummary;
+        private SpriteFont contentFont, summaryFont;
 
         private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
 
@@ -63,11 +64,11 @@ namespace BubblesClient
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
-            if(Configuration.ScreenWidth > 0)
+            if (Configuration.ScreenWidth > 0)
             {
                 graphics.PreferredBackBufferWidth = Configuration.ScreenWidth;
             }
-            if(Configuration.ScreenHeight > 0)
+            if (Configuration.ScreenHeight > 0)
             {
                 graphics.PreferredBackBufferHeight = Configuration.ScreenHeight;
             }
@@ -144,8 +145,8 @@ namespace BubblesClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            textContent = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
-            textSummary = Content.Load<SpriteFont>("Fonts/SpriteFontLarge");
+            contentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
+            summaryFont = Content.Load<SpriteFont>("Fonts/SpriteFontLarge");
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
@@ -311,18 +312,17 @@ namespace BubblesClient
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
-                    /*
-                     * If the label is not cached then it means it has not
-                     * been formatted to fit in the box. 
-                     * Therefore format it and save it back
-                     * author: AM
-                     */
-                    if(!balloon.labelCached) {
-                        balloon.Label = wrapText(balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
+
+                    // If the label is not cached then it means it has not
+                    // been formatted to fit in the box; therefore format it 
+                    // and save it back
+                    if (!balloon.labelCached)
+                    {
+                        balloon.Label = wrapText(summaryFont, balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
                         balloon.labelCached = true;
                     }
 
-                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                    drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
             }
 
@@ -337,7 +337,7 @@ namespace BubblesClient
             {
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
                 spriteBatch.Draw(contentBox, position, Color.White);
-                drawContentText(poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
+                drawTextLabel(contentFont, poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
                 spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(24, 24), Color.White);
             }
             else
@@ -360,60 +360,44 @@ namespace BubblesClient
             physicsManager.UpdateHandPositions(input.GetHandPositions());
         }
 
-        /**
-         * wrapText
-         * This function takes a string and a vector2. It splits the string given by spaces
-         * and then for each word it will check the length of it against the length of the 
-         * vector2 given in. When the word is passed the edge a new line is put in.
-         * 
-         * @param String text Text to be wrapped
-         * @param Vector2 containerDemensions Demensions of the container the text is to be wrapped in
-         * @return String The text including newlines to fit into the container
-         * @author Alex Macrae
-         */
-        private String wrapText(String text, Vector2 containerDemensions) {
+        /// <summary>
+        /// This function takes a string and a vector2. It splits the string given by spaces
+        /// and then for each word it will check the length of it against the length of the
+        /// vector2 given in. When the word is passed the edge a new line is put in.
+        /// </summary>
+        /// <param name="font">The font to use for measuments</param>
+        /// <param name="text">Text to be wrapped</param>
+        /// <param name="containerDemensions">Dimensions of the container the text is to be wrapped in</param>
+        /// <returns>The text including newlines to fit into the container</returns>
+        private String wrapText(SpriteFont font, String text, Vector2 containerDemensions)
+        {
             String line = String.Empty;
             String returnString = String.Empty;
             String[] wordArray = text.Split(' ');
 
             foreach (String word in wordArray)
             {
-                if (textSummary.MeasureString(line + word).Length() > containerDemensions.X)
+                if (font.MeasureString(line + word).Length() > containerDemensions.X)
                 {
-                    returnString = returnString + line + '\n';
+                    returnString += line + '\n';
                     line = String.Empty;
                 }
-        
-                line = line + word + ' ';
+
+                line += word + ' ';
             }
 
             return returnString + line;
-
         }
 
-        //TODO: do these properly
-        //(have to do new lines manually, based on number of characters in string..?
-        private void drawContentText(String text, Vector2 pos)
+        private void drawTextLabel(SpriteFont font, String text, Vector2 pos)
         {
             try
             {
-                spriteBatch.DrawString(textContent, text, pos, Color.Black);
+                spriteBatch.DrawString(font, text, pos, Color.Black);
             }
             catch (Exception)
             {
-                spriteBatch.DrawString(textContent, "Invalid character", pos, Color.Red);
-            }
-        }
-
-        private void drawSummaryText(String text, Vector2 pos)
-        {
-            try
-            {
-                spriteBatch.DrawString(textSummary, text, pos, Color.Black);
-            }
-            catch (Exception)
-            {
-                spriteBatch.DrawString(textSummary, "Invalid character", pos, Color.Red);
+                spriteBatch.DrawString(font, "Invalid character", pos, Color.Red);
             }
         }
 
