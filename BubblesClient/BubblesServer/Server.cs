@@ -320,49 +320,35 @@ namespace Balloons.Server
         
         private bool HandleGetBalloonContent(GetBalloonContentMessage gbcm)
         {
-            ServerBalloon b = GetBalloon(gbcm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbcm.BalloonID);
             Screen screen = gbcm.Sender as Screen;
-            if((b != null) && (screen != null))
+            if((balloon != null) && (screen != null))
             {
-                screen.Connection.SendMessage(new BalloonContentUpdateMessage(
-                    b.ID, b.Type, b.Label, b.Content, b.Url));
+                screen.Connection.SendMessage(new BalloonContentUpdateMessage(balloon));
             }
             return true;
         }
 
         private bool HandleGetBalloonState(GetBalloonStateMessage gbdm)
         {
-            ServerBalloon b = GetBalloon(gbdm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbdm.BalloonID);
             Screen screen = gbdm.Sender as Screen;
-            if((b != null) && (screen != null))
+            if((balloon != null) && (screen != null))
             {
-                screen.Connection.SendMessage(new BalloonStateUpdateMessage(
-                    b.ID, b.OverlayType, b.BackgroundColor, b.Votes));
+                screen.Connection.SendMessage(new BalloonStateUpdateMessage(balloon));
             }
             return true;
         }
 
         private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
-            ServerBalloon b = GetBalloon(bcm.BalloonID);
-            if(b != null)
-            {
-                b.Label = bcm.Label;
-                b.Content = bcm.Content;
-                b.Type = bcm.BalloonType;
-                b.Url = bcm.Url;
-            }
+            bcm.UpdateContent(GetBalloon(bcm.BalloonID));
             return true;
         }
 
         private bool HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
-            ServerBalloon b = GetBalloon(bdm.BalloonID);
-            if(b != null)
-            {
-                b.OverlayType = bdm.OverlayType;
-                b.BackgroundColor = bdm.BackgroundColor;
-            }
+            bdm.UpdateState(GetBalloon(bdm.BalloonID));
             return true;
         }
 

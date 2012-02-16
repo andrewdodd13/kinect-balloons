@@ -167,6 +167,23 @@ namespace Balloons.Messaging.Model
             m_content = content;
             m_url = url;
         }
+        
+        public BalloonContentUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.Type, balloon.Label, balloon.Content, balloon.Url)
+        {
+        }
+        
+        public void UpdateContent(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.Type = BalloonType;
+            balloon.Label = Label;
+            balloon.Content = Content;
+            balloon.Url = Url;
+        }
 
         private BalloonType m_type;
         private string m_label;
@@ -266,6 +283,22 @@ namespace Balloons.Messaging.Model
             m_bgColor = bgColor;
             m_votes = votes;
         }
+        
+        public BalloonStateUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.OverlayType, balloon.BackgroundColor, balloon.Votes)
+        {
+        }
+        
+        public void UpdateState(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.OverlayType = OverlayType;
+            balloon.BackgroundColor = BackgroundColor;
+            balloon.Votes = Votes;
+        }
 
         private OverlayType m_overlayType;
         private Colour m_bgColor;
@@ -316,6 +349,5 @@ namespace Balloons.Messaging.Model
         
         private List<FeedContent> m_items;
     }
-    
     #endregion
 }
