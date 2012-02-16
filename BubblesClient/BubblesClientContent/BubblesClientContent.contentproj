@@ -142,11 +142,6 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
-    <Compile Include="Images\hand2.png">
-      <Name>hand2</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
     <Compile Include="Images\Sky.jpg">
       <Name>Sky</Name>
       <Importer>TextureImporter</Importer>
