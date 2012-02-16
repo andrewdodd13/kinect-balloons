@@ -158,18 +158,24 @@ namespace Balloons.Messaging.Model
         {
             get { return this.m_url; }
         }
+        
+        public string ImageUrl
+        {
+            get { return this.m_imageUrl;  }
+        }
 
-        public BalloonContentUpdateMessage(string balloonID, BalloonType type, string label, string content, string url)
+        public BalloonContentUpdateMessage(string balloonID, BalloonType type, string label, string content, string url, string imageURL)
             : base(MessageType.BalloonContentUpdate, Tag, balloonID)
         {
             m_type = type;
             m_label = label;
             m_content = content;
             m_url = url;
+            m_imageUrl = imageURL;
         }
         
         public BalloonContentUpdateMessage(Balloon balloon)
-            : this(balloon.ID, balloon.Type, balloon.Label, balloon.Content, balloon.Url)
+            : this(balloon.ID, balloon.Type, balloon.Label, balloon.Content, balloon.Url, balloon.ImageUrl)
         {
         }
         
@@ -183,12 +189,14 @@ namespace Balloons.Messaging.Model
             balloon.Label = Label;
             balloon.Content = Content;
             balloon.Url = Url;
+            balloon.ImageUrl = ImageUrl;
         }
 
         private BalloonType m_type;
         private string m_label;
         private string m_content;
         private string m_url;
+        private string m_imageUrl;
     }
     #endregion
 

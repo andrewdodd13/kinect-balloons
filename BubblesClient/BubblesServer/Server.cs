@@ -403,7 +403,7 @@ namespace Balloons.Server
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
                         0.2f, Configuration.VelocityLeft), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
-                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL), fm.Sender);
+                        (BalloonType)i.Type, i.Title, i.Excerpt, i.URL, i.ImageURL), fm.Sender);
                     EnqueueMessage(new BalloonStateUpdateMessage(i.ContentID, 0,
                         Colour.Parse(i.BalloonColour), i.Votes), fm.Sender);
                     added++;

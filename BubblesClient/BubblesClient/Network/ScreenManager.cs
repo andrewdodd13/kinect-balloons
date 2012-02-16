@@ -149,6 +149,7 @@ namespace BubblesClient
                 balloon.Content = bcm.Content;
                 balloon.Type = bcm.BalloonType;
                 balloon.Url = bcm.Url;
+                balloon.ImageUrl = bcm.ImageUrl;
             }
         }
 
