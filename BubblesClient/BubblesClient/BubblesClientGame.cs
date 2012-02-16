@@ -311,7 +311,18 @@ namespace BubblesClient
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
-                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X + boxTexture.Width / 20, boxPosition.Y + boxTexture.Height * 2 / 3));
+                    /*
+                     * If the label is not cached then it means it has not
+                     * been formatted to fit in the box. 
+                     * Therefore format it and save it back
+                     * author: AM
+                     */
+                    if(!balloon.labelCached) {
+                        balloon.Label = wrapText(balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
+                        balloon.labelCached = true;
+                    }
+
+                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
             }
 
@@ -347,6 +358,37 @@ namespace BubblesClient
         private void HandleInput()
         {
             physicsManager.UpdateHandPositions(input.GetHandPositions());
+        }
+
+        /**
+         * wrapText
+         * This function takes a string and a vector2. It splits the string given by spaces
+         * and then for each word it will check the length of it against the length of the 
+         * vector2 given in. When the word is passed the edge a new line is put in.
+         * 
+         * @param String text Text to be wrapped
+         * @param Vector2 containerDemensions Demensions of the container the text is to be wrapped in
+         * @return String The text including newlines to fit into the container
+         * @author Alex Macrae
+         */
+        private String wrapText(String text, Vector2 containerDemensions) {
+            String line = String.Empty;
+            String returnString = String.Empty;
+            String[] wordArray = text.Split(' ');
+
+            foreach (String word in wordArray)
+            {
+                if (textSummary.MeasureString(line + word).Length() > containerDemensions.X)
+                {
+                    returnString = returnString + line + '\n';
+                    line = String.Empty;
+                }
+        
+                line = line + word + ' ';
+            }
+
+            return returnString + line;
+
         }
 
         //TODO: do these properly
