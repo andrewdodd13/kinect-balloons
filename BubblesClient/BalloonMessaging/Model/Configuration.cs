@@ -248,44 +248,43 @@ namespace Balloons.Messaging.Model
             }
 
             // common settings
-            LoadValue(settings, "LogToConsole", out LogToConsole);
-            LoadValue(settings, "LogToFile", out LogToFile);
-            LoadValue(settings, "LogFilePath", out LogFilePath);
-            LoadValue(settings, "SerializerType", out SerializerType);
-            LoadValue(settings, "LogNetworkMessages", out LogNetworkMessages);
+            LoadValue(settings, "LogToConsole", ref LogToConsole);
+            LoadValue(settings, "LogToFile", ref LogToFile);
+            LoadValue(settings, "LogFilePath", ref LogFilePath);
+            LoadValue(settings, "SerializerType", ref SerializerType);
+            LoadValue(settings, "LogNetworkMessages", ref LogNetworkMessages);
 
             // client settings
-            LoadValue(settings, "InputType", out InputType);
-            LoadValue(settings, "FullScreen", out FullScreen);
-            LoadValue(settings, "ScreenWidth", out ScreenWidth);
-            LoadValue(settings, "ScreenHeight", out ScreenHeight);
-            LoadValue(settings, "MessageDisplayTime", out MessageDisplayTime);
-            LoadValue(settings, "RemoteIPAddress", out RemoteIPAddress);
-            LoadValue(settings, "RemotePort", out RemotePort);
-            LoadValue(settings, "EnableHighFive", out EnableHighFive);
-            LoadValue(settings, "KinectMovementThreshold", out KinectMovementThreshold);
-            LoadValue(settings, "KinectMaxHandRange", out KinectMaxHandRange);
-            LoadValue(settings, "KinectMinAttackAngle", out KinectMinAttackAngle);
+            LoadValue(settings, "InputType", ref InputType);
+            LoadValue(settings, "FullScreen", ref FullScreen);
+            LoadValue(settings, "ScreenWidth", ref ScreenWidth);
+            LoadValue(settings, "ScreenHeight", ref ScreenHeight);
+            LoadValue(settings, "MessageDisplayTime", ref MessageDisplayTime);
+            LoadValue(settings, "RemoteIPAddress", ref RemoteIPAddress);
+            LoadValue(settings, "RemotePort", ref RemotePort);
+            LoadValue(settings, "EnableHighFive", ref EnableHighFive);
+            LoadValue(settings, "KinectMovementThreshold", ref KinectMovementThreshold);
+            LoadValue(settings, "KinectMaxHandRange", ref KinectMaxHandRange);
+            LoadValue(settings, "KinectMinAttackAngle", ref KinectMinAttackAngle);
 
             // server settings
-            LoadValue(settings, "LocalIPAddress", out LocalIPAddress);
-            LoadValue(settings, "LocalPort", out LocalPort);
-            LoadValue(settings, "FeedURL", out FeedURL);
-            LoadValue(settings, "FeedTimeout", out FeedTimeout);
-            LoadValue(settings, "MinBalloonsPerScreen", out MinBalloonsPerScreen);
-            LoadValue(settings, "MaxBalloonsPerScreen", out MaxBalloonsPerScreen);
+            LoadValue(settings, "LocalIPAddress", ref LocalIPAddress);
+            LoadValue(settings, "LocalPort", ref LocalPort);
+            LoadValue(settings, "FeedURL", ref FeedURL);
+            LoadValue(settings, "FeedTimeout", ref FeedTimeout);
+            LoadValue(settings, "MinBalloonsPerScreen", ref MinBalloonsPerScreen);
+            LoadValue(settings, "MaxBalloonsPerScreen", ref MaxBalloonsPerScreen);
 
-            LoadValue(settings, "VelocityLeft", out VelocityLeft);
-            LoadValue(settings, "VelocityRight", out VelocityRight);
+            LoadValue(settings, "VelocityLeft", ref VelocityLeft);
+            LoadValue(settings, "VelocityRight", ref VelocityRight);
         }
 
-        private static bool LoadValue<T>(JObject settings, string key, out T val)
+        private static bool LoadValue<T>(JObject settings, string key, ref T val)
         {
             if(typeof(T).IsEnum)
             {
-                string text;
-                val = default(T);
-                if(LoadValueInternal(settings, key, out text))
+                string text = null;
+                if(LoadValueInternal(settings, key, ref text))
                 {
                     try
                     {
@@ -300,14 +299,13 @@ namespace Balloons.Messaging.Model
             }
             else
             {
-                return LoadValueInternal(settings, key, out val);
+                return LoadValueInternal(settings, key, ref val);
             }
         }
 
-        private static bool LoadValueInternal<T>(JObject settings, string key, out T val)
+        private static bool LoadValueInternal<T>(JObject settings, string key, ref T val)
         {
             JToken jVal = null;
-            val = default(T);
             if(settings.TryGetValue(key, out jVal))
             {
                 try
@@ -323,11 +321,10 @@ namespace Balloons.Messaging.Model
             return false;
         }
 
-        private static bool LoadValue(JObject settings, string key, out Vector2D val)
+        private static bool LoadValue(JObject settings, string key, ref Vector2D val)
         {
-            float x, y;
-            val = new Vector2D(0.0f, 0.0f);
-            if(LoadValue(settings, key + "X", out x) && LoadValue(settings, key + "Y", out y))
+            float x = 0.0f, y = 0.0f;
+            if(LoadValue(settings, key + "X", ref x) && LoadValue(settings, key + "Y", ref y))
             {
                 val = new Vector2D(x, y);
                 return true;
@@ -335,13 +332,17 @@ namespace Balloons.Messaging.Model
             return false;
         }
 
-        private static bool LoadValue(JObject settings, string key, out IPAddress val)
+        private static bool LoadValue(JObject settings, string key, ref IPAddress val)
         {
-            string text;
-            val = null;
-            if(LoadValue(settings, key, out text))
+            string text = null;
+            if(LoadValue(settings, key, ref text))
             {
-                return IPAddress.TryParse(text, out val);
+                IPAddress address;
+                if(IPAddress.TryParse(text, out address))
+                {
+                    val = address;
+                    return true;
+                }
             }
             return false;
         }
