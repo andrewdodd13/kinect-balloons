@@ -4,15 +4,12 @@ using System.Linq;
 using System.Timers;
 using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
-using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Model;
+using BubblesClient.Model.Buckets;
 using BubblesClient.Physics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System.Text;
 
 namespace BubblesClient
 {
@@ -54,7 +51,7 @@ namespace BubblesClient
 
         //other stuff
         private bool showBuckets = true;
-        private int oldBucketID = 5; //buckets 0-4
+        private Bucket oldBucket = null;
 
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
@@ -92,7 +89,7 @@ namespace BubblesClient
             {
                 ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
                 Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
-                ApplyBucketToBalloon(bucket, balloon);
+                this.ApplyBucketToBalloon(bucket, balloon);
             };
 
             // Initialise network
@@ -115,20 +112,15 @@ namespace BubblesClient
 
             // Load buckets
             float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
-            for (int i = 0; i < 5; i++)
+
+            for (int i = 0; i < buckets.Count; i++)
             {
                 float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
                 float y = screenDimensions.Y - Bucket.BucketHeight;
 
-                Bucket b = new Bucket()
-                {
-                    ID = i,
-                    Position = PhysicsManager.PixelToWorld(new Vector2(x, y)),
-                    Size = PhysicsManager.PixelToWorld(new Vector2(Bucket.BucketWidth, Bucket.BucketHeight)),
-                    Texture = bucketTextures[i]
-                };
-                buckets.Add(b);
-
+                Bucket b = buckets[i];
+                b.Position = PhysicsManager.PixelToWorld(new Vector2(x, y));
+                b.Size = PhysicsManager.PixelToWorld(new Vector2(Bucket.BucketWidth, Bucket.BucketHeight));
                 b.Entity = physicsManager.CreateBucket(b.Size, b.Position);
             }
 
@@ -181,11 +173,13 @@ namespace BubblesClient
             };
 
             boxTexture = Content.Load<Texture2D>("Images/Box");
-            bucketTextures[0] = Content.Load<Texture2D>("Images/BucketRed");
-            bucketTextures[2] = Content.Load<Texture2D>("Images/bucketGreen");
-            bucketTextures[4] = Content.Load<Texture2D>("Images/bucketBlue");
-            bucketTextures[3] = Content.Load<Texture2D>("Images/bucketStripes");
-            bucketTextures[1] = Content.Load<Texture2D>("Images/bucketSpots");
+
+            // Create buckets
+            buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/BucketRed"), Color.Red));
+            buckets.Add(new DecorationBucket(Content.Load<Texture2D>("Images/bucketSpots"), OverlayType.Spots));
+            buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketGreen"), Color.Green));
+            buckets.Add(new DecorationBucket(Content.Load<Texture2D>("Images/bucketStripes"), OverlayType.Stripes));
+            buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketBlue"), Color.Blue));
         }
 
         /// <summary>
@@ -299,16 +293,13 @@ namespace BubblesClient
 
             spriteBatch.Draw(skyTexture, new Vector2(0, 0), Color.White);
 
-            // Draw all of the balloons
+            // Draw all of the boxes first
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
-                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
-
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (balloon.Type != BalloonType.Customizable && !balloon.Popped)
                 {
-                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, boxTexture.Height / 2);
+                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
                     spriteBatch.Draw(boxTexture, boxPosition, Color.White);
@@ -316,14 +307,21 @@ namespace BubblesClient
                     // If the label is not cached then it means it has not
                     // been formatted to fit in the box; therefore format it 
                     // and save it back
-                    if (!balloon.labelCached)
+                    if (!balloon.IsLabelCached)
                     {
                         balloon.Label = wrapText(summaryFont, balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
-                        balloon.labelCached = true;
+                        balloon.IsLabelCached = true;
                     }
 
                     drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
+            }
+
+            // Draw all of the balloons
+            foreach (ClientBalloon balloon in balloons.Values)
+            {
+                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
+                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
             }
 
             // Draw all buckets
@@ -403,110 +401,15 @@ namespace BubblesClient
 
         private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)
         {
-            //Console.WriteLine("Bucket {0} collided with ballon {1}", bucket.ID, balloon.ID);
             OverlayType oldOverlay = balloon.OverlayType;
             Colour oldBackgroundColor = balloon.BackgroundColor;
 
-            //only change colour if we're touching a new bucket
-            //...what if we want to hit the same bucket twice? :S
-            if (bucket.ID != oldBucketID)
+            // Only change colour if we're touching a new bucket
+            if (bucket != oldBucket)
             {
-                int count = 0;
-                if (balloon.BackgroundColor.Blue == 0) count++;
-                if (balloon.BackgroundColor.Red == 0) count++;
-                if (balloon.BackgroundColor.Green == 0) count++;
+                bucket.ApplyToBalloon(balloon);
 
-                if (bucket.ID == 0)
-                {
-                    //red
-                    switch (count)
-                    {
-                        case 0:
-                            balloon.BackgroundColor = new Colour(255, 0, 0, 255);
-                            break;
-                        case 1:
-                            if (balloon.BackgroundColor.Red == 128)
-                                balloon.BackgroundColor = new Colour(255, 0, 0, 255);
-                            else
-                                balloon.BackgroundColor = new Colour(128, 128, 128, 255);
-                            break;
-                        case 2:
-                            if (balloon.BackgroundColor.Red == 0 && balloon.BackgroundColor.Blue == 255)
-                                balloon.BackgroundColor = new Colour(128, 0, 128, 255);
-                            else if (balloon.BackgroundColor.Red == 0 && balloon.BackgroundColor.Green == 255)
-                                balloon.BackgroundColor = new Colour(128, 128, 0, 255);
-                            break;
-                    }
-                }
-                else if (bucket.ID == 1)
-                {
-                    //texture id 1
-                    if (balloon.OverlayType == OverlayType.Spots)
-                    {
-                        balloon.OverlayType = OverlayType.White;
-                    }
-                    else
-                    {
-                        balloon.OverlayType = OverlayType.Spots;
-                    }
-                }
-                else if (bucket.ID == 2)
-                {
-                    //green
-                    switch (count)
-                    {
-                        case 0:
-                            balloon.BackgroundColor = new Colour(0, 255, 0, 255);
-                            break;
-                        case 1:
-                            if (balloon.BackgroundColor.Green == 128)
-                                balloon.BackgroundColor = new Colour(0, 255, 0, 255);
-                            else
-                                balloon.BackgroundColor = new Colour(128, 128, 128, 255);
-                            break;
-                        case 2:
-                            if (balloon.BackgroundColor.Green == 0 && balloon.BackgroundColor.Blue == 255)
-                                balloon.BackgroundColor = new Colour(0, 128, 128, 255);
-                            else if (balloon.BackgroundColor.Green == 0 && balloon.BackgroundColor.Red == 255)
-                                balloon.BackgroundColor = new Colour(128, 128, 0, 255);
-                            break;
-                    }
-                }
-                else if (bucket.ID == 3)
-                {
-                    //texture id 2
-                    if (balloon.OverlayType == OverlayType.Stripes)
-                    {
-                        balloon.OverlayType = OverlayType.White;
-                    }
-                    else
-                    {
-                        balloon.OverlayType = OverlayType.Stripes;
-                    }
-                }
-                else if (bucket.ID == 4)
-                {
-                    //blue
-                    switch (count)
-                    {
-                        case 0:
-                            balloon.BackgroundColor = new Colour(0, 0, 255, 255);
-                            break;
-                        case 1:
-                            if (balloon.BackgroundColor.Blue == 128)
-                                balloon.BackgroundColor = new Colour(0, 0, 255, 255);
-                            else
-                                balloon.BackgroundColor = new Colour(128, 128, 128, 255);
-                            break;
-                        case 2:
-                            if (balloon.BackgroundColor.Blue == 0 && balloon.BackgroundColor.Green == 255)
-                                balloon.BackgroundColor = new Colour(0, 128, 128, 255);
-                            else if (balloon.BackgroundColor.Green == 0 && balloon.BackgroundColor.Red == 255)
-                                balloon.BackgroundColor = new Colour(128, 0, 128, 255);
-                            break;
-                    }
-                }
-                oldBucketID = bucket.ID;
+                oldBucket = bucket;
             }
 
             // notify the server that the ballon's decoration changed.
