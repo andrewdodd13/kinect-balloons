@@ -25,6 +25,8 @@ namespace BubblesClient.Physics
         private Dictionary<Body, WorldEntity> entities = new Dictionary<Body, WorldEntity>();
         private Dictionary<Hand, WorldEntity> handBodies = new Dictionary<Hand, WorldEntity>();
 
+        Random rnd = new Random();
+
         public event EventHandler<BalloonPoppedEventArgs> BalloonPopped;
         public class BalloonPoppedEventArgs : EventArgs
         {
@@ -40,7 +42,7 @@ namespace BubblesClient.Physics
 
         public void Initialize()
         {
-            world = new World(new Vector2(0, -2));
+            world = new World(new Vector2(0, 1));
         }
 
         public void Update(GameTime gameTime)
@@ -195,6 +197,44 @@ namespace BubblesClient.Physics
             entities.Remove(bodyEntity.Body);
         }
         #endregion
+
+        public void ApplyWind()
+        {
+            Vector2 windForce = new Vector2(1, 0);
+            // Hmm, is there a better way to get the balloon & bodies?
+            foreach (Body body in entities.Keys)
+            {
+                WorldEntity entity = entities[body];
+                if (entity.Type == WorldEntity.EntityType.Balloon)
+                {
+                    // Apply buoyant force
+                    body.ApplyForce(new Vector2(0, -7));
+
+                    // Apply roof repelant force
+                    int jiggleForce = 20; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
+                    if (body.Position.Y < 2)
+                    {
+                        body.ApplyForce(new Vector2(0, 10*(2-body.Position.Y) + rnd.Next(jiggleForce)));
+                    }
+
+                    // Apply anti-dead zone force
+                    float maxx = 1360 / MeterInPixels; // MAGIC NUMBER OMGWTF
+                    // We calculate the direction of the wind, and use it to apply either a sucking or repelling deadzone force
+                    float windDir = windForce.X < 0 ? 1 : -1;
+                    if (body.Position.X < 0)
+                    {
+                        body.ApplyForce(new Vector2(windDir * 5 * body.Position.X, 0));
+                    }
+                    if (body.Position.X > maxx)
+                    {
+                        body.ApplyForce(new Vector2(windDir * 5 * (maxx - body.Position.X), 0));
+                    }
+
+                    // Apply wind
+                    body.ApplyForce(windForce);
+                }
+            }
+        }
 
         /// <summary>
         /// Removes an entity from the physics world.

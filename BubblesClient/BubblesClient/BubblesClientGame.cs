@@ -219,6 +219,7 @@ namespace BubblesClient
                 }
             }
 
+            physicsManager.ApplyWind();
             physicsManager.Update(gameTime);
 
             // Check if any of the balloons have left the screen
