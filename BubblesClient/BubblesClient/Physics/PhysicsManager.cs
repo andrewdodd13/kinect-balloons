@@ -86,26 +86,87 @@ namespace BubblesClient.Physics
             }
             if (!entities.ContainsKey(fixtureB.Body))
             {
-                //This is an acceptable case
+                // This is an acceptable case
                 return true;
             }
 
             WorldEntity B = entities[fixtureB.Body];
             if (B.Type == WorldEntity.EntityType.Bucket)
             {
-                if (BucketCollision != null) { BucketCollision(this, new BucketCollisionEventArgs { Balloon = A, Bucket = B }); }
+                if (BucketCollision != null)
+                {
+                    BucketCollision(this, new BucketCollisionEventArgs { Balloon = A, Bucket = B });
+                }
             }
             else if (B.Type == WorldEntity.EntityType.Hand)
             {
-                foreach (WorldEntity altHand in handBodies.Values)
+                // Clap detection tweak values
+                float movementThreshold = 10, altHandRange = 2;
+                double minimumAttackAngle = 0.5;
+
+                // First we get the hand that has collided with the balloon and check that it is
+                // moving fast enough and at a direct enough angle towards the balloon to trigger the clap
+                Hand _hand1 = GetHandForHandEntity(B);
+                Vector2 handToBalloon = A.Body.Position - B.Body.Position;
+                Vector2 handDirection = B.Body.LinearVelocity;
+
+                float velocity = handDirection.Length();
+
+                handToBalloon.Normalize();
+                handDirection.Normalize();
+                double theta = Vector2.Dot(handToBalloon, handDirection);
+
+                if (velocity > movementThreshold && theta > minimumAttackAngle)
                 {
-                    if (altHand != B)
+                    foreach (WorldEntity altHand in handBodies.Values)
                     {
-                        //Magic number! Might need to adjust for sensitivity
-                        //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
-                        if (Vector2.Distance(new Vector2(altHand.Body.Position.X, altHand.Body.Position.Y), fixtureA.Body.Position) < 2)
+                        // Check this isn't already the hand we know about
+                        if (altHand == B)
                         {
-                            if (BalloonPopped != null) { BalloonPopped(this, new BalloonPoppedEventArgs() { Balloon = A }); }
+                            continue;
+                        }
+
+                        Hand _hand2 = GetHandForHandEntity(altHand);
+                        if (Configuration.EnableHighFive && _hand1.ID != _hand2.ID)
+                        {
+                            // Don't allow hands belonging to different users to trigger claps
+                            continue;
+                        }
+
+                        // First check if the second hand is close enough to the balloon
+                        float distanceFromAltHandToBallon = Vector2.Distance(new Vector2(altHand.Body.Position.X, altHand.Body.Position.Y), fixtureA.Body.Position);
+                        if (distanceFromAltHandToBallon < altHandRange)
+                        {
+                            // Now check if the second hand is moving fast enough
+                            if (altHand.Body.LinearVelocity.Length() < movementThreshold)
+                            {
+                                continue;
+                            }
+
+                            // Now check if the second hand is moving towards the balloon
+                            Vector2 altHandToBalloon = A.Body.Position - altHand.Body.Position;
+                            altHandToBalloon.Normalize();
+                            Vector2 altHandDirection = altHand.Body.LinearVelocity;
+                            altHandDirection.Normalize();
+                            double altTheta = Vector2.Dot(altHandToBalloon, altHandDirection);
+
+                            if (altTheta < minimumAttackAngle)
+                            {
+                                continue;
+                            }
+
+                            // Now check the hands are moving towards each other
+                            double omega = Vector2.Dot(altHandDirection, handDirection);
+                            if (omega > -minimumAttackAngle)
+                            {
+                                continue;
+                            }
+
+                            // Phew - if we got through all that, we've detected a clap!
+                            if (BalloonPopped != null)
+                            {
+                                BalloonPopped(this, new BalloonPoppedEventArgs() { Balloon = A });
+                            }
                         }
                     }
                 }

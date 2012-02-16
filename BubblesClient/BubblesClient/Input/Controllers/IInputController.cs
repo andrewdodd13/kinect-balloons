@@ -34,6 +34,6 @@ namespace BubblesClient.Input.Controllers
         /// really need a state machine for this...
         /// </summary>
         /// <returns>True if the user is trying to close the popup.</returns>
-        bool ShouldClosePopup();
+        bool ShouldClosePopup(); //This is bad - find a way to remove it
     }
 }

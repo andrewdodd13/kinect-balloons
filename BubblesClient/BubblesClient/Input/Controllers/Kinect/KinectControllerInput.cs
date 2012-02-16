@@ -99,6 +99,7 @@ namespace BubblesClient.Input.Controllers.Kinect
                                             {
                                                 break;
                                             }
+                                            id++;
                                         }
                                         _handPositions.Add(skeleton, new Hand[2] { new Hand() { ID = id, Side = Side.Left}, new Hand() { ID = id, Side = Side.Right} });
                                     }
@@ -129,7 +130,9 @@ namespace BubblesClient.Input.Controllers.Kinect
 
         public bool ShouldClosePopup()
         {
-            throw new NotImplementedException("Gotta close the popup!");
+            // This shoud be removed from the interface
+            return false;
+            //throw new NotImplementedException("Gotta close the popup!");
         }
 
         private Vector2 convertRawHandToScreen(SkeletonPoint raw)

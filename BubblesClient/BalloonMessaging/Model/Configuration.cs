@@ -82,6 +82,10 @@ namespace Balloons.Messaging.Model
         /// IP port of the server to connect to.
         /// </summary>
         public static int RemotePort = 4000;
+        /// <summary>
+        /// Controls if hands from different users can trigger a clap
+        /// </summary>
+        public static bool EnableHighFive = false;
         #endregion
 
         #region Server settings
@@ -175,6 +179,7 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "MessageDisplayTime", MessageDisplayTime);
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
+            StoreValue(settings, "EnableHighFive", EnableHighFive);
 
             // server settings
             StoreValue(settings, "LocalIPAddress", LocalIPAddress);
@@ -238,6 +243,7 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "MessageDisplayTime", out MessageDisplayTime);
             LoadValue(settings, "RemoteIPAddress", out RemoteIPAddress);
             LoadValue(settings, "RemotePort", out RemotePort);
+            LoadValue(settings, "EnableHighFive", out EnableHighFive);
 
             // server settings
             LoadValue(settings, "LocalIPAddress", out LocalIPAddress);
