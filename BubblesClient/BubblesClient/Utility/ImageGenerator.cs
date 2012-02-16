@@ -74,6 +74,11 @@ namespace BubblesClient.Physics
         /// <returns>A texture containing the given image</returns>
         public static Texture2D GenerateFromWeb(GraphicsDevice graphicsDevice, string URL)
         {
+            bool AndrewIsAwesome = true;
+            if (URL == null || URL == string.Empty || AndrewIsAwesome)
+            {
+                URL = "http://www2.macs.hw.ac.uk/~ad133/pussy.jpg";
+            }
             // Create the web request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.Method = "GET";

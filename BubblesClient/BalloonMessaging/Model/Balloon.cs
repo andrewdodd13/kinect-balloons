@@ -56,6 +56,7 @@ namespace Balloons.Messaging.Model
             this.OverlayType = parent.OverlayType;
             this.Type = parent.Type;
             this.Url = parent.Url;
+            this.ImageUrl = parent.ImageUrl;
         }
 
         public static string FormatDirection(Direction direction)
