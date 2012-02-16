@@ -18,8 +18,8 @@ namespace BubblesClient.Model
         public const float BalloonHeight = 192f;
 
         public Texture2D Texture { get; set; }
-        public Texture2D QrCodeTexture { get; set; }
-
+        public BalloonContentCache BalloonContentCache { get; set; }
+        
         public bool Popped { get; set; }
 
         public ClientBalloon(Balloon parent)

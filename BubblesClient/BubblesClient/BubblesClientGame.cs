@@ -31,7 +31,7 @@ namespace BubblesClient
         private Texture2D boxTexture;
         private SpriteFont textContent, textSummary;
 
-        private Dictionary<string, Texture2D> balloonQRCache = new Dictionary<string, Texture2D>();
+        private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
 
         // Network
         public ScreenManager ScreenManager { get; private set; }
@@ -327,7 +327,7 @@ namespace BubblesClient
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
                 spriteBatch.Draw(contentBox, position, Color.White);
                 drawContentText(poppedBalloon.Content, new Vector2(screenDimensions.X / 6, screenDimensions.Y / 5));
-                spriteBatch.Draw(poppedBalloon.QrCodeTexture, position + new Vector2(24, 24), Color.White);
+                spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(24, 24), Color.White);
             }
             else
             {
@@ -622,14 +622,20 @@ namespace BubblesClient
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
 
-            // Get the QR Code from the cache
-            if (!balloonQRCache.ContainsKey(b.ID))
+            // Get the images from the cache
+            if (!balloonTextureCache.ContainsKey(b.ID))
             {
-                Texture2D qrTexture = QRGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url);
-                balloonQRCache.Add(b.ID, qrTexture);
+                BalloonContentCache cacheEntry = new BalloonContentCache()
+                {
+                    ID = b.ID,
+                    QRCode = ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
+                    // Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.);
+                };
+
+                balloonTextureCache.Add(b.ID, cacheEntry);
             }
 
-            b.QrCodeTexture = balloonQRCache[b.ID];
+            b.BalloonContentCache = balloonTextureCache[b.ID];
 
             balloons.Add(b.ID, b);
             balloonEntities.Add(b, balloonEntity);

@@ -120,6 +120,7 @@
     <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
     <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
     <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
+    <Compile Include="Model\BalloonContentCache.cs" />
     <Compile Include="Model\Bucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
     <Compile Include="Network\ScreenManager.cs" />
