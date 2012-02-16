@@ -25,6 +25,8 @@ namespace BubblesClient.Physics
         private Dictionary<Body, WorldEntity> entities = new Dictionary<Body, WorldEntity>();
         private Dictionary<Hand, WorldEntity> handBodies = new Dictionary<Hand, WorldEntity>();
 
+        Random rnd = new Random();
+
         public event EventHandler<BalloonPoppedEventArgs> BalloonPopped;
         public class BalloonPoppedEventArgs : EventArgs
         {
@@ -40,7 +42,7 @@ namespace BubblesClient.Physics
 
         public void Initialize()
         {
-            world = new World(new Vector2(0, -2));
+            world = new World(new Vector2(0, 1));
         }
 
         public void Update(GameTime gameTime)
@@ -84,26 +86,87 @@ namespace BubblesClient.Physics
             }
             if (!entities.ContainsKey(fixtureB.Body))
             {
-                //This is an acceptable case
+                // This is an acceptable case
                 return true;
             }
 
             WorldEntity B = entities[fixtureB.Body];
             if (B.Type == WorldEntity.EntityType.Bucket)
             {
-                if (BucketCollision != null) { BucketCollision(this, new BucketCollisionEventArgs { Balloon = A, Bucket = B }); }
+                if (BucketCollision != null)
+                {
+                    BucketCollision(this, new BucketCollisionEventArgs { Balloon = A, Bucket = B });
+                }
             }
             else if (B.Type == WorldEntity.EntityType.Hand)
             {
-                foreach (WorldEntity altHand in handBodies.Values)
+                float movementThreshold = Configuration.KinectMovementThreshold;
+                float altHandRange = Configuration.KinectMaxHandRange;
+                double minimumAttackAngle = Configuration.KinectMinAttackAngle;
+
+                // First we get the hand that has collided with the balloon and check that it is
+                // moving fast enough and at a direct enough angle towards the balloon to trigger the clap
+                Hand _hand1 = GetHandForHandEntity(B);
+                Vector2 handToBalloon = A.Body.Position - B.Body.Position;
+                Vector2 handDirection = B.Body.LinearVelocity;
+
+                float velocity = handDirection.Length();
+
+                handToBalloon.Normalize();
+                handDirection.Normalize();
+                double theta = Vector2.Dot(handToBalloon, handDirection);
+
+                if (velocity > movementThreshold && theta > minimumAttackAngle)
                 {
-                    if (altHand != B)
+                    foreach (WorldEntity altHand in handBodies.Values)
                     {
-                        //Magic number! Might need to adjust for sensitivity
-                        //Also, it might be worth checking the velocity/momentum of the hands to check they are converving on the balloon
-                        if (Vector2.Distance(new Vector2(altHand.Body.Position.X, altHand.Body.Position.Y), fixtureA.Body.Position) < 2)
+                        // Check this isn't already the hand we know about
+                        if (altHand == B)
                         {
-                            if (BalloonPopped != null) { BalloonPopped(this, new BalloonPoppedEventArgs() { Balloon = A }); }
+                            continue;
+                        }
+
+                        Hand _hand2 = GetHandForHandEntity(altHand);
+                        if (Configuration.EnableHighFive && _hand1.ID != _hand2.ID)
+                        {
+                            // Don't allow hands belonging to different users to trigger claps
+                            continue;
+                        }
+
+                        // First check if the second hand is close enough to the balloon
+                        float distanceFromAltHandToBallon = Vector2.Distance(new Vector2(altHand.Body.Position.X, altHand.Body.Position.Y), fixtureA.Body.Position);
+                        if (distanceFromAltHandToBallon < altHandRange)
+                        {
+                            // Now check if the second hand is moving fast enough
+                            if (altHand.Body.LinearVelocity.Length() < movementThreshold)
+                            {
+                                continue;
+                            }
+
+                            // Now check if the second hand is moving towards the balloon
+                            Vector2 altHandToBalloon = A.Body.Position - altHand.Body.Position;
+                            altHandToBalloon.Normalize();
+                            Vector2 altHandDirection = altHand.Body.LinearVelocity;
+                            altHandDirection.Normalize();
+                            double altTheta = Vector2.Dot(altHandToBalloon, altHandDirection);
+
+                            if (altTheta < minimumAttackAngle)
+                            {
+                                continue;
+                            }
+
+                            // Now check the hands are moving towards each other
+                            double omega = Vector2.Dot(altHandDirection, handDirection);
+                            if (omega > -minimumAttackAngle)
+                            {
+                                continue;
+                            }
+
+                            // Phew - if we got through all that, we've detected a clap!
+                            if (BalloonPopped != null)
+                            {
+                                BalloonPopped(this, new BalloonPoppedEventArgs() { Balloon = A });
+                            }
                         }
                     }
                 }
@@ -164,6 +227,20 @@ namespace BubblesClient.Physics
             return new List<WorldEntity>(handBodies.Values);
         }
 
+        public Hand GetHandForHandEntity(WorldEntity ent)
+        {
+            if(ent.Type != WorldEntity.EntityType.Hand)
+                return null;
+
+            foreach (Hand hand in handBodies.Keys)
+            {
+                if (handBodies[hand] == ent)
+                    return hand;
+            }
+
+            return null;
+        }
+
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
@@ -195,6 +272,44 @@ namespace BubblesClient.Physics
             entities.Remove(bodyEntity.Body);
         }
         #endregion
+
+        public void ApplyWind()
+        {
+            Vector2 windForce = new Vector2(1, 0);
+            // Hmm, is there a better way to get the balloon & bodies?
+            foreach (Body body in entities.Keys)
+            {
+                WorldEntity entity = entities[body];
+                if (entity.Type == WorldEntity.EntityType.Balloon)
+                {
+                    // Apply buoyant force
+                    body.ApplyForce(new Vector2(0, -7));
+
+                    // Apply roof repelant force
+                    int jiggleForce = 20; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
+                    if (body.Position.Y < 2)
+                    {
+                        body.ApplyForce(new Vector2(0, 10*(2-body.Position.Y) + rnd.Next(jiggleForce)));
+                    }
+
+                    // Apply anti-dead zone force
+                    float maxx = 1360 / MeterInPixels; // MAGIC NUMBER OMGWTF
+                    // We calculate the direction of the wind, and use it to apply either a sucking or repelling deadzone force
+                    float windDir = windForce.X < 0 ? 1 : -1;
+                    if (body.Position.X < 0)
+                    {
+                        body.ApplyForce(new Vector2(windDir * 5 * body.Position.X, 0));
+                    }
+                    if (body.Position.X > maxx)
+                    {
+                        body.ApplyForce(new Vector2(windDir * 5 * (maxx - body.Position.X), 0));
+                    }
+
+                    // Apply wind
+                    body.ApplyForce(windForce);
+                }
+            }
+        }
 
         /// <summary>
         /// Removes an entity from the physics world.
