@@ -43,6 +43,7 @@ namespace BubblesClient
 
         // Input
         private IInputController input;
+        private Color[] userColours = { Color.Red, Color.Blue }; // Move this to config?
 
         // Physics World
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
@@ -336,7 +337,10 @@ namespace BubblesClient
                 foreach (WorldEntity handBody in physicsManager.GetHandPositions())
                 {
                     Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
-                    spriteBatch.Draw(handTexture, cursorPos, Color.White);
+                    Hand hand = physicsManager.GetHandForHandEntity(handBody);
+                    Color col = userColours[hand.ID];
+                    SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                    spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
                 }
             }
 

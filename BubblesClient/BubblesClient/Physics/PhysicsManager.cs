@@ -166,6 +166,20 @@ namespace BubblesClient.Physics
             return new List<WorldEntity>(handBodies.Values);
         }
 
+        public Hand GetHandForHandEntity(WorldEntity ent)
+        {
+            if(ent.Type != WorldEntity.EntityType.Hand)
+                return null;
+
+            foreach (Hand hand in handBodies.Keys)
+            {
+                if (handBodies[hand] == ent)
+                    return hand;
+            }
+
+            return null;
+        }
+
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
