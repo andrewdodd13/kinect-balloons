@@ -374,9 +374,16 @@ namespace Balloons.Server
                 if((b != null) && (b.Screen != null))
                 {
                     b.Screen.Balloons.Remove(pbm.BalloonID);
-                    if(!(pbm.Sender is Screen))
+                    if (!(pbm.Sender is Screen))
                     {
                         b.Screen.Connection.SendMessage(pbm);
+                    }
+                    else
+                    {
+                        if (m_bubbles.Count <= (Configuration.MinBalloonsPerScreen * m_screens.Count))
+                        {
+                            m_feed.Refresh();
+                        }
                     }
                 }
                 m_bubbles.Remove(pbm.BalloonID);
