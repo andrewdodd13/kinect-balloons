@@ -406,6 +406,12 @@ namespace BubblesClient
                 {
                     returnString += line + '\n';
                     line = String.Empty;
+
+                    // If the string is longer than the box, we need to stop
+                    if (font.MeasureString(returnString).Y > containerDemensions.Y)
+                    {
+                        break;
+                    }
                 }
 
                 line += word + ' ';
