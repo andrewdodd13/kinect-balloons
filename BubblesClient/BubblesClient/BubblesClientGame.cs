@@ -317,11 +317,11 @@ namespace BubblesClient
                      * author: AM
                      */
                     if(!balloon.labelCached) {
-                        balloon.Label = wrapText(balloon.Label, boxPosition);
+                        balloon.Label = wrapText(balloon.Label, new Vector2(boxTexture.Width, boxTexture.Height));
                         balloon.labelCached = true;
                     }
 
-                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X + boxTexture.Width / 20, boxPosition.Y + boxTexture.Height * 2 / 3));
+                    drawSummaryText(balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
             }
 
