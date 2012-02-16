@@ -35,12 +35,6 @@ namespace Balloons.Messaging.Model
         public string Content { get; set; }
         public string Url { get; set; }
 
-        // Whether or not the label has been cached.
-        // This is used for wrapping the text of the label
-        // When the wrapping has been doen once this will be set to true 
-        // so that it does not happen again every time the screen is drawn
-        public bool labelCached { get; set; }
-
         public OverlayType OverlayType { get; set; }
         public BalloonType Type { get; set; }
         public Colour BackgroundColor { get; set; }
@@ -61,7 +55,6 @@ namespace Balloons.Messaging.Model
             this.OverlayType = parent.OverlayType;
             this.Type = parent.Type;
             this.Url = parent.Url;
-            this.labelCached = false;
         }
 
         public static string FormatDirection(Direction direction)
