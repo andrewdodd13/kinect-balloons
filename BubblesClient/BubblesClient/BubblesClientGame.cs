@@ -56,6 +56,23 @@ namespace BubblesClient
 
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
+        private ClientBalloon PoppedBalloon
+        {
+            get
+            {
+                lock(this)
+                {
+                    return poppedBalloon;
+                }
+            }
+            set
+            {
+                lock(this)
+                {
+                    poppedBalloon = value;
+                }
+            }
+        }
         private ClientBalloon poppedBalloon = null;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
@@ -203,7 +220,7 @@ namespace BubblesClient
             ProcessNetworkMessages();
 
             // Query the Input Library if there isn't currently a message displayed.
-            if (poppedBalloon == null)
+            if (PoppedBalloon == null)
             {
                 this.HandleInput();
             }
@@ -211,7 +228,7 @@ namespace BubblesClient
             {
                 if (input.ShouldClosePopup())
                 {
-                    poppedBalloon = null;
+                    PoppedBalloon = null;
                 }
             }
 
@@ -343,6 +360,7 @@ namespace BubblesClient
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
+            ClientBalloon poppedBalloon = PoppedBalloon;
             if (poppedBalloon != null)
             {
                 // Position contains the co-ordinate of the top-left corner of the box
@@ -466,28 +484,26 @@ namespace BubblesClient
             // Display content only asked and if balloon is not customizable type
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
-                poppedBalloon = balloon;
+                PoppedBalloon = balloon;
 
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
-                    poppedBalloon = null;
+                    PoppedBalloon = null;
                     timer.Stop();
                 };
                 timer.Interval = Configuration.MessageDisplayTime;
                 timer.Start();
-
-                // Remove balloon from screen, and server
-                ScreenManager.NotifyBalloonPopped(balloon);
             }
 
             this.RemoveBalloon(balloon, true);
         }
 
         /// <summary>
-        /// Removes the given balloon from the physics world and screen.
+        /// Removes (possibly later) the given balloon from the physics world and screen.
         /// </summary>
-        /// <param name="balloon"></param>
+        /// <param name="balloon">Balloon to remove. </param>
+        /// <param name="timed"> If true the balloon will be removed after a given time interval. </param>
         private void RemoveBalloon(ClientBalloon balloon, bool timed)
         {
             // Set the texture to the kapow! texture
@@ -502,7 +518,10 @@ namespace BubblesClient
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
-                    this.RemoveBalloonFromMappings(balloon);
+                    // Do not call RemoveBalloonFromMappings from another thread as it can cause races.
+                    // Send a message which will be processed on the main thread during update
+                    var msg = new BalloonMessage(MessageType.RemoveBalloon, "remove-balloon", balloon.ID);
+                    ScreenManager.MessageQueue.Enqueue(msg);
                     timer.Stop();
                 };
                 timer.Interval = 2500;
@@ -510,15 +529,31 @@ namespace BubblesClient
             }
             else
             {
-                this.RemoveBalloonFromMappings(balloon);
+                this.RemoveBalloonFromMappings(balloon.ID);
             }
         }
 
-        private void RemoveBalloonFromMappings(ClientBalloon balloon)
+        /// <summary>
+        /// Removes (immediately) the given balloon from the physics world and screen.
+        /// </summary>
+        /// <param name="balloon">Balloon to remove. </param>
+        private void RemoveBalloonFromMappings(string balloonID)
         {
+            ClientBalloon balloon;
+            if(!balloons.TryGetValue(balloonID, out balloon))
+            {
+                return;
+            }
+
+            // Remove balloon from screen.
             physicsManager.RemoveEntity(balloonEntities[balloon]);
             balloonEntities.Remove(balloon);
             balloons.Remove(balloon.ID);
+
+            // Remove balloon from server. This must be done after removing the balloon
+            // from the map or an exception can be raised when the server sends a
+            // "new balloon" message with the same ID when the feed is updated.
+            ScreenManager.NotifyBalloonPopped(balloon);
         }
         #endregion
 
@@ -541,6 +576,9 @@ namespace BubblesClient
                         break;
                     case MessageType.PopBalloon:
                         OnPopBalloon((PopBalloonMessage)msg);
+                        break;
+                    case MessageType.RemoveBalloon:
+                        this.RemoveBalloonFromMappings(((BalloonMessage)msg).BalloonID);
                         break;
                     case MessageType.BalloonContentUpdate:
                         OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
@@ -598,7 +636,7 @@ namespace BubblesClient
             b.BalloonContentCache = balloonTextureCache[b.ID];
 
             balloons.Add(b.ID, b);
-            balloonEntities.Add(b, balloonEntity);
+            balloonEntities[b] = balloonEntity;
         }
 
         /// <summary>

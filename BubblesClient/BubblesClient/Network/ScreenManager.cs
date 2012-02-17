@@ -24,7 +24,7 @@ namespace BubblesClient
             this.serverPort = serverPort;
 
             this.balloonCache = new Dictionary<string, Balloon>();
-            this.MessageQueue = new CircularQueue<Message>(64);
+            this.MessageQueue = new CircularQueue<Message>(256);
 
             m_conn = new ScreenConnection(this.MessageQueue);
             m_conn.Connected += OnConnected;

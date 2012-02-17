@@ -26,7 +26,8 @@ namespace Balloons.Messaging.Model
         Connected,
         Disconnected,
         RefreshFeed,
-        FeedUpdated
+        FeedUpdated,
+        RemoveBalloon
     }
     
     /// <summary>
