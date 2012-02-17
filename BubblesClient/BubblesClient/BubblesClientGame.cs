@@ -107,8 +107,9 @@ namespace BubblesClient
             // Initialise base
             base.Initialize();
 
-            // Lol roof!
-            physicsManager.CreateRoof((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
+            // Create a roof and floor
+            physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
+            physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, screenDimensions.Y));
 
             // Load buckets
             float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
@@ -408,6 +409,12 @@ namespace BubblesClient
                 {
                     returnString += line + '\n';
                     line = String.Empty;
+
+                    // If the string is longer than the box, we need to stop
+                    if (font.MeasureString(returnString).Y > containerDemensions.Y)
+                    {
+                        break;
+                    }
                 }
 
                 line += word + ' ';
