@@ -325,7 +325,7 @@ namespace BubblesClient
                         string labelText = balloon.Label;
                         balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
 
-                        if (balloon.Content.Trim() == string.Empty)
+                        if (String.IsNullOrEmpty(balloon.Content) || (balloon.Content.Trim() == string.Empty))
                         {
                             balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
                         }
