@@ -61,13 +61,23 @@ namespace BubblesClient
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
-            if (Configuration.ScreenWidth > 0)
+            if (Configuration.FullScreen)
             {
-                graphics.PreferredBackBufferWidth = Configuration.ScreenWidth;
+                // use the current resolution of the screen
+                graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+                graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+                graphics.IsFullScreen = true;
             }
-            if (Configuration.ScreenHeight > 0)
+            else
             {
-                graphics.PreferredBackBufferHeight = Configuration.ScreenHeight;
+                if (Configuration.ScreenWidth > 0)
+                {
+                    graphics.PreferredBackBufferWidth = Configuration.ScreenWidth;
+                }
+                if (Configuration.ScreenHeight > 0)
+                {
+                    graphics.PreferredBackBufferHeight = Configuration.ScreenHeight;
+                }
             }
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
