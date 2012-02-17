@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Model;
@@ -56,23 +55,6 @@ namespace BubblesClient
 
         // If this is not null then we will be showing a balloon. We really need
         // a state machine.
-        private ClientBalloon PoppedBalloon
-        {
-            get
-            {
-                lock(this)
-                {
-                    return poppedBalloon;
-                }
-            }
-            set
-            {
-                lock(this)
-                {
-                    poppedBalloon = value;
-                }
-            }
-        }
         private ClientBalloon poppedBalloon = null;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
@@ -220,7 +202,7 @@ namespace BubblesClient
             ProcessNetworkMessages();
 
             // Query the Input Library if there isn't currently a message displayed.
-            if (PoppedBalloon == null)
+            if (poppedBalloon == null)
             {
                 this.HandleInput();
             }
@@ -228,7 +210,7 @@ namespace BubblesClient
             {
                 if (input.ShouldClosePopup())
                 {
-                    PoppedBalloon = null;
+                    poppedBalloon = null;
                 }
             }
 
@@ -360,7 +342,6 @@ namespace BubblesClient
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
-            ClientBalloon poppedBalloon = PoppedBalloon;
             if (poppedBalloon != null)
             {
                 // Position contains the co-ordinate of the top-left corner of the box
@@ -484,16 +465,11 @@ namespace BubblesClient
             // Display content only asked and if balloon is not customizable type
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
-                PoppedBalloon = balloon;
-
-                Timer timer = new Timer();
-                timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
+                poppedBalloon = balloon;
+                ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
                 {
-                    PoppedBalloon = null;
-                    timer.Stop();
-                };
-                timer.Interval = Configuration.MessageDisplayTime;
-                timer.Start();
+                    poppedBalloon = null;
+                });
             }
 
             this.RemoveBalloon(balloon, true);
@@ -515,17 +491,11 @@ namespace BubblesClient
                 // Disable the body's physics
                 balloonEntities[balloon].Body.Enabled = false;
 
-                Timer timer = new Timer();
-                timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
+                poppedBalloon = balloon;
+                ScreenManager.CallLater(2500, delegate()
                 {
-                    // Do not call RemoveBalloonFromMappings from another thread as it can cause races.
-                    // Send a message which will be processed on the main thread during update
-                    var msg = new BalloonMessage(MessageType.RemoveBalloon, "remove-balloon", balloon.ID);
-                    ScreenManager.MessageQueue.Enqueue(msg);
-                    timer.Stop();
-                };
-                timer.Interval = 2500;
-                timer.Start();
+                    this.RemoveBalloonFromMappings(balloon.ID);
+                });
             }
             else
             {
@@ -577,14 +547,15 @@ namespace BubblesClient
                     case MessageType.PopBalloon:
                         OnPopBalloon((PopBalloonMessage)msg);
                         break;
-                    case MessageType.RemoveBalloon:
-                        this.RemoveBalloonFromMappings(((BalloonMessage)msg).BalloonID);
-                        break;
                     case MessageType.BalloonContentUpdate:
                         OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
                         break;
                     case MessageType.BalloonStateUpdate:
                         OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
+                        break;
+                    case MessageType.Callback:
+                        var cm = (CallbackMessage)msg;
+                        cm.Callback();
                         break;
                 }
             }
