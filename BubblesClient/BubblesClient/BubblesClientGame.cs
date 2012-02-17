@@ -483,9 +483,6 @@ namespace BubblesClient
                 };
                 timer.Interval = Configuration.MessageDisplayTime;
                 timer.Start();
-
-                // Remove balloon from screen, and server
-                ScreenManager.NotifyBalloonPopped(balloon);
             }
 
             this.RemoveBalloon(balloon, true);
@@ -509,8 +506,12 @@ namespace BubblesClient
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
-                    this.RemoveBalloonFromMappings(balloon);
                     timer.Stop();
+
+                    this.RemoveBalloonFromMappings(balloon);
+
+                    // Remove balloon from screen, and server
+                    ScreenManager.NotifyBalloonPopped(balloon);
                 };
                 timer.Interval = 2500;
                 timer.Start();
@@ -561,6 +562,7 @@ namespace BubblesClient
 
         public void OnNewBalloon(NewBalloonMessage m)
         {
+            Console.WriteLine("Adding balloon w/ ID: " + m.BalloonID);
             // Choose where to place the balloon
             Vector2 position = new Vector2();
             switch (m.Direction)
