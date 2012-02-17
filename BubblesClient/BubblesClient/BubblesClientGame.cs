@@ -382,7 +382,7 @@ namespace BubblesClient
                 {
                     Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
                     Hand hand = physicsManager.GetHandForHandEntity(handBody);
-                    Color col = userColours[hand.ID];
+                    Color col = userColours[hand.ID%2];
                     SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
                     spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
                 }
