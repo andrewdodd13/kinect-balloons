@@ -79,6 +79,7 @@ namespace BubblesClient
                     graphics.PreferredBackBufferHeight = Configuration.ScreenHeight;
                 }
             }
+            graphics.PreferMultiSampling = true;
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Initialise Input
