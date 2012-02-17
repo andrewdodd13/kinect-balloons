@@ -562,7 +562,6 @@ namespace BubblesClient
 
         public void OnNewBalloon(NewBalloonMessage m)
         {
-            Console.WriteLine("Adding balloon w/ ID: " + m.BalloonID);
             // Choose where to place the balloon
             Vector2 position = new Vector2();
             switch (m.Direction)
