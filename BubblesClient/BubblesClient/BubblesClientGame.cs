@@ -6,6 +6,7 @@ using BubblesClient.Input.Controllers;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Physics;
+using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +28,9 @@ namespace BubblesClient
 
         private Texture2D boxTexture;
         private SpriteFont contentFont, summaryFont;
+
+        private ContentRenderer renderer;
+        private Texture2D contentBoxTexture;
 
         private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
 
@@ -88,6 +92,7 @@ namespace BubblesClient
 
             // Initialise Content
             Content.RootDirectory = "Content";
+            renderer = new ContentRenderer();
 
             // Initialise Physics
             physicsManager.Initialize();
@@ -185,6 +190,7 @@ namespace BubblesClient
             };
 
             boxTexture = Content.Load<Texture2D>("Images/Box");
+            renderer.LoadTemplate(Content);
 
             // Create buckets
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/BucketRed"), Color.Red));
@@ -354,7 +360,15 @@ namespace BubblesClient
             }
 
             //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (poppedBalloon != null)
+            if (poppedBalloon != null && contentBoxTexture != null)
+            {
+                // Position contains the co-ordinate of the top-left corner of the box
+                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
+
+                // Draw the HTML-rendered box
+                spriteBatch.Draw(contentBoxTexture, position, Color.White);
+            }
+            else if(poppedBalloon != null)
             {
                 // Position contains the co-ordinate of the top-left corner of the box
                 Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
@@ -484,9 +498,11 @@ namespace BubblesClient
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
                 poppedBalloon = balloon;
+                contentBoxTexture = renderer.Render(GraphicsDevice, balloon);
                 ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
                 {
                     poppedBalloon = null;
+                    contentBoxTexture = null;
                 });
             }
 
