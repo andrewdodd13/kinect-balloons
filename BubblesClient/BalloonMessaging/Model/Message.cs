@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace Balloons.Messaging.Model
@@ -15,21 +16,24 @@ namespace Balloons.Messaging.Model
         // Messages sent by the client
         ChangeScreen,
         GetBalloonContent,
-        GetBalloonDecoration,
+        GetBalloonState,
 
         // Messages sent by both
         PopBalloon,
-        BalloonDecorationUpdate,
+        BalloonStateUpdate,
 
         // Internal messages
         Connected,
-        Disconnected
+        Disconnected,
+        RefreshFeed,
+        FeedUpdated,
+        Callback
     }
     
     /// <summary>
     /// Message that can be sent between a screen and bubble server or within the server.
     /// </summary>
-    public abstract class Message
+    public class Message
     {
         /// <summary>
         /// Identifies the type of the message.
@@ -37,6 +41,14 @@ namespace Balloons.Messaging.Model
         public MessageType Type
         {
             get { return m_type; }
+        }
+
+        /// <summary>
+        /// Identifies the type of the message.
+        /// </summary>
+        public string TypeTag
+        {
+            get { return m_tag; }
         }
 
         /// <summary>
@@ -54,19 +66,6 @@ namespace Balloons.Messaging.Model
             m_tag = tag;
         }
         
-        /// <summary>
-        /// Convert the message to a string that can be sent on the network.
-        /// </summary>
-        public virtual string Format()
-        {
-            return String.Format("{0} {1}", m_tag, FormatContent());
-        }
-
-        protected virtual string FormatContent()
-        {
-            return "";
-        }
-        
         private readonly MessageType m_type;
         private readonly string m_tag;
         private object m_sender;
@@ -74,22 +73,18 @@ namespace Balloons.Messaging.Model
 
     public class BalloonMessage : Message
     {
-        public int BalloonID
+        public string BalloonID
         {
             get { return this.m_balloonID; }
         }
 
-        public BalloonMessage(MessageType type, string tag, int balloonID) : base(type, tag)
+        public BalloonMessage(MessageType type, string tag, string balloonID)
+            : base(type, tag)
         {
             m_balloonID = balloonID;
         }
 
-        protected override string FormatContent()
-        {
-            return m_balloonID.ToString();
-        }
-
-        private int m_balloonID;
+        private string m_balloonID;
     }
 
     public class MessageEventArgs : EventArgs
@@ -111,7 +106,7 @@ namespace Balloons.Messaging.Model
     #region Messages sent by the server
     public class NewBalloonMessage : BalloonMessage
     {
-        public static readonly string Tag = "new-balloon";
+        public const string Tag = "new-balloon";
 
         public Direction Direction
         {
@@ -128,7 +123,7 @@ namespace Balloons.Messaging.Model
             get { return this.m_velocity; }
         }
 
-        public NewBalloonMessage(int balloonID, Direction direction, float y, Vector2D velocity)
+        public NewBalloonMessage(string balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.NewBalloon, Tag, balloonID)
         {
             m_direction = direction;
@@ -136,12 +131,6 @@ namespace Balloons.Messaging.Model
             m_velocity = velocity;
         }
 
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
-        }
-        
         private Direction m_direction;
         private Vector2D m_velocity;
         private float m_y;
@@ -149,9 +138,9 @@ namespace Balloons.Messaging.Model
 
     public class BalloonContentUpdateMessage : BalloonMessage
     {
-        public static readonly string Tag = "balloon-content-update";
+        public const string Tag = "balloon-content-update";
 
-        public int BalloonType
+        public BalloonType BalloonType
         {
             get { return this.m_type; }
         }
@@ -170,33 +159,52 @@ namespace Balloons.Messaging.Model
         {
             get { return this.m_url; }
         }
+        
+        public string ImageUrl
+        {
+            get { return this.m_imageUrl;  }
+        }
 
-        public BalloonContentUpdateMessage(int balloonID, int type, string label, string content, string url)
+        public BalloonContentUpdateMessage(string balloonID, BalloonType type, string label, string content, string url, string imageURL)
             : base(MessageType.BalloonContentUpdate, Tag, balloonID)
         {
             m_type = type;
             m_label = label;
             m_content = content;
             m_url = url;
+            m_imageUrl = imageURL;
         }
-
-        protected override string FormatContent()
+        
+        public BalloonContentUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.Type, balloon.Label, balloon.Content, balloon.Url, balloon.ImageUrl)
         {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, m_type, m_label, m_content, m_url);
+        }
+        
+        public void UpdateContent(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.Type = BalloonType;
+            balloon.Label = Label;
+            balloon.Content = Content;
+            balloon.Url = Url;
+            balloon.ImageUrl = ImageUrl;
         }
 
-        private int m_type;
+        private BalloonType m_type;
         private string m_label;
         private string m_content;
         private string m_url;
+        private string m_imageUrl;
     }
     #endregion
 
     #region Messages sent by the client
     public class ChangeScreenMessage : BalloonMessage
     {
-        public static readonly string Tag = "change-screen";
+        public const string Tag = "change-screen";
 
         public Direction Direction
         {
@@ -213,18 +221,12 @@ namespace Balloons.Messaging.Model
             get { return this.m_velocity; }
         }
 
-        public ChangeScreenMessage(int balloonID, Direction direction, float y, Vector2D velocity)
+        public ChangeScreenMessage(string balloonID, Direction direction, float y, Vector2D velocity)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
             m_y = y;
             m_velocity = velocity;
-        }
-        
-        protected override string FormatContent()
-        {
-            return String.Format("{0} {1} {2} {3} {4}",
-                BalloonID, Balloon.FormatDirection(m_direction), m_y, m_velocity.X, m_velocity.Y);
         }
         
         private Direction m_direction;
@@ -234,20 +236,20 @@ namespace Balloons.Messaging.Model
 
     public class GetBalloonContentMessage : BalloonMessage
     {
-        public static readonly string Tag = "get-balloon-content";
+        public const string Tag = "get-balloon-content";
 
-        public GetBalloonContentMessage(int balloonID)
+        public GetBalloonContentMessage(string balloonID)
             : base(MessageType.GetBalloonContent, Tag, balloonID)
         {
         }
     }
 
-    public class GetBalloonDecorationMessage : BalloonMessage
+    public class GetBalloonStateMessage : BalloonMessage
     {
-        public static readonly string Tag = "get-balloon-decoration";
+        public const string Tag = "get-balloon-state";
 
-        public GetBalloonDecorationMessage(int balloonID)
-            : base(MessageType.GetBalloonDecoration, Tag, balloonID)
+        public GetBalloonStateMessage(string balloonID)
+            : base(MessageType.GetBalloonState, Tag, balloonID)
         {
         }
     }
@@ -256,19 +258,19 @@ namespace Balloons.Messaging.Model
     #region Messages sent by both
     public class PopBalloonMessage : BalloonMessage
     {
-        public static readonly string Tag = "pop-balloon";
+        public const string Tag = "pop-balloon";
 
-        public PopBalloonMessage(int balloonID)
+        public PopBalloonMessage(string balloonID)
             : base(MessageType.PopBalloon, Tag, balloonID)
         {
         }
     }
 
-    public class BalloonDecorationUpdateMessage : BalloonMessage
+    public class BalloonStateUpdateMessage : BalloonMessage
     {
-        public static readonly string Tag = "balloon-decoration-update";
+        public const string Tag = "balloon-state-update";
 
-        public int OverlayType
+        public OverlayType OverlayType
         {
             get { return this.m_overlayType; }
         }
@@ -278,21 +280,38 @@ namespace Balloons.Messaging.Model
             get { return this.m_bgColor; }
         }
 
-        public BalloonDecorationUpdateMessage(int balloonID, int overlayType, Colour bgColor)
-            : base(MessageType.BalloonDecorationUpdate, Tag, balloonID)
+        public int Votes
+        {
+            get { return this.m_votes; }
+        }
+
+        public BalloonStateUpdateMessage(string balloonID, OverlayType overlayType, Colour bgColor, int votes)
+            : base(MessageType.BalloonStateUpdate, Tag, balloonID)
         {
             m_overlayType = overlayType;
             m_bgColor = bgColor;
+            m_votes = votes;
         }
-
-        protected override string FormatContent()
+        
+        public BalloonStateUpdateMessage(Balloon balloon)
+            : this(balloon.ID, balloon.OverlayType, balloon.BackgroundColor, balloon.Votes)
         {
-            return String.Format("{0} {1} {2} {3}",
-                BalloonID, m_overlayType, m_bgColor.Red, m_bgColor.Green, m_bgColor.Blue);
+        }
+        
+        public void UpdateState(Balloon balloon)
+        {
+            if(balloon == null)
+            {
+                return;
+            }
+            balloon.OverlayType = OverlayType;
+            balloon.BackgroundColor = BackgroundColor;
+            balloon.Votes = Votes;
         }
 
-        private int m_overlayType;
+        private OverlayType m_overlayType;
         private Colour m_bgColor;
+        private int m_votes;
     }
     #endregion
 
@@ -318,23 +337,44 @@ namespace Balloons.Messaging.Model
     {
         public static readonly string Tag = "disconnected";
 
-        public int ScreenID
+        public DisconnectedMessage() : base(MessageType.Disconnected, Tag)
         {
-            get { return this.m_screenID; }
         }
-
-        public DisconnectedMessage(int screenID) : base(MessageType.Disconnected, Tag)
-        {
-            m_screenID = screenID;
-        }
-        
-        protected override string FormatContent()
-        {
-            return m_screenID.ToString();
-        }
-        
-        private int m_screenID;
     }
     
+    public class FeedUpdatedMessage : Message
+    {
+        public static readonly string Tag = "feed-updated";
+
+        public List<FeedContent> FeedItems
+        {
+            get { return this.m_items; }
+        }
+        
+        public FeedUpdatedMessage(List<FeedContent> items) : base(MessageType.FeedUpdated, Tag)
+        {
+            m_items = items;
+        }
+        
+        private List<FeedContent> m_items;
+    }
+
+    public delegate void GameCallback();
+
+    public class CallbackMessage : Message
+    {
+        private GameCallback m_callback;
+
+        public GameCallback Callback
+        {
+            get { return m_callback; }
+        }
+
+        public CallbackMessage(GameCallback callback)
+            : base(MessageType.Callback, "callback")
+        {
+            m_callback = callback;
+        }
+    }
     #endregion
 }

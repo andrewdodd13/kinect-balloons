@@ -24,6 +24,27 @@ namespace Balloons.Messaging
         {
             get { return m_socket; }
         }
+        
+        /// <summary>
+        /// Sender object for received messages.
+        /// </summary>
+        public object Sender
+        {
+            get
+            {
+                lock(this)
+                {
+                    return m_sender;
+                }
+            }
+            set
+            {
+                lock(this)
+                {
+                    m_sender = value;
+                }
+            }
+        }
 
         public event EventHandler Connected;
         public event EventHandler ConnectFailed;
@@ -56,8 +77,16 @@ namespace Balloons.Messaging
             m_socket = socket;
             m_receiveQueue = receiveQueue;
             m_receiveBuffer = new CircularBuffer(4096);
-            m_serializer = new TextMessageSerializer();
-            //m_serializer = new BinaryMessageSerializer();
+            switch(Configuration.SerializerType)
+            {
+            default:
+            case SerializerType.Binary:
+                m_serializer = new BinaryMessageSerializer();
+                break;
+            case SerializerType.JSON:
+                m_serializer = new TextMessageSerializer();
+                break;
+            }
         }
 
         public void Dispose()
@@ -117,7 +146,9 @@ namespace Balloons.Messaging
         {
             if(m_receiveQueue != null)
             {
-                m_receiveQueue.Enqueue(null);
+                var msg = new DisconnectedMessage();
+                msg.Sender = Sender;
+                m_receiveQueue.Enqueue(msg);
             }
 
             EventHandler handler = Disconnected;
@@ -147,6 +178,7 @@ namespace Balloons.Messaging
         private CircularBuffer m_receiveBuffer;
         private IMessageSerializer m_serializer;
         private readonly CircularQueue<Message> m_receiveQueue;
+        private object m_sender;
 
         /// <summary>
         /// Called when the asynchronous connect operation finishes.
@@ -157,7 +189,7 @@ namespace Balloons.Messaging
             {
                 m_socket.EndConnect(result);
             }
-            catch (SocketException)
+            catch (Exception)
             {
                 OnConnectFailed();
                 return;
@@ -239,7 +271,7 @@ namespace Balloons.Messaging
                 }
 
                 // notify the user that a message was received
-                msg.Sender = this;
+                msg.Sender = Sender;
                 OnMessageReceived(msg);
             };
 
