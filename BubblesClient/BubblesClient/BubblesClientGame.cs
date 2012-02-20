@@ -518,9 +518,11 @@ namespace BubblesClient
             if (showContent)
             {
                 poppedBalloon = balloon;
+                physicsManager.DisableHandCollisions();
                 ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
                 {
                     poppedBalloon = null;
+                    physicsManager.EnableHandCollisions();
                 });
             }
 
