@@ -333,7 +333,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloon.Type != BalloonType.Customizable && !balloon.Popped && !String.IsNullOrWhiteSpace(balloon.Label))
+                if (IsCaptionDrawn(balloon))
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
@@ -450,6 +450,13 @@ namespace BubblesClient
             base.Draw(gameTime);
         }
 
+        private bool IsCaptionDrawn(ClientBalloon balloon)
+        {
+            return balloon.Type != BalloonType.Customizable &&
+                !balloon.Popped &&
+                !String.IsNullOrWhiteSpace(balloon.Label);
+        }
+
         private void HandleInput()
         {
             physicsManager.UpdateHandPositions(input.GetHandPositions());
@@ -534,10 +541,10 @@ namespace BubblesClient
                 throw new ArgumentOutOfRangeException("e", "No such balloon in received message.");
             }
 
+            // Display content only asked and if balloon has a caption
+            showContent &= IsCaptionDrawn(balloon);
             balloon.Popped = true;
-
-            // Display content only asked and if balloon is not customizable type
-            if (BalloonType.Customizable != balloon.Type && showContent)
+            if (showContent)
             {
                 poppedBalloon = balloon;
                 contentBoxTexture = renderer.Render(GraphicsDevice, balloon);
