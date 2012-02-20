@@ -417,14 +417,17 @@ namespace BubblesClient
             //display content page if balloonPopped is not null (should only be true for 30 seconds)
             if (poppedBalloon != null)
             {
-                if(Configuration.UseHtmlRendering /* && contentBoxTexture != null */)
+                if(Configuration.UseHtmlRendering)
                 {
-                    // Position contains the co-ordinate of the top-left corner of the box
-                    Vector2 position = (screenDimensions / 2) -
-                        (new Vector2(contentBoxTexture.Width, contentBoxTexture.Height) / 2);
+                    if(contentBoxTexture != null)
+                    {
+                        // Position contains the co-ordinate of the top-left corner of the box
+                        Vector2 position = (screenDimensions / 2) -
+                            (new Vector2(contentBoxTexture.Width, contentBoxTexture.Height) / 2);
 
-                    // Draw the HTML-rendered box
-                    spriteBatch.Draw(contentBoxTexture, position, Color.White);
+                        // Draw the HTML-rendered box
+                        spriteBatch.Draw(contentBoxTexture, position, Color.White);
+                    }
                 }
                 else
                 {
