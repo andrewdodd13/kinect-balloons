@@ -65,4 +65,8 @@ class Content_model extends CI_Model {
         $this->db->update('usercontent');
     }
 
+	public function remove_content_by_id($contentID) {
+		$this->db->delete('usercontent', array('ContentID' => $contentID));
+	}
+
 }

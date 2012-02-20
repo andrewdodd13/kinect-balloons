@@ -8,6 +8,7 @@ class Api extends CI_Controller {
 	
     public function __construct() {
         parent::__construct();
+        // Isn't this already loaded in autoload???? Alex
         $this->load->helper('url');
         $this->load->model('url_map');
         $this->url_map->set_base_url(site_url('url/go'));
