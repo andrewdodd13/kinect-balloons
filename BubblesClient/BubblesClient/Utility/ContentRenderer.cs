@@ -127,7 +127,7 @@ namespace BubblesClient.Utility
             using(HTMLite hLite = new HTMLite())
             {
                 // this callback is used to load images
-                hLite.SetCallback((handle, code, pMsg) => HTMLiteCallback(handle, code, pMsg, images));
+                hLite.UriHandler = (uri, type) => LoadUri(uri, type, images);
                 // load the HTML page data
                 hLite.LoadHtmlFromMemory("content.html", htmlData);
                 // set the HTML page size
@@ -142,24 +142,18 @@ namespace BubblesClient.Utility
             }
         }
 
-        private uint HTMLiteCallback(HTMLite hLite, HTMLite.MessageCode code, IntPtr pMsg, Dictionary<string, Image> images)
+        private byte[] LoadUri(string uri, HTMLite.ResourceType type, Dictionary<string, Image> images)
         {
-            switch(code)
+            Image img;
+            if(images.TryGetValue(uri, out img))
             {
-            case HTMLite.MessageCode.HLN_LOAD_DATA:
-                var loadData = hLite.ReadMessage<HTMLite.NMHL_LOAD_DATA>(pMsg);
-                Image img;
-                if(images.TryGetValue(loadData.uri, out img))
-                {
-                    // serialize the image to a stream of bytes
-                    MemoryStream ms = new MemoryStream();
-                    img.Save(ms, imgFormat);
-                    byte[] data = ms.ToArray();
-                    hLite.SetDataReady(loadData.uri, data);
-                }
-                break;
+                // serialize the image to a stream of bytes
+                MemoryStream ms = new MemoryStream();
+                img.Save(ms, imgFormat);
+                byte[] data = ms.ToArray();
+                return data;
             }
-            return 0;
+            return null;
         }
     }
 }

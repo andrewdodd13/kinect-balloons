@@ -10,9 +10,23 @@ namespace BubblesClient.Utility
     /// </summary>
     public class HTMLite : IDisposable
     {
+        /// <summary>
+        /// This delegate can be used to load images and other content referenced in HTML pages.
+        /// </summary>
+        public delegate byte[] LoadUriHandler(string uri, ResourceType type);
+
         private IntPtr hLite;
         private GCHandle cbHandle;
         private List<GCHandle> bufferList;
+
+        /// <summary>
+        /// Delegate used to load images and other content referenced in HTML pages.
+        /// </summary>
+        public LoadUriHandler UriHandler
+        {
+            get;
+            set;
+        }
 
         public HTMLite()
         {
@@ -22,6 +36,11 @@ namespace BubblesClient.Utility
                 throw new Exception("Could not load HTMLlite");
             }
             this.bufferList = new List<GCHandle>();
+
+            // keep the callback object alive until Dispose is called
+            HTMLCallback cb = Callback;
+            this.cbHandle = GCHandle.Alloc(cb);
+            ThrowOnError(HTMLiteSetCallback(this.hLite, cb));
         }
 
         ~HTMLite()
@@ -31,44 +50,71 @@ namespace BubblesClient.Utility
 
         public void Dispose()
         {
+            if(cbHandle.IsAllocated)
+            {
+                if(hLite != IntPtr.Zero)
+                {
+                    HTMLiteSetCallback(this.hLite, null);
+                }
+                cbHandle.Free();
+            }
+
             if(hLite != IntPtr.Zero)
             {
                 HTMLiteDestroyInstance(hLite);
                 hLite = IntPtr.Zero;
             }
-
-            if(cbHandle.IsAllocated)
-            {
-                cbHandle.Free();
-            }
+            
 
             FreeBuffers();
         }
 
+        /// <summary>
+        /// Load an HTML page from a byte buffer.
+        /// </summary>
+        /// <param name="baseURI"> URI of the page. </param>
+        /// <param name="data"> Buffer containing the HTML data to load. </param>
         public void LoadHtmlFromMemory(string baseURI, byte[] data)
         {
             uint result = HTMLiteLoadHtmlFromMemory(hLite, baseURI, data, (uint)data.Length);
             ThrowOnError(result);
         }
 
+        /// <summary>
+        /// Load an HTML page from a file.
+        /// </summary>
+        /// <param name="path"> Path of the HTML page to load. </param>
         public void LoadHtmlFromFile(string path)
         {
             uint result = HTMLiteLoadHtmlFromFile(hLite, path);
             ThrowOnError(result);
         }
 
+        /// <summary>
+        /// Set the current page's dimensions.
+        /// </summary>
+        /// <param name="width"> Width of the page. </param>
+        /// <param name="height"> Height of the page. </param>
         public void Measure(int width, int height)
         {
             uint result = HTMLiteMeasure(hLite, width, height);
             ThrowOnError(result);
         }
 
-        public void Render(Graphics g, int x, int y, int sx, int sy)
+        /// <summary>
+        /// Render the page using the graphics context.
+        /// </summary>
+        /// <param name="g"> Graphics context. </param>
+        /// <param name="x"> X coordinate of the top-left corner of the area to render. </param>
+        /// <param name="y"> Y coordinate of the top-left corner of the area to render. </param>
+        /// <param name="width"> Width of the area to render. </param>
+        /// <param name="height"> Height of the area to render. </param>
+        public void Render(Graphics g, int x, int y, int width, int height)
         {
             IntPtr hDc = g.GetHdc();
             try
             {
-                uint result = HTMLiteRender(hLite, hDc, x, y, sx, sy);
+                uint result = HTMLiteRender(hLite, hDc, x, y, width, height);
                 ThrowOnError(result);
             }
             finally
@@ -78,13 +124,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        public void RenderOnBitmap(IntPtr hBmp, int x, int y, int sx, int sy)
-        {
-            uint result = HTMLiteRenderOnBitmap(hLite, hBmp, x, y, sx, sy);
-            ThrowOnError(result);
-        }
-
-        public void SetDataReady(string url, byte[] data)
+        protected void SetDataReady(string url, byte[] data)
         {
             GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
             bufferList.Add(dataHandle);
@@ -92,7 +132,7 @@ namespace BubblesClient.Utility
             ThrowOnError(result);
         }
 
-        private void FreeBuffers()
+        protected void FreeBuffers()
         {
             // un-pin the memory allocated for the data
             foreach(GCHandle pData in bufferList)
@@ -102,26 +142,22 @@ namespace BubblesClient.Utility
             bufferList.Clear();
         }
 
-        public void SetCallback(Callback cb)
+        protected uint Callback(IntPtr hLite, IntPtr pMsg)
         {
-            if(cbHandle.IsAllocated)
+            MessageCode code = (MessageCode)Marshal.ReadInt32(pMsg, 8);
+            if((code == MessageCode.HLN_LOAD_DATA) && (UriHandler != null))
             {
-                cbHandle.Free();
+                var loadData = ReadMessage<NMHL_LOAD_DATA>(pMsg);
+                byte[] data = UriHandler(loadData.uri, (ResourceType)loadData.dataType);
+                if(data != null)
+                {
+                    SetDataReady(loadData.uri, data);
+                }
             }
-
-            // keep the callback object alive until Dispose is called
-            HTMLCallback internalCb = delegate(IntPtr handle, IntPtr msg)
-            {
-                MessageCode code = (MessageCode)Marshal.ReadInt32(msg, 8);
-                return cb(this, code, msg);
-            };
-            cbHandle = GCHandle.Alloc(internalCb);
-
-            uint result = HTMLiteSetCallback(hLite, internalCb);
-            ThrowOnError(result);
+            return 0;
         }
 
-        public T ReadMessage<T>(IntPtr pMsg) where T : struct
+        protected T ReadMessage<T>(IntPtr pMsg) where T : struct
         {
             if(pMsg == IntPtr.Zero)
             {
@@ -189,14 +225,14 @@ namespace BubblesClient.Utility
             HLN_LOAD_DATA = 0xAFF + 0x02
         }
 
-        public struct NMHDR
+        protected struct NMHDR
         {
             public IntPtr hwndFrom;
             public IntPtr idFrom;
             public uint code;
         };
 
-        public struct NMHL_LOAD_DATA
+        protected struct NMHL_LOAD_DATA
         {
             public NMHDR hdr;
             [MarshalAs(UnmanagedType.LPWStr)]
@@ -205,12 +241,10 @@ namespace BubblesClient.Utility
             public uint outDataSize;
             public uint dataType;
         }
-
-        public delegate uint Callback(HTMLite h, MessageCode code, IntPtr pMsg);
         #endregion
 
         #region P/invoke stuff
-        private delegate uint HTMLCallback(IntPtr hLite, IntPtr pMsg);
+        protected delegate uint HTMLCallback(IntPtr hLite, IntPtr pMsg);
 
         private const string HTMLitePath = @"Content\Html\htmlayout.dll";
 
