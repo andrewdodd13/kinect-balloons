@@ -1,4 +1,4 @@
-<?php
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Submit_content extends CI_Controller {
 	
@@ -8,7 +8,15 @@ class Submit_content extends CI_Controller {
 	}
 	
 	public function index() {
-		$this->load->view('submit_content_view', array('errors' => ''));
+		$this->show_submit_article_page();
+	}
+	
+	public function show_submit_article_page($errors = '') {
+		$data['main_content'] = 'submit_content_view';
+		$data['headerData']['js']['jsItem']['src'] = base_url()."included/jscolor/jscolor.js";
+		$data['bodyData'] = $errors;
+		
+		$this->load->view('includes/template', $data);
 	}
 	
 	public function is_logged_in() {
@@ -31,7 +39,7 @@ class Submit_content extends CI_Controller {
 		$this->form_validation->set_rules('colour', 'Balloon colour', 'trim|exact_length[6]');
 		
 		if($this->form_validation->run() == FALSE) {
-			$this->load->view('submit_content_view');
+			$this->show_submit_article_page();
 		}
 		else {
 			// configuration for uploading files
@@ -49,7 +57,7 @@ class Submit_content extends CI_Controller {
 			if(!$this->upload->do_upload('image')) {
 				// file has failed to upload
 				$errors = array('errors' => $this->upload->display_errors('<p class="errors">', '</p>'));
-				$this->load->view('submit_content_view', $errors);
+				$this->show_submit_article_page($errors);
 			}
 			else {
 				// file has uploaded
@@ -72,7 +80,7 @@ class Submit_content extends CI_Controller {
 			'errors' => 'Your article has been successfully submitted. Thank You'
 		);
 		
-		$this->load->view('submit_content_view', $errors);
+		$this->show_submit_article_page($errors);
 	}
 	
 }

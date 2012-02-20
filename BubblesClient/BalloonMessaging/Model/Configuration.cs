@@ -55,6 +55,11 @@ namespace Balloons.Messaging.Model
         /// Whether to log or not the messages sent and received from the network.
         /// </summary>
         public static bool LogNetworkMessages = false;
+        /// <summary>
+        /// How big the dead zone is relative to the size of a balloon. Behaviour 
+        /// is undefined if this is less than or equal to 1.0f.
+        /// </summary>
+        public static float BalloonDeadzoneMultiplier = 1.1f;
         #endregion
 
         #region Client settings
@@ -74,6 +79,26 @@ namespace Balloons.Messaging.Model
         /// How long (in ms) the content box that appears when a balloon is popped should be shown.
         /// </summary>
         public static int MessageDisplayTime = 30 * 1000;      // TODO TimeSpan?
+        /// <summary>
+        /// How long (in ms) the balloon pop animation should be shown.
+        /// </summary>
+        public static int PopAnimationTime = 2500;
+        /// <summary>
+        /// Whether the balloon pop animation is enabled or disabled (in that case the pop texture is static).
+        /// </summary>
+        public static bool PopAnimationEnabled = true;
+        /// <summary>
+        /// Alpha parameter of the balloon pop animation. Controls how much smaller/bigger the texture becomes.
+        /// </summary>
+        public static float PopAnimationAlpha = 0.3f;
+        /// <summary>
+        /// Beta parameter of the balloon pop animation. Controls how fast the size of the texture changes.
+        /// </summary>
+        public static float PopAnimationBeta = 5.0f;
+        /// <summary>
+        /// Scale parameter of the balloon pop animation.
+        /// </summary>
+        public static float PopAnimationScale = 2.0f;
         /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
@@ -186,6 +211,7 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "LogFilePath", LogFilePath);
             StoreValue(settings, "SerializerType", SerializerType);
             StoreValue(settings, "LogNetworkMessages", LogNetworkMessages);
+            StoreValue(settings, "BalloonDeadzoneMultiplier", BalloonDeadzoneMultiplier);
 
             // client settings
             StoreValue(settings, "InputType", InputType);
@@ -193,6 +219,11 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "ScreenWidth", ScreenWidth);
             StoreValue(settings, "ScreenHeight", ScreenHeight);
             StoreValue(settings, "MessageDisplayTime", MessageDisplayTime);
+            StoreValue(settings, "PopAnimationTime", PopAnimationTime);
+            StoreValue(settings, "PopAnimationEnabled", PopAnimationEnabled);
+            StoreValue(settings, "PopAnimationAlpha", PopAnimationAlpha);
+            StoreValue(settings, "PopAnimationBeta", PopAnimationBeta);
+            StoreValue(settings, "PopAnimationScale", PopAnimationScale);
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
             StoreValue(settings, "EnableHighFive", EnableHighFive);
@@ -253,6 +284,7 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "LogFilePath", ref LogFilePath);
             LoadValue(settings, "SerializerType", ref SerializerType);
             LoadValue(settings, "LogNetworkMessages", ref LogNetworkMessages);
+            LoadValue(settings, "BalloonDeadzoneMultiplier", ref BalloonDeadzoneMultiplier);
 
             // client settings
             LoadValue(settings, "InputType", ref InputType);
@@ -260,6 +292,11 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "ScreenWidth", ref ScreenWidth);
             LoadValue(settings, "ScreenHeight", ref ScreenHeight);
             LoadValue(settings, "MessageDisplayTime", ref MessageDisplayTime);
+            LoadValue(settings, "PopAnimationTime", ref PopAnimationTime);
+            LoadValue(settings, "PopAnimationEnabled", ref PopAnimationEnabled);
+            LoadValue(settings, "PopAnimationAlpha", ref PopAnimationAlpha);
+            LoadValue(settings, "PopAnimationBeta", ref PopAnimationBeta);
+            LoadValue(settings, "PopAnimationScale", ref PopAnimationScale);
             LoadValue(settings, "RemoteIPAddress", ref RemoteIPAddress);
             LoadValue(settings, "RemotePort", ref RemotePort);
             LoadValue(settings, "EnableHighFive", ref EnableHighFive);
