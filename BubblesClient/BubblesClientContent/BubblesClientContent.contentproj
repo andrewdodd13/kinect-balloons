@@ -102,11 +102,6 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
-    <Compile Include="Images\Box.png">
-      <Name>Box</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
     <Compile Include="Images\BucketBlue.png">
       <Name>BucketBlue</Name>
       <Importer>TextureImporter</Importer>

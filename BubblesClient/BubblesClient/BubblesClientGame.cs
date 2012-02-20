@@ -6,10 +6,10 @@ using BubblesClient.Input.Controllers;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Physics;
+using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BubblesClient.Utility;
 
 namespace BubblesClient
 {
@@ -25,7 +25,7 @@ namespace BubblesClient
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
         private Texture2D[] balloonPopTextures;
 
-        private Texture2D boxTexture;
+        private Texture2D boxWhiteColour, boxBlackColour;
         private SpriteFont summaryFont;
 
         // Network
@@ -188,7 +188,10 @@ namespace BubblesClient
                 Content.Load<Texture2D>("Images/BalloonPop")
             };
 
-            boxTexture = Content.Load<Texture2D>("Images/Box");
+            boxBlackColour = new Texture2D(GraphicsDevice, 1, 1);
+            boxBlackColour.SetData(new[] { Color.Black });
+            boxWhiteColour = new Texture2D(GraphicsDevice, 1, 1);
+            boxWhiteColour.SetData(new[] { Color.White });
 
             // Create buckets
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/BucketRed"), Color.Red));
@@ -222,7 +225,10 @@ namespace BubblesClient
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            base.UnloadContent();
+
+            boxBlackColour.Dispose();
+            boxWhiteColour.Dispose();
         }
 
         /// <summary>
@@ -341,22 +347,28 @@ namespace BubblesClient
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (IsCaptionDrawn(balloon))
                 {
-                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
-                    boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
-
-                    spriteBatch.Draw(boxTexture, boxPosition, Color.White);
-
                     // If the label is not cached then it means it has not
                     // been formatted to fit in the box; therefore format it 
                     // and save it back
                     if (!balloon.IsLabelCached)
                     {
                         string labelText = balloon.Label;
-                        balloon.Label = TextUtility.wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
+                        balloon.Label = TextUtility.wrapText(summaryFont, labelText, new Vector2(382, 168));
                         balloon.IsLabelCached = true;
                     }
 
-                    TextUtility.drawTextLabel(spriteBatch, summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                    // Measure the size of the string and add 4px padding
+                    Vector2 boxSize = summaryFont.MeasureString(balloon.Label) + new Vector2(8, 8);
+
+                    Vector2 boxPosition =
+                        PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position)
+                        - new Vector2(boxSize.X / 2, 0);
+                    boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
+
+                    spriteBatch.Draw(boxBlackColour, new Rectangle((int)boxPosition.X - 2, (int)boxPosition.Y - 2, (int)boxSize.X + 4, (int)boxSize.Y + 4), Color.White);
+                    spriteBatch.Draw(boxWhiteColour, new Rectangle((int)boxPosition.X, (int)boxPosition.Y, (int)boxSize.X, (int)boxSize.Y), Color.White);
+
+                    TextUtility.drawTextLabel(spriteBatch, summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y) + new Vector2(4, 4));
                 }
             }
 
