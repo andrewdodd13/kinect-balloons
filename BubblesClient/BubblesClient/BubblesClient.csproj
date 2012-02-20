@@ -128,6 +128,7 @@
     <Compile Include="Model\Buckets\ColourBucket.cs" />
     <Compile Include="Model\Buckets\DecorationBucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
+    <Compile Include="Model\PopInfo.cs" />
     <Compile Include="Network\ScreenManager.cs" />
     <Compile Include="Physics\PhysicsManager.cs" />
     <Compile Include="Physics\WorldEntity.cs" />

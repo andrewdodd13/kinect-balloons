@@ -57,9 +57,10 @@ namespace BubblesClient
         private bool showBuckets = true;
         private Bucket oldBucket = null;
 
-        // If this is not null then we will be showing a balloon. We really need
-        // a state machine.
+        // If this is not null then we will be showing a balloon. We really need a state machine.
         private ClientBalloon poppedBalloon = null;
+        private List<PopAnim> popAnimations = new List<PopAnim>();
+        private GameTime currentTime;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
@@ -216,6 +217,8 @@ namespace BubblesClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            currentTime = gameTime;
+
             // Query the Network Manager for events
             ProcessNetworkMessages();
 
@@ -258,7 +261,7 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x => this.RemoveBalloon(x, false));
+            removals.ForEach(x => RemoveBalloon(x));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -277,6 +280,20 @@ namespace BubblesClient
             if (showBuckets != shouldShowBuckets)
             {
                 UpdateBuckets(shouldShowBuckets);
+            }
+
+            // Update the pop animations
+            for(int i = popAnimations.Count - 1; i >= 0; i--)
+            {
+                double elapsedMs = gameTime.TotalGameTime.TotalMilliseconds - popAnimations[i].TimePopped.TotalMilliseconds;
+                if(elapsedMs >= Configuration.PopAnimationTime)
+                {
+                    popAnimations.RemoveAt(i);
+                }
+                else
+                {
+                    popAnimations[i].ElapsedSincePopped = (float)(elapsedMs / 1000.0);
+                }
             }
 
             base.Update(gameTime);
@@ -316,7 +333,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloon.Type != BalloonType.Customizable && !balloon.Popped)
+                if (balloon.Type != BalloonType.Customizable && !balloon.Popped && !String.IsNullOrWhiteSpace(balloon.Label))
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
@@ -350,7 +367,32 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
-                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
+                Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
+                spriteBatch.Draw(balloon.Texture, balloonPosition, balloonColour);
+            }
+
+            // Draw all pop animations
+            foreach(PopAnim popAnim in popAnimations)
+            {
+                Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
+                                                popAnim.PopTexture.Width, popAnim.PopTexture.Height);
+                Color popColour = new Color(popAnim.PopColour.Red, popAnim.PopColour.Green, popAnim.PopColour.Blue, popAnim.PopColour.Alpha);
+                if(Configuration.PopAnimationEnabled)
+                {
+                    // Animate popped balloons: make the texture bigger/smaller over time through scale
+                    float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
+                    float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
+                    balloonScale *= Configuration.PopAnimationScale;
+
+                    // Scale the texture rectangle at its center and not at its top-left corner
+                    // like Draw() does when you pass a scaling factor.
+                    float newWidth = (textureRect.Width * balloonScale);
+                    float newHeight = (textureRect.Height * balloonScale);
+                    float newX = (textureRect.Center.X - newWidth * 0.5f);
+                    float newY = (textureRect.Center.Y - newHeight * 0.5f);
+                    textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
+                }
+                spriteBatch.Draw(popAnim.PopTexture, textureRect, popColour);
             }
 
             // Draw all buckets
@@ -382,13 +424,13 @@ namespace BubblesClient
                 // Draw the QR Code
                 if(poppedBalloon.BalloonContentCache.QRCode != null)
                 {
-                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(contentBox.Width - 280, 24), Color.White);
+                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode,
+                        position + new Vector2(contentBox.Width - 280, 24), Color.White);
                 }
 
                 // Draw the Image
-                spriteBatch.Draw(poppedBalloon.BalloonContentCache.Image,
-                    position + new Vector2(contentBox.Width - 280, contentBox.Height - poppedBalloon.BalloonContentCache.Image.Height - 24),
-                    Color.White);
+                Texture2D balloonImage = poppedBalloon.BalloonContentCache.Image;
+                spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
             }
             else
             {
@@ -474,7 +516,7 @@ namespace BubblesClient
             }
 
             // notify the server that the ballon's decoration changed.
-            // otherwise decorations are lost when ballons change screens
+            // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
                 ScreenManager.UpdateBalloonDetails(balloon);
@@ -506,48 +548,22 @@ namespace BubblesClient
                 });
             }
 
-            this.RemoveBalloon(balloon, true);
-        }
-
-        /// <summary>
-        /// Removes (possibly later) the given balloon from the physics world and screen.
-        /// </summary>
-        /// <param name="balloon">Balloon to remove. </param>
-        /// <param name="timed"> If true the balloon will be removed after a given time interval. </param>
-        private void RemoveBalloon(ClientBalloon balloon, bool timed)
-        {
-            // Set the texture to the kapow! texture
-            balloon.Texture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
-            balloon.BackgroundColor = new Colour(255, 255, 255, 255);
-
-            if (timed)
-            {
-                // Disable the body's physics
-                balloonEntities[balloon].Body.Enabled = false;
-
-                poppedBalloon = balloon;
-                ScreenManager.CallLater(2500, delegate()
-                {
-                    this.RemoveBalloonFromMappings(balloon.ID);
-                });
-            }
-            else
-            {
-                this.RemoveBalloonFromMappings(balloon.ID);
-            }
+            RemoveBalloon(balloon);
         }
 
         /// <summary>
         /// Removes (immediately) the given balloon from the physics world and screen.
         /// </summary>
         /// <param name="balloon">Balloon to remove. </param>
-        private void RemoveBalloonFromMappings(string balloonID)
+        private void RemoveBalloon(ClientBalloon balloon)
         {
-            ClientBalloon balloon;
-            if(!balloons.TryGetValue(balloonID, out balloon))
-            {
-                return;
-            }
+            // Create a new pop animation
+            PopAnim anim = new PopAnim(balloon);
+            anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+            anim.TimePopped = currentTime.TotalGameTime;
+            anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
+            anim.PopColour = new Colour(255, 255, 255, 255);
+            popAnimations.Add(anim);
 
             // Remove balloon from screen.
             physicsManager.RemoveEntity(balloonEntities[balloon]);
