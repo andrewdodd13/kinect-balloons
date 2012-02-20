@@ -26,7 +26,8 @@ namespace Balloons.Messaging.Model
         Connected,
         Disconnected,
         RefreshFeed,
-        FeedUpdated
+        FeedUpdated,
+        Callback
     }
     
     /// <summary>
@@ -356,6 +357,24 @@ namespace Balloons.Messaging.Model
         }
         
         private List<FeedContent> m_items;
+    }
+
+    public delegate void GameCallback();
+
+    public class CallbackMessage : Message
+    {
+        private GameCallback m_callback;
+
+        public GameCallback Callback
+        {
+            get { return m_callback; }
+        }
+
+        public CallbackMessage(GameCallback callback)
+            : base(MessageType.Callback, "callback")
+        {
+            m_callback = callback;
+        }
     }
     #endregion
 }
