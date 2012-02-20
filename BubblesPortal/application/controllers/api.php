@@ -7,6 +7,7 @@ class Api extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
+        // Isn't this already loaded in autoload???? Alex
         $this->load->helper('url');
     }
 
