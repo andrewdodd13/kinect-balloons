@@ -21,7 +21,7 @@ namespace BubblesClient.Utility
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
         private Color maskColour;
-        private string htmlTemplate;
+        private Dictionary<string, string> templates;
         private Dictionary<string, Image> staticImages;
         private List<GCHandle> bufferList;
 
@@ -31,23 +31,29 @@ namespace BubblesClient.Utility
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
+            this.templates = new Dictionary<string, string>();
             this.staticImages = new Dictionary<string, Image>();
             this.bufferList = new List<GCHandle>();
         }
 
         public void LoadContent(ContentManager manager)
         {
-            string path = Path.Combine(manager.RootDirectory, @"Html\content_box.html");
-            htmlTemplate = File.ReadAllText(path);
-
+            LoadTemplate(manager.RootDirectory, "caption_box.html");
+            LoadTemplate(manager.RootDirectory, "content_box.html");
             LoadImage(manager.RootDirectory, "thumbs-up.png");
             LoadImage(manager.RootDirectory, "thumbs-down.png");
         }
 
-        private void LoadImage(string path, string key)
+        private void LoadTemplate(string path, string name)
         {
-            string file = Path.Combine(path, Path.Combine("Images", key));
-            staticImages[key] = Image.FromFile(file);
+            string file = Path.Combine(path, Path.Combine("Html", name));
+            templates[name] = File.ReadAllText(file);
+        }
+
+        private void LoadImage(string path, string name)
+        {
+            string file = Path.Combine(path, Path.Combine("Images", name));
+            staticImages[name] = Image.FromFile(file);
         }
 
         private string FillTemplate(string templateText, Dictionary<string, string> vals)
@@ -86,7 +92,7 @@ namespace BubblesClient.Utility
                 vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
                 vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
             }
-            string html = FillTemplate(htmlTemplate, vals);
+            string html = FillTemplate(templates["content_box.html"], vals);
 
             // prepare the images
             var images = new Dictionary<string, Image>(staticImages);
@@ -118,41 +124,32 @@ namespace BubblesClient.Utility
 
         private void RenderHtml(Bitmap img, string html, Dictionary<string, Image> images)
         {
-            IntPtr hLite = HTMLiteCreateInstance();
-            if(hLite == IntPtr.Zero)
-            {
-                return;
-            }
-
             // encode the HTML page text to bytes
             byte[] htmlData = Encoding.UTF8.GetBytes(html);
 
             // this callback is used to load images
-            HTMLCallback callback = (handle, pMsg) => HTMLiteCallback(handle, pMsg, images);
+            HTMLite.Callback callback = (handle, pMsg) => HTMLiteCallback(handle, pMsg, images);
+
             // keep the callback object alive until the library is released
             GCHandle cbHandle = GCHandle.Alloc(callback, GCHandleType.Normal);
             try
             {
-                ThrowOnError(HTMLiteSetCallback(hLite, callback));
-                // load the HTML page data
-                ThrowOnError(HTMLiteLoadHtmlFromMemory(hLite, "content.html", htmlData, (uint)htmlData.Length));
-                // set the HTML page size
-                ThrowOnError(HTMLiteMeasure(hLite, img.Width, img.Height));
-
-                try
+                using(HTMLite hLite = new HTMLite())
                 {
+                    hLite.SetCallback(callback);
+                    // load the HTML page data
+                    hLite.LoadHtmlFromMemory("content.html", htmlData);
+                    // set the HTML page size
+                    hLite.Measure(img.Width, img.Height);
+
                     // render the HTML page to the image
                     using(Graphics g = Graphics.FromImage(img))
                     {
                         g.Clear(Color.Transparent);
                         IntPtr hDc = g.GetHdc();
-                        ThrowOnError(HTMLiteRender(hLite, hDc, 0, 0, img.Width, img.Height));
+                        hLite.Render(hDc, 0, 0, img.Width, img.Height);
                         g.ReleaseHdc(hDc);
                     }
-                }
-                finally
-                {
-                    ThrowOnError(HTMLiteDestroyInstance(hLite));
                 }
             }
             finally
@@ -168,13 +165,13 @@ namespace BubblesClient.Utility
             bufferList.Clear();
         }
 
-        private uint HTMLiteCallback(IntPtr hLite, IntPtr pMsg, Dictionary<string, Image> images)
+        private uint HTMLiteCallback(HTMLite hLite, IntPtr pMsg, Dictionary<string, Image> images)
         {
-            uint code = (uint)Marshal.ReadInt32(pMsg, 8);
+            HTMLite.MessageCode code = (HTMLite.MessageCode)Marshal.ReadInt32(pMsg, 8);
             switch(code)
             {
-            case HLN_LOAD_DATA:
-                NMHL_LOAD_DATA loadData = (NMHL_LOAD_DATA)Marshal.PtrToStructure(pMsg, typeof(NMHL_LOAD_DATA));
+            case HTMLite.MessageCode.HLN_LOAD_DATA:
+                var loadData = hLite.ReadMessage<HTMLite.NMHL_LOAD_DATA>(pMsg);
                 Image img;
                 if(images.TryGetValue(loadData.uri, out img))
                 {
@@ -187,147 +184,11 @@ namespace BubblesClient.Utility
                     GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
                     bufferList.Add(dataHandle);
                     IntPtr hData = dataHandle.AddrOfPinnedObject();
-                    ThrowOnError(HTMLiteSetDataReady(hLite, loadData.uri, hData, (uint)data.Length));
+                    hLite.SetDataReady(loadData.uri, hData, (uint)data.Length);
                 }
                 break;
             }
             return 0;
         }
-
-        public enum HtmlResult : int
-        {
-            // HLDOM_OK_NOT_HANDLED
-            DOM_Success_NotHandled = -1,
-            // HLDOM_OK
-            DOM_Success = 0,
-            // HLDOM_INVALID_HWND
-            DOM_Failure_InvalidHWND = 1,
-            // HLDOM_INVALID_HANDLE
-            DOM_Failure_InvalidHandle = 2,
-            // HLDOM_PASSIVE_HANDLE
-            DOM_Failure_PassiveHandle = 3,
-            // HLDOM_INVALID_PARAMETER
-            DOM_Failure_InvalidParameter = 4,
-            // HLDOM_OPERATION_FAILED
-            DOM_Failure_OperationFailed = 5,
-            DOM_Failure_Unsupported = 256,
-
-            // HPR_OK
-            Print_Success = 0,
-            // HPR_INVALID_HANDLE
-            Print_Failure_InvalidHandle = 1,
-            // HPR_INVALID_FORMAT
-            Print_Failure_InvalidFormat = 2,
-            // HPR_FILE_NOT_FOUND
-            Print_Failure_FileNotFound = 3,
-            // HPR_INVALID_PARAMETER
-            Print_Failure_InvalidParameter = 4,
-            // HPR_INVALID_STATE
-            Print_Failure_InvalidState = 5,
-
-            Value_Success = 0,
-            // HV_BAD_PARAMETER
-            Value_Bad_Parameter = 1,
-            // HV_INCOMPATIBLE_TYPE
-            Value_Incompatible_Type = 2
-        }
-
-        public enum HtmlResourceType : int
-        {
-            Unknown = -1,
-            // HLRT_DATA_HTML
-            Html = 0,
-            // HLRT_DATA_IMAGE
-            Image = 1,
-            // HLRT_DATA_STYLE
-            StyleSheet = 2,
-            // HLRT_DATA_CURSOR
-            Cursor = 3,
-            // HLRT_DATA_SCRIPT
-            Script = 4
-        };
-
-        private void ThrowOnError(uint result)
-        {
-            if(result != 0)
-            {
-                throw new Exception(MessageFromCode(result));
-            }
-        }
-
-        private string MessageFromCode(uint errorCode)
-        {
-            switch((HtmlResult)errorCode)
-            {
-            case HtmlResult.Print_Success:
-                return "No error.";
-            case HtmlResult.Print_Failure_InvalidHandle:
-                return "Invalid handle.";
-            case HtmlResult.Print_Failure_InvalidFormat:
-                return "Invalid format.";
-            case HtmlResult.Print_Failure_FileNotFound:
-                return "File not found.";
-            case HtmlResult.Print_Failure_InvalidParameter:
-                return "Invalid parameter.";
-            case HtmlResult.Print_Failure_InvalidState:
-                return "Invalid state.";
-            default:
-                return String.Format("Unknown error code {0}.", errorCode);
-            }
-        }
-
-        #region PInvoke stuff
-        const uint HLN_LOAD_DATA = 0xAFF + 0x02;
-
-        struct NMHDR
-        {
-            public IntPtr hwndFrom;
-            public IntPtr idFrom;
-            public uint code;
-        };
-
-        struct NMHL_LOAD_DATA
-        {
-            public NMHDR hdr;
-            [MarshalAs(UnmanagedType.LPWStr)]
-            public string uri;
-            public IntPtr outData;
-            public uint outDataSize;
-            public uint dataType;
-        }
-
-        private delegate uint HTMLCallback(IntPtr hLite, IntPtr pMsg);
-
-        const string HTMLitePath = @"Content\Html\htmlayout.dll";
-
-        [DllImport(HTMLitePath)]
-        extern static IntPtr HTMLiteCreateInstance();
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteDestroyInstance(IntPtr hLite);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteLoadHtmlFromMemory(IntPtr hLite, [MarshalAs(UnmanagedType.LPWStr)] string baseURI,
-            byte[] data, uint dataSize);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteLoadHtmlFromFile(IntPtr hLite, [MarshalAs(UnmanagedType.LPWStr)] string path);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteMeasure(IntPtr hLite, int width, int height);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteRender(IntPtr hLite, IntPtr hDc, int x, int y, int sx, int sy);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteRenderOnBitmap(IntPtr hLite, IntPtr hBmp, int x, int y, int sx, int sy);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteSetDataReady(IntPtr hLite, [MarshalAs(UnmanagedType.LPWStr)] string url,
-            IntPtr data, uint dataSize);
-
-        [DllImport(HTMLitePath)]
-        extern static uint HTMLiteSetCallback(IntPtr hLite, HTMLCallback cb);
-        #endregion
     }
 }

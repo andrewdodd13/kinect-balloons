@@ -133,6 +133,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />
     <Compile Include="Utility\ContentRenderer.cs" />
+    <Compile Include="Utility\HTMLite.cs" />
     <Compile Include="Utility\ImageGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
