@@ -5,7 +5,7 @@ using System;
 using System.Drawing;
 using System.Net;
 
-namespace BubblesClient.Physics
+namespace BubblesClient.Utility
 {
     public class QRGeneratorException : Exception
     {
@@ -25,29 +25,27 @@ namespace BubblesClient.Physics
         private const QRCodeEncoder.ERROR_CORRECTION DefaultErrorCorrection = QRCodeEncoder.ERROR_CORRECTION.M;
 
         /// <summary>
-        /// Create a texture using the default version and ECC.
+        /// Create an image using the default version and ECC.
         /// </summary>
-        /// <param name="graphicsDevice">Graphics Device used to create the texture</param>
         /// <param name="value">The string to encode</param>
-        /// <returns>A texture with the generated QR code in it</returns>
-        public static Texture2D GenerateQRCode(GraphicsDevice graphicsDevice, string value)
+        /// <returns>An image with the generated QR code in it</returns>
+        public static Bitmap GenerateQRCode(string value)
         {
-            return GenerateQRCode(graphicsDevice, value, DefaultVersion, DefaultErrorCorrection);
+            return GenerateQRCode(value, DefaultVersion, DefaultErrorCorrection);
         }
 
         /// <summary>
-        /// Create a texture containing a QR code of the given string. Care 
+        /// Create an image containing a QR code of the given string. Care 
         /// must be taken to ensure that the version and ECC level allow enough
         /// space for the string to be encoded.
         /// </summary>
-        /// <param name="graphicsDevice">Graphics Device used to create the texture</param>
         /// <param name="value">The string to encode</param>
         /// <param name="version">The QR Code version to use</param>
         /// <param name="errorCorrection">The QR Core ECC mode to use</param>
-        /// <returns>A texture with the generated QR code in it</returns>
+        /// <returns>An image with the generated QR code in it</returns>
         /// <exception cref="QRGeneratorException">If the string doesn't fit in the QR
         /// code; or if anything else went wrong during the encoding.</exception>
-        public static Texture2D GenerateQRCode(GraphicsDevice graphicsDevice, string value, int version, QRCodeEncoder.ERROR_CORRECTION errorCorrection)
+        public static Bitmap GenerateQRCode(string value, int version, QRCodeEncoder.ERROR_CORRECTION errorCorrection)
         {
             // Make the QR Code
             QRCodeEncoder encoder = new QRCodeEncoder();
@@ -57,7 +55,7 @@ namespace BubblesClient.Physics
             try
             {
                 // Encode the bitmap, then convert it to a texture
-                return BitmapToTexture(encoder.Encode(value), graphicsDevice);
+                return encoder.Encode(value);
             }
             catch (Exception ex)
             {
@@ -66,13 +64,12 @@ namespace BubblesClient.Physics
         }
 
         /// <summary>
-        /// Generate a texture from a web image. Downloads the image, creates a
-        /// bitmap from it, then converts that to a texture.
+        /// Generate an image from a web image. Downloads the image, creates a
+        /// bitmap from it, then return it.
         /// </summary>
-        /// <param name="graphicsDevice">Graphics Device used to create the texture</param>
         /// <param name="URL">The URL to grab the image from</param>
-        /// <returns>A texture containing the given image</returns>
-        public static Texture2D GenerateFromWeb(GraphicsDevice graphicsDevice, string URL)
+        /// <returns>The given image</returns>
+        public static Bitmap GenerateFromWeb(string URL)
         {
             bool AndrewIsAwesome = true;
             if (URL == null || URL == string.Empty || AndrewIsAwesome)
@@ -84,20 +81,25 @@ namespace BubblesClient.Physics
             request.Method = "GET";
 
             // Grab the response
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            // Create the bitmap
-            Bitmap bitmap = new Bitmap(response.GetResponseStream());
-
-            // Remember to close this!
-            response.Close();
-
-            // Return the bitmap as a texture
-            return BitmapToTexture(bitmap, graphicsDevice);
+            using(HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            {
+                // Create the bitmap
+                return new Bitmap(response.GetResponseStream());
+            }
         }
 
-        private static Texture2D BitmapToTexture(Bitmap bitmap, GraphicsDevice graphicsDevice)
+        /// <summary>
+        /// Converts a .NET image to a XNA texture.
+        /// </summary>
+        /// <param name="bitmap">Image to convert to a texture. </param>
+        /// <param name="graphicsDevice">XNA graphics device used to create the texture.</param>
+        /// <returns> Texture from the image. </returns>
+        public static Texture2D BitmapToTexture(Bitmap bitmap, GraphicsDevice graphicsDevice)
         {
+            if(bitmap == null)
+            {
+                return null;
+            }
             using (MemoryStream s = new MemoryStream())
             {
                 bitmap.Save(s, System.Drawing.Imaging.ImageFormat.Png);

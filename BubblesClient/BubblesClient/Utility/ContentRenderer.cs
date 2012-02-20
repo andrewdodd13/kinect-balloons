@@ -22,7 +22,7 @@ namespace BubblesClient.Utility
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
         private string htmlTemplate;
-        private List<IntPtr> bufferList;
+        private List<IntPtr> bufferList; //TODO GCHandle
 
         public ContentRenderer()
         {
@@ -49,8 +49,16 @@ namespace BubblesClient.Utility
             string html = htmlTemplate.Replace("@@TITLE@@", title);
             html = html.Replace("@@CONTENT@@", content);
 
-            var images = new Dictionary<string, byte[]>();
-            images.Add("qr.png", File.ReadAllBytes(@"..\..\..\..\BubblesClientContent\Images\BalloonPop.jpg"));
+            // prepare the images
+            var images = new Dictionary<string, Image>();
+            if(!String.IsNullOrWhiteSpace(balloon.Url))
+            {
+                images["qr.png"] = ImageGenerator.GenerateQRCode(balloon.Url);
+            }
+            if(!String.IsNullOrWhiteSpace(balloon.ImageUrl))
+            {
+                images["web.png"] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+            }
 
             using(Bitmap bmp = new Bitmap(boxSize.Width, boxSize.Height, pixFormat))
             {
@@ -67,7 +75,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private void RenderUsingDrawingHtml(Bitmap img, string html, Dictionary<string, byte[]> images)
+        private void RenderUsingDrawingHtml(Bitmap img, string html, Dictionary<string, Image> images)
         {
             using(Graphics g = Graphics.FromImage(img))
             {
@@ -77,7 +85,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private void RenderUsingHTMLite(Bitmap img, string html, Dictionary<string, byte[]> images)
+        private void RenderUsingHTMLite(Bitmap img, string html, Dictionary<string, Image> images)
         {
             IntPtr hLite = HTMLiteCreateInstance();
             if(hLite == IntPtr.Zero)
@@ -119,16 +127,21 @@ namespace BubblesClient.Utility
             bufferList.Clear();
         }
 
-        private uint HTMLiteCallback(IntPtr hLite, IntPtr pMsg, Dictionary<string, byte[]> images)
+        private uint HTMLiteCallback(IntPtr hLite, IntPtr pMsg, Dictionary<string, Image> images)
         {
             uint code = (uint)Marshal.ReadInt32(pMsg, 8);
             switch(code)
             {
             case HLN_LOAD_DATA:
                 NMHL_LOAD_DATA loadData = (NMHL_LOAD_DATA)Marshal.PtrToStructure(pMsg, typeof(NMHL_LOAD_DATA));
-                byte[] data;
-                if(images.TryGetValue(loadData.uri, out data))
+                Image img;
+                if(images.TryGetValue(loadData.uri, out img))
                 {
+                    // serialize the image to a stream of bytes
+                    MemoryStream ms = new MemoryStream();
+                    img.Save(ms, imgFormat);
+                    byte[] data = ms.ToArray();
+
                     // allocate an unmanaged buffer and copy the image data to that buffer
                     IntPtr hData = Marshal.AllocHGlobal(data.Length);
                     Marshal.Copy(data, 0, hData, data.Length);

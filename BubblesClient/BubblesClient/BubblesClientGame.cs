@@ -401,36 +401,40 @@ namespace BubblesClient
                 spriteBatch.Draw(bucket.Texture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
             }
 
-            //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (poppedBalloon != null && contentBoxTexture != null)
+            //display content page if balloonPopped is not null (should only be true for 30 seconds)
+            if (poppedBalloon != null)
             {
-                // Position contains the co-ordinate of the top-left corner of the box
-                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
-
-                // Draw the HTML-rendered box
-                spriteBatch.Draw(contentBoxTexture, position, Color.White);
-            }
-            else if(poppedBalloon != null)
-            {
-                // Position contains the co-ordinate of the top-left corner of the box
-                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
-
-                // Draw the box itself
-                spriteBatch.Draw(contentBox, position, Color.White);
-
-                // Draw the text
-                drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
-
-                // Draw the QR Code
-                if(poppedBalloon.BalloonContentCache.QRCode != null)
+                if(Configuration.UseHtmlRendering /* && contentBoxTexture != null */)
                 {
-                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode,
-                        position + new Vector2(contentBox.Width - 280, 24), Color.White);
-                }
+                    // Position contains the co-ordinate of the top-left corner of the box
+                    Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
 
-                // Draw the Image
-                Texture2D balloonImage = poppedBalloon.BalloonContentCache.Image;
-                spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
+                    // Draw the HTML-rendered box
+                    spriteBatch.Draw(contentBoxTexture, position, Color.White);
+                }
+                else
+                {
+                    // Position contains the co-ordinate of the top-left corner of the box
+                    Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
+
+                    // Draw the box itself
+                    spriteBatch.Draw(contentBox, position, Color.White);
+
+                    // Draw the text
+                    drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
+
+                    // Draw the QR Code
+                    if(poppedBalloon.BalloonContentCache.QRCode != null)
+                    {
+                        spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode,
+                            position + new Vector2(contentBox.Width - 280, 24), Color.White);
+                    }
+
+                    // Draw the Image
+                    Texture2D balloonImage = poppedBalloon.BalloonContentCache.Image;
+                    spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
+                }
+   
             }
             else
             {
@@ -648,20 +652,20 @@ namespace BubblesClient
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
 
             // Get the images from the cache
-            if (!balloonTextureCache.ContainsKey(b.ID))
+            if (!Configuration.UseHtmlRendering && !balloonTextureCache.ContainsKey(b.ID))
             {
+                System.Drawing.Bitmap qrImage = String.IsNullOrEmpty(b.Url) ? null : ImageGenerator.GenerateQRCode(b.Url);
+                System.Drawing.Bitmap webImage = ImageGenerator.GenerateFromWeb(b.ImageUrl);
                 BalloonContentCache cacheEntry = new BalloonContentCache()
                 {
                     ID = b.ID,
-                    QRCode = String.IsNullOrEmpty(b.Url) ? null :
-                        ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
-                    Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.ImageUrl)
+                    QRCode = ImageGenerator.BitmapToTexture(qrImage, graphics.GraphicsDevice),
+                    Image = ImageGenerator.BitmapToTexture(webImage, graphics.GraphicsDevice)
                 };
 
                 balloonTextureCache.Add(b.ID, cacheEntry);
+                b.BalloonContentCache = balloonTextureCache[b.ID];
             }
-
-            b.BalloonContentCache = balloonTextureCache[b.ID];
 
             balloons.Add(b.ID, b);
             balloonEntities[b] = balloonEntity;
