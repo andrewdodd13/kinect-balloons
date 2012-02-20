@@ -54,7 +54,7 @@ namespace BubblesClient.Utility
             {
                 if(hLite != IntPtr.Zero)
                 {
-                    HTMLiteSetCallback(this.hLite, null);
+                    HTMLiteSetCallback(hLite, null);
                 }
                 cbHandle.Free();
             }
@@ -64,7 +64,6 @@ namespace BubblesClient.Utility
                 HTMLiteDestroyInstance(hLite);
                 hLite = IntPtr.Zero;
             }
-            
 
             FreeBuffers();
         }

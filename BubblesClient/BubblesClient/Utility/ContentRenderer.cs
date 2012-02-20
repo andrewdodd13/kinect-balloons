@@ -16,7 +16,8 @@ namespace BubblesClient.Utility
     /// </summary>
     public class ContentRenderer
     {
-        private Size boxSize;
+        private Size captionBoxSize;
+        private Size contentBoxSize;
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
         private Color maskColour;
@@ -25,7 +26,8 @@ namespace BubblesClient.Utility
 
         public ContentRenderer()
         {
-            this.boxSize = new Size(1060, 650);
+            this.captionBoxSize = new Size(240, 120);
+            this.contentBoxSize = new Size(1060, 650);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
@@ -61,6 +63,36 @@ namespace BubblesClient.Utility
                 text = text.Replace(pair.Key, pair.Value);
             }
             return text;
+        }
+
+        public Texture2D RenderCaption(GraphicsDevice device, ClientBalloon balloon)
+        {
+            if(device == null)
+            {
+                return null;
+            }
+
+            // replace template parameters by their values
+            string content = (balloon.Label == null) ? "" : balloon.Label;
+            var vals = new Dictionary<string, string>();
+            vals.Add("@@CONTENT@@", content);
+            string html = FillTemplate(templates["caption_box.html"], vals);
+
+            var images = new Dictionary<string, Image>(staticImages);
+            using(Bitmap bmp = new Bitmap(captionBoxSize.Width, captionBoxSize.Height, pixFormat))
+            {
+                Stopwatch w = new Stopwatch();
+                w.Start();
+                RenderHtml(bmp, html, images);
+                w.Stop();
+                Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
+
+                using(MemoryStream ms = new MemoryStream())
+                {
+                    bmp.Save(ms, imgFormat);
+                    return Texture2D.FromStream(device, ms);
+                }
+            }
         }
 
         public Texture2D RenderContent(GraphicsDevice device, ClientBalloon balloon)
@@ -102,7 +134,7 @@ namespace BubblesClient.Utility
                 images["web.png"] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
             }
 
-            using(Bitmap bmp = new Bitmap(boxSize.Width, boxSize.Height, pixFormat))
+            using(Bitmap bmp = new Bitmap(contentBoxSize.Width, contentBoxSize.Height, pixFormat))
             {
                 Stopwatch w = new Stopwatch();
                 w.Start();

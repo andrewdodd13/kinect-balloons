@@ -1,0 +1,34 @@
+﻿<html>
+  <head>
+    <title>Content box</title>
+    <style>
+      html
+      {
+      /* Removes scrollbars with HTMLlite */
+      overflow: hidden;
+      background-color: white;
+      }
+
+      body
+      {
+      margin: 0px;
+      border: 2px solid grey;
+      padding: 05px 10px 05px 10px;
+      background-color: white white #82cafa #82cafa;
+      }
+
+      .frame
+      {
+      font-family: Tahoma;
+      font-size: 24px;
+      /* HACK: prevent text from overflowing out of the caption box or clearing the bottom border */
+      max-height: calc( 50% );
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">  
+      <p>@@CONTENT@@</p>
+    </div>
+  </body>
+</html>

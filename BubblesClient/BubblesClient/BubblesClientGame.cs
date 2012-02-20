@@ -335,31 +335,44 @@ namespace BubblesClient
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (IsCaptionDrawn(balloon))
                 {
-                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
+                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);                    
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
-                    spriteBatch.Draw(boxTexture, boxPosition, Color.White);
-
-                    // If the label is not cached then it means it has not
-                    // been formatted to fit in the box; therefore format it 
-                    // and save it back
-                    if (!balloon.IsLabelCached)
+                    if(Configuration.UseHtmlRendering)
                     {
-                        string labelText = balloon.Label;
-                        balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
-
-                        if (String.IsNullOrEmpty(balloon.Content) || (balloon.Content.Trim() == string.Empty))
+                        Texture2D caption = balloon.BalloonContentCache.Caption;
+                        if(caption != null)
                         {
-                            balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
+                            boxPosition.X -= caption.Width / 2;
+                            spriteBatch.Draw(caption, boxPosition, Color.White);
                         }
-                        else
-                        {
-                            balloon.Content = wrapText(contentFont, balloon.Content, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
-                        }
-                        balloon.IsLabelCached = true;
                     }
+                    else
+                    {
+                        boxPosition.X -= boxTexture.Width / 2;
+                        spriteBatch.Draw(boxTexture, boxPosition, Color.White);
 
-                    drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                        // If the label is not cached then it means it has not
+                        // been formatted to fit in the box; therefore format it 
+                        // and save it back
+                        if(!balloon.IsLabelCached)
+                        {
+                            string labelText = balloon.Label;
+                            balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
+
+                            if(String.IsNullOrEmpty(balloon.Content) || (balloon.Content.Trim() == string.Empty))
+                            {
+                                balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
+                            }
+                            else
+                            {
+                                balloon.Content = wrapText(contentFont, balloon.Content, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
+                            }
+                            balloon.IsLabelCached = true;
+                        }
+
+                        drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                    }
                 }
             }
 
@@ -652,20 +665,28 @@ namespace BubblesClient
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
 
+            // Create a cache entry for the balloon if needed
+            BalloonContentCache cacheEntry = null;
+            if(!balloonTextureCache.TryGetValue(b.ID, out cacheEntry))
+            {
+                cacheEntry = new BalloonContentCache() { ID = b.ID };
+                balloonTextureCache.Add(b.ID, cacheEntry);
+            }
+            b.BalloonContentCache = cacheEntry;
+
             // Get the images from the cache
             if (!Configuration.UseHtmlRendering && !balloonTextureCache.ContainsKey(b.ID))
             {
                 System.Drawing.Bitmap qrImage = String.IsNullOrEmpty(b.Url) ? null : ImageGenerator.GenerateQRCode(b.Url);
                 System.Drawing.Bitmap webImage = ImageGenerator.GenerateFromWeb(b.ImageUrl);
-                BalloonContentCache cacheEntry = new BalloonContentCache()
-                {
-                    ID = b.ID,
-                    QRCode = ImageGenerator.BitmapToTexture(qrImage, graphics.GraphicsDevice),
-                    Image = ImageGenerator.BitmapToTexture(webImage, graphics.GraphicsDevice)
-                };
+                cacheEntry.QRCode = ImageGenerator.BitmapToTexture(qrImage, graphics.GraphicsDevice);
+                cacheEntry.Image = ImageGenerator.BitmapToTexture(webImage, graphics.GraphicsDevice);
+            }
 
-                balloonTextureCache.Add(b.ID, cacheEntry);
-                b.BalloonContentCache = balloonTextureCache[b.ID];
+            // Render the balloon's caption if we already have it
+            if(Configuration.UseHtmlRendering && !String.IsNullOrWhiteSpace(b.Label))
+            {
+                cacheEntry.Caption = renderer.RenderCaption(GraphicsDevice, b);
             }
 
             balloons.Add(b.ID, b);
@@ -690,11 +711,19 @@ namespace BubblesClient
             ClientBalloon balloon;
             if (balloons.TryGetValue(bcm.BalloonID, out balloon))
             {
+                string oldLabel = balloon.Label;
+
                 balloon.Label = bcm.Label;
                 balloon.Content = bcm.Content;
                 balloon.Type = bcm.BalloonType;
                 balloon.Url = bcm.Url;
                 balloon.ImageUrl = bcm.ImageUrl;
+
+                // Render the balloon's caption again when it changes
+                if(Configuration.UseHtmlRendering && (oldLabel != balloon.Label))
+                {
+                    balloon.BalloonContentCache.Caption = renderer.RenderCaption(GraphicsDevice, balloon);
+                }
             }
         }
 
