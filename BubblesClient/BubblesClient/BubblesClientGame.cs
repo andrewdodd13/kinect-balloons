@@ -53,9 +53,9 @@ namespace BubblesClient
         private bool showBuckets = true;
         private Bucket oldBucket = null;
 
-        // If this is not null then we will be showing a balloon. We really need
-        // a state machine.
-        private ClientBalloon poppedBalloon = null;
+        // If this is not null then we will be showing a balloon. We really need a state machine.
+        private PopInfo poppedBalloon = null;
+        private GameTime currentTime;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
         {
@@ -210,6 +210,8 @@ namespace BubblesClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            currentTime = gameTime;
+
             // Query the Network Manager for events
             ProcessNetworkMessages();
 
@@ -344,7 +346,25 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
-                spriteBatch.Draw(balloon.Texture, balloonPosition, new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha));
+                Rectangle textureRect = new Rectangle((int)balloonPosition.X, (int)balloonPosition.Y,
+                                                balloon.Texture.Width, balloon.Texture.Height);
+                Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
+                if (Configuration.PopAnimationEnabled && (poppedBalloon != null) && (poppedBalloon.ID == balloon.ID))
+                {
+                    // Animate popped balloons: make the texture bigger/smaller over time through scale
+                    float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
+                    double timeDiff = currentTime.TotalGameTime.TotalSeconds - poppedBalloon.TimePopped.TotalSeconds;
+                    float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * timeDiff);
+
+                    // Scale the texture rectangle at its center and not at its top-left corner
+                    // like Draw() does when you pass a scaling factor.
+                    float newWidth = (textureRect.Width * balloonScale);
+                    float newHeight = (textureRect.Height * balloonScale);
+                    float newX = (textureRect.Center.X - newWidth * 0.5f);
+                    float newY = (textureRect.Center.Y - newHeight * 0.5f);
+                    textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
+                }
+                spriteBatch.Draw(balloon.Texture, textureRect, balloonColour);
             }
 
             // Draw all buckets
@@ -363,18 +383,18 @@ namespace BubblesClient
                 spriteBatch.Draw(contentBox, position, Color.White);
 
                 // Draw the text
-                drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
+                drawTextLabel(contentFont, poppedBalloon.Balloon.Content, position + new Vector2(24, 24));
 
                 // Draw the QR Code
-                if(poppedBalloon.BalloonContentCache.QRCode != null)
+                if(poppedBalloon.Balloon.BalloonContentCache.QRCode != null)
                 {
-                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(contentBox.Width - 280, 24), Color.White);
+                    spriteBatch.Draw(poppedBalloon.Balloon.BalloonContentCache.QRCode,
+                        position + new Vector2(contentBox.Width - 280, 24), Color.White);
                 }
 
                 // Draw the Image
-                spriteBatch.Draw(poppedBalloon.BalloonContentCache.Image,
-                    position + new Vector2(contentBox.Width - 280, contentBox.Height - poppedBalloon.BalloonContentCache.Image.Height - 24),
-                    Color.White);
+                Texture2D balloonImage = poppedBalloon.Balloon.BalloonContentCache.Image;
+                spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
             }
             else
             {
@@ -460,7 +480,7 @@ namespace BubblesClient
             }
 
             // notify the server that the ballon's decoration changed.
-            // otherwise decorations are lost when ballons change screens
+            // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
                 ScreenManager.UpdateBalloonDetails(balloon);
@@ -478,12 +498,15 @@ namespace BubblesClient
                 throw new ArgumentOutOfRangeException("e", "No such balloon in received message.");
             }
 
+            PopInfo info = new PopInfo(balloon);
+            info.TimePopped = currentTime.TotalGameTime;
+
             balloon.Popped = true;
 
             // Display content only asked and if balloon is not customizable type
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
-                poppedBalloon = balloon;
+                poppedBalloon = info;
                 ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
                 {
                     poppedBalloon = null;
@@ -509,8 +532,8 @@ namespace BubblesClient
                 // Disable the body's physics
                 balloonEntities[balloon].Body.Enabled = false;
 
-                poppedBalloon = balloon;
-                ScreenManager.CallLater(2500, delegate()
+                // Remove the balloon after the animation ends
+                ScreenManager.CallLater(Configuration.PopAnimationTime, delegate()
                 {
                     this.RemoveBalloonFromMappings(balloon.ID);
                 });

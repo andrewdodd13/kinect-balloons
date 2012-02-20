@@ -75,6 +75,22 @@ namespace Balloons.Messaging.Model
         /// </summary>
         public static int MessageDisplayTime = 30 * 1000;      // TODO TimeSpan?
         /// <summary>
+        /// How long (in ms) the balloon pop animation should be shown.
+        /// </summary>
+        public static int PopAnimationTime = 2500;
+        /// <summary>
+        /// Whether the balloon pop animation is enabled or disabled (in that case the pop texture is static).
+        /// </summary>
+        public static bool PopAnimationEnabled = true;
+        /// <summary>
+        /// Alpha parameter of the balloon pop animation. Controls how much smaller/bigger the texture becomes.
+        /// </summary>
+        public static float PopAnimationAlpha = 0.3f;
+        /// <summary>
+        /// Beta parameter of the balloon pop animation. Controls how fast the size of the texture changes.
+        /// </summary>
+        public static float PopAnimationBeta = 5.0f;
+        /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
         public static IPAddress RemoteIPAddress = IPAddress.Loopback;
@@ -193,6 +209,10 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "ScreenWidth", ScreenWidth);
             StoreValue(settings, "ScreenHeight", ScreenHeight);
             StoreValue(settings, "MessageDisplayTime", MessageDisplayTime);
+            StoreValue(settings, "PopAnimationTime", PopAnimationTime);
+            StoreValue(settings, "PopAnimationEnabled", PopAnimationEnabled);
+            StoreValue(settings, "PopAnimationAlpha", PopAnimationAlpha);
+            StoreValue(settings, "PopAnimationBeta", PopAnimationBeta);
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
             StoreValue(settings, "EnableHighFive", EnableHighFive);
@@ -260,6 +280,10 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "ScreenWidth", ref ScreenWidth);
             LoadValue(settings, "ScreenHeight", ref ScreenHeight);
             LoadValue(settings, "MessageDisplayTime", ref MessageDisplayTime);
+            LoadValue(settings, "PopAnimationTime", ref PopAnimationTime);
+            LoadValue(settings, "PopAnimationEnabled", ref PopAnimationEnabled);
+            LoadValue(settings, "PopAnimationAlpha", ref PopAnimationAlpha);
+            LoadValue(settings, "PopAnimationBeta", ref PopAnimationBeta);
             LoadValue(settings, "RemoteIPAddress", ref RemoteIPAddress);
             LoadValue(settings, "RemotePort", ref RemotePort);
             LoadValue(settings, "EnableHighFive", ref EnableHighFive);
