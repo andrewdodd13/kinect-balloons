@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace BubblesClient.Utility
@@ -9,6 +11,8 @@ namespace BubblesClient.Utility
     public class HTMLite : IDisposable
     {
         private IntPtr hLite;
+        private GCHandle cbHandle;
+        private List<GCHandle> bufferList;
 
         public HTMLite()
         {
@@ -17,6 +21,7 @@ namespace BubblesClient.Utility
             {
                 throw new Exception("Could not load HTMLlite");
             }
+            this.bufferList = new List<GCHandle>();
         }
 
         ~HTMLite()
@@ -31,6 +36,13 @@ namespace BubblesClient.Utility
                 HTMLiteDestroyInstance(hLite);
                 hLite = IntPtr.Zero;
             }
+
+            if(cbHandle.IsAllocated)
+            {
+                cbHandle.Free();
+            }
+
+            FreeBuffers();
         }
 
         public void LoadHtmlFromMemory(string baseURI, byte[] data)
@@ -51,10 +63,19 @@ namespace BubblesClient.Utility
             ThrowOnError(result);
         }
 
-        public void Render(IntPtr hDc, int x, int y, int sx, int sy)
+        public void Render(Graphics g, int x, int y, int sx, int sy)
         {
-            uint result = HTMLiteRender(hLite, hDc, x, y, sx, sy);
-            ThrowOnError(result);
+            IntPtr hDc = g.GetHdc();
+            try
+            {
+                uint result = HTMLiteRender(hLite, hDc, x, y, sx, sy);
+                ThrowOnError(result);
+            }
+            finally
+            {
+                g.ReleaseHdc(hDc);
+                FreeBuffers();
+            }
         }
 
         public void RenderOnBitmap(IntPtr hBmp, int x, int y, int sx, int sy)
@@ -63,15 +84,40 @@ namespace BubblesClient.Utility
             ThrowOnError(result);
         }
 
-        public void SetDataReady(string url, IntPtr data, uint dataSize)
+        public void SetDataReady(string url, byte[] data)
         {
-            uint result = HTMLiteSetDataReady(hLite, url, data, dataSize);
+            GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            bufferList.Add(dataHandle);
+            uint result = HTMLiteSetDataReady(hLite, url, dataHandle.AddrOfPinnedObject(), (uint)data.Length);
             ThrowOnError(result);
+        }
+
+        private void FreeBuffers()
+        {
+            // un-pin the memory allocated for the data
+            foreach(GCHandle pData in bufferList)
+            {
+                pData.Free();
+            }
+            bufferList.Clear();
         }
 
         public void SetCallback(Callback cb)
         {
-            uint result = HTMLiteSetCallback(hLite, (handle, msg) => cb(this, msg));
+            if(cbHandle.IsAllocated)
+            {
+                cbHandle.Free();
+            }
+
+            // keep the callback object alive until Dispose is called
+            HTMLCallback internalCb = delegate(IntPtr handle, IntPtr msg)
+            {
+                MessageCode code = (MessageCode)Marshal.ReadInt32(msg, 8);
+                return cb(this, code, msg);
+            };
+            cbHandle = GCHandle.Alloc(internalCb);
+
+            uint result = HTMLiteSetCallback(hLite, internalCb);
             ThrowOnError(result);
         }
 
@@ -160,7 +206,7 @@ namespace BubblesClient.Utility
             public uint dataType;
         }
 
-        public delegate uint Callback(HTMLite h, IntPtr pMsg);
+        public delegate uint Callback(HTMLite h, MessageCode code, IntPtr pMsg);
         #endregion
 
         #region P/invoke stuff

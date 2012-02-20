@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using BubblesClient.Model;
@@ -23,7 +22,6 @@ namespace BubblesClient.Utility
         private Color maskColour;
         private Dictionary<string, string> templates;
         private Dictionary<string, Image> staticImages;
-        private List<GCHandle> bufferList;
 
         public ContentRenderer()
         {
@@ -33,7 +31,6 @@ namespace BubblesClient.Utility
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
             this.templates = new Dictionary<string, string>();
             this.staticImages = new Dictionary<string, Image>();
-            this.bufferList = new List<GCHandle>();
         }
 
         public void LoadContent(ContentManager manager)
@@ -127,47 +124,26 @@ namespace BubblesClient.Utility
             // encode the HTML page text to bytes
             byte[] htmlData = Encoding.UTF8.GetBytes(html);
 
-            // this callback is used to load images
-            HTMLite.Callback callback = (handle, pMsg) => HTMLiteCallback(handle, pMsg, images);
-
-            // keep the callback object alive until the library is released
-            GCHandle cbHandle = GCHandle.Alloc(callback, GCHandleType.Normal);
-            try
+            using(HTMLite hLite = new HTMLite())
             {
-                using(HTMLite hLite = new HTMLite())
-                {
-                    hLite.SetCallback(callback);
-                    // load the HTML page data
-                    hLite.LoadHtmlFromMemory("content.html", htmlData);
-                    // set the HTML page size
-                    hLite.Measure(img.Width, img.Height);
+                // this callback is used to load images
+                hLite.SetCallback((handle, code, pMsg) => HTMLiteCallback(handle, code, pMsg, images));
+                // load the HTML page data
+                hLite.LoadHtmlFromMemory("content.html", htmlData);
+                // set the HTML page size
+                hLite.Measure(img.Width, img.Height);
 
-                    // render the HTML page to the image
-                    using(Graphics g = Graphics.FromImage(img))
-                    {
-                        g.Clear(Color.Transparent);
-                        IntPtr hDc = g.GetHdc();
-                        hLite.Render(hDc, 0, 0, img.Width, img.Height);
-                        g.ReleaseHdc(hDc);
-                    }
+                // render the HTML page to the image
+                using(Graphics g = Graphics.FromImage(img))
+                {
+                    g.Clear(Color.Transparent);
+                    hLite.Render(g, 0, 0, img.Width, img.Height);
                 }
             }
-            finally
-            {
-                cbHandle.Free();
-            }
-
-            // un-pin the memory allocated for the images
-            foreach(GCHandle pData in bufferList)
-            {
-                pData.Free();
-            }
-            bufferList.Clear();
         }
 
-        private uint HTMLiteCallback(HTMLite hLite, IntPtr pMsg, Dictionary<string, Image> images)
+        private uint HTMLiteCallback(HTMLite hLite, HTMLite.MessageCode code, IntPtr pMsg, Dictionary<string, Image> images)
         {
-            HTMLite.MessageCode code = (HTMLite.MessageCode)Marshal.ReadInt32(pMsg, 8);
             switch(code)
             {
             case HTMLite.MessageCode.HLN_LOAD_DATA:
@@ -179,12 +155,7 @@ namespace BubblesClient.Utility
                     MemoryStream ms = new MemoryStream();
                     img.Save(ms, imgFormat);
                     byte[] data = ms.ToArray();
-
-                    // pass the buffer to the library
-                    GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
-                    bufferList.Add(dataHandle);
-                    IntPtr hData = dataHandle.AddrOfPinnedObject();
-                    hLite.SetDataReady(loadData.uri, hData, (uint)data.Length);
+                    hLite.SetDataReady(loadData.uri, data);
                 }
                 break;
             }
