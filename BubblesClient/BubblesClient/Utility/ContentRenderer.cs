@@ -23,6 +23,7 @@ namespace BubblesClient.Utility
         private ImageFormat imgFormat;
         private Color maskColour;
         private string htmlTemplate;
+        private Dictionary<string, Image> staticImages;
         private List<GCHandle> bufferList;
 
         public ContentRenderer()
@@ -31,13 +32,23 @@ namespace BubblesClient.Utility
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
+            this.staticImages = new Dictionary<string, Image>();
             this.bufferList = new List<GCHandle>();
         }
 
-        public void LoadTemplate(ContentManager manager)
+        public void LoadContent(ContentManager manager)
         {
-            string path = Path.Combine(manager.RootDirectory, "Html/content_box.html");
+            string path = Path.Combine(manager.RootDirectory, @"Html\content_box.html");
             htmlTemplate = File.ReadAllText(path);
+
+            LoadImage(manager.RootDirectory, "thumbs-up.png");
+            LoadImage(manager.RootDirectory, "thumbs-down.png");
+        }
+
+        private void LoadImage(string path, string key)
+        {
+            string file = Path.Combine(path, Path.Combine("Images", key));
+            staticImages[key] = Image.FromFile(file);
         }
 
         private string FillHTMLTemplate(Dictionary<string, string> vals)
@@ -64,10 +75,22 @@ namespace BubblesClient.Utility
             vals.Add("@@TITLE@@", title);
             vals.Add("@@CONTENT@@", content);
             vals.Add("@@MASK-COLOR@@", ColorTranslator.ToHtml(maskColour));
+            if(balloon.Votes >= 0)
+            {
+                vals.Add("@@VOTES@@", balloon.Votes.ToString());
+                vals.Add("@@THUMBS-CLASS@@", "thumbsUp");
+                vals.Add("@@THUMBS-IMG@@", "thumbs-up.png");
+            }
+            else
+            {
+                vals.Add("@@VOTES@@", (-balloon.Votes).ToString());
+                vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
+                vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
+            }
             string html = FillHTMLTemplate(vals);
 
             // prepare the images
-            var images = new Dictionary<string, Image>();
+            var images = new Dictionary<string, Image>(staticImages);
             if(!String.IsNullOrWhiteSpace(balloon.Url))
             {
                 images["qr.png"] = ImageGenerator.GenerateQRCode(balloon.Url);

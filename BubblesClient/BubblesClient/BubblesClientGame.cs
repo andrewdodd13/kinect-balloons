@@ -191,7 +191,7 @@ namespace BubblesClient
             };
 
             boxTexture = Content.Load<Texture2D>("Images/Box");
-            renderer.LoadTemplate(Content);
+            renderer.LoadContent(Content);
 
             // Create buckets
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/BucketRed"), Color.Red));

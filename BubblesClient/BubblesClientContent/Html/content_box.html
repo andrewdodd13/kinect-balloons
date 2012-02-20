@@ -20,10 +20,35 @@
       padding: 20px 30px 20px 30px;
       color: black;
       border-bottom: 2px solid grey;
+      }
+
+      .heading
+      {
       font-size: 40px;
       font-weight: bold;
       font-family: Cambria;
-      vertical-align: middle;
+      }
+
+      .thumbsUp, .thumbsDown
+      {
+      font-size: 40px;
+      font-family: Calibri;
+      font-weight: bold;
+      }
+
+      .thumbsUp
+      {
+      color: green;
+      }
+
+      .thumbsDown
+      {
+      color: red;
+      }
+
+      .thumbsUp > img, .thumbsDown > img
+      {
+      width: 30px;
       }
 
       .frame
@@ -74,7 +99,12 @@
   <body>
     <div class="frame">
       <div class="header">
-        <span>@@TITLE@@</span>
+        <table border="0" width="100%">
+          <tr>
+            <td width="90%"><span class="heading">@@TITLE@@</span></td>
+            <td><span class="@@THUMBS-CLASS@@"><img src="@@THUMBS-IMG@@"> @@VOTES@@</span></td>
+          </tr>
+        </table>
       </div>
       <div class="content">
         <table border="0" width="100%">
