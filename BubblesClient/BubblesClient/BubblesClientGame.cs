@@ -39,7 +39,7 @@ namespace BubblesClient
 
         // Input
         private IInputController input;
-        private Color[] userColours = { Color.Red, Color.Blue }; // Move this to config?
+        private Color[] userColours = { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple }; // Move this to config?
 
         // Physics World
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
