@@ -63,10 +63,10 @@ class Api extends CI_Controller {
 
         return (object) array(
             'ContentID' => 't' . $tweet->id,
-            'Title' => $tweet->text,
+            'Title' => 'Tweet from @' . $tweet->user->screen_name,
             'SubmittedBy' => $tweet->user->screen_name,
             'TimeCreated' => strtotime($tweet->created_at),
-            'Excerpt' => '',
+            'Excerpt' => $tweet->text,
             'URL' => $tweetURL,
             'ImageURL' => $tweet->user->profile_image_url,
             'BalloonColour' => TWITTER_BALLOON_COLOR,
