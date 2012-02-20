@@ -270,7 +270,7 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x => RemoveBalloon(x));
+            removals.ForEach(x => RemoveBalloon(x, false));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -517,15 +517,18 @@ namespace BubblesClient
         /// Removes (immediately) the given balloon from the physics world and screen.
         /// </summary>
         /// <param name="balloon">Balloon to remove. </param>
-        private void RemoveBalloon(ClientBalloon balloon)
+        private void RemoveBalloon(ClientBalloon balloon, Boolean animate = true)
         {
-            // Create a new pop animation
-            PopAnim anim = new PopAnim(balloon);
-            anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
-            anim.TimePopped = currentTime.TotalGameTime;
-            anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
-            anim.PopColour = new Colour(255, 255, 255, 255);
-            popAnimations.Add(anim);
+            if (animate)
+            {
+                // Create a new pop animation
+                PopAnim anim = new PopAnim(balloon);
+                anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+                anim.TimePopped = currentTime.TotalGameTime;
+                anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
+                anim.PopColour = new Colour(255, 255, 255, 255);
+                popAnimations.Add(anim);
+            }
 
             // Remove balloon from screen.
             physicsManager.RemoveEntity(balloonEntities[balloon]);
