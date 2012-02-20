@@ -330,7 +330,7 @@ namespace BubblesClient.Physics
 
         public void ApplyWind()
         {
-            Vector2 windForce = new Vector2(1, 0);
+            Vector2 windForce = new Vector2(4, 0);
             // Hmm, is there a better way to get the balloon & bodies?
             foreach (Body body in entities.Keys)
             {
@@ -341,10 +341,10 @@ namespace BubblesClient.Physics
                     body.ApplyForce(new Vector2(0, -7));
 
                     // Apply roof repelant force
-                    int jiggleForce = 20; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
-                    if (body.Position.Y < 2)
+                    int jiggleForce = 1300; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
+                    if (body.Position.Y < 1.5)
                     {
-                        body.ApplyForce(new Vector2(0, 10 * (2 - body.Position.Y) + rnd.Next(jiggleForce)));
+                        body.ApplyForce(new Vector2(0, 200 + 10 * (2 - body.Position.Y) + rnd.Next(jiggleForce)));
                     }
 
                     // Apply anti-dead zone force
