@@ -22,14 +22,14 @@ namespace BubblesClient.Utility
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
         private string htmlTemplate;
-        private List<IntPtr> bufferList; //TODO GCHandle
+        private List<GCHandle> bufferList;
 
         public ContentRenderer()
         {
             this.boxSize = new Size(1027, 722);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
-            this.bufferList = new List<IntPtr>();
+            this.bufferList = new List<GCHandle>();
         }
 
         public void LoadTemplate(ContentManager manager)
@@ -129,10 +129,10 @@ namespace BubblesClient.Utility
                 cbHandle.Free();
             }
 
-            // clean up the memory allocated for the images
-            foreach(IntPtr pData in bufferList)
+            // un-pin the memory allocated for the images
+            foreach(GCHandle pData in bufferList)
             {
-                Marshal.FreeHGlobal(pData);
+                pData.Free();
             }
             bufferList.Clear();
         }
@@ -152,12 +152,10 @@ namespace BubblesClient.Utility
                     img.Save(ms, imgFormat);
                     byte[] data = ms.ToArray();
 
-                    // allocate an unmanaged buffer and copy the image data to that buffer
-                    IntPtr hData = Marshal.AllocHGlobal(data.Length);
-                    Marshal.Copy(data, 0, hData, data.Length);
-                    bufferList.Add(hData);
-
                     // pass the buffer to the library
+                    GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                    bufferList.Add(dataHandle);
+                    IntPtr hData = dataHandle.AddrOfPinnedObject();
                     ThrowOnError(HTMLiteSetDataReady(hLite, loadData.uri, hData, (uint)data.Length));
                 }
                 break;
