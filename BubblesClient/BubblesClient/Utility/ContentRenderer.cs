@@ -27,7 +27,7 @@ namespace BubblesClient.Utility
 
         public ContentRenderer()
         {
-            this.boxSize = new Size(1060, 630);
+            this.boxSize = new Size(1060, 650);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
