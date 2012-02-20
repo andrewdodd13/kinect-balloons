@@ -115,7 +115,7 @@ namespace Balloons.Messaging.Model
         /// The minimum speed a hand must be moving to be valid to clap
         /// Units are meters/sec
         /// </summary>
-        public static float KinectMovementThreshold = 10;
+        public static float KinectMovementThreshold = 2;
         /// <summary>
         /// The minimum range a hand must be from a balloon before it is valid to burt it
         /// Units are meters
@@ -126,7 +126,7 @@ namespace Balloons.Messaging.Model
         /// Also used as tolerance angle for if hands are moving towards each other
         /// Unit is cos(angle) [Range 0 to 1]
         /// </summary>
-        public static double KinectMinAttackAngle = 0.5;
+        public static double KinectMinAttackAngle = 0.4;
         #endregion
 
         #region Server settings

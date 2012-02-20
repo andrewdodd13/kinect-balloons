@@ -38,7 +38,7 @@ namespace BubblesClient
 
         // Input
         private IInputController input;
-        private Color[] userColours = { Color.Red, Color.Blue }; // Move this to config?
+        private Color[] userColours = { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple }; // Move this to config?
 
         // Physics World
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
@@ -156,6 +156,9 @@ namespace BubblesClient
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
+
+            // This doesn't seem like the best place for this, but set hand size from the texture
+            physicsManager.setHandSizePixels(handTexture.Width);
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {

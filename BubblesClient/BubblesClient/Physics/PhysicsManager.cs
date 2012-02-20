@@ -24,6 +24,8 @@ namespace BubblesClient.Physics
 
         private Random rnd = new Random();
 
+        private float handSize = 1f;
+
         public event EventHandler<BalloonPoppedEventArgs> BalloonPopped;
         public class BalloonPoppedEventArgs : EventArgs
         {
@@ -242,10 +244,16 @@ namespace BubblesClient.Physics
             return null;
         }
 
+        public void setHandSizePixels(float size)
+        {
+            handSize = size / MeterInPixels;
+            handSize /= 2; // we store the radius
+        }
+
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(world, 1f, 1f, 1f, handPos / MeterInPixels);
+            Body handBody = BodyFactory.CreateCircle(world, handSize, 1f, handPos / MeterInPixels);
             handBody.BodyType = BodyType.Dynamic;
 
             // Check what hands should be colliding with
@@ -322,7 +330,7 @@ namespace BubblesClient.Physics
 
         public void ApplyWind()
         {
-            Vector2 windForce = new Vector2(1, 0);
+            Vector2 windForce = new Vector2(4, 0);
             // Hmm, is there a better way to get the balloon & bodies?
             foreach (Body body in entities.Keys)
             {
@@ -333,10 +341,10 @@ namespace BubblesClient.Physics
                     body.ApplyForce(new Vector2(0, -7));
 
                     // Apply roof repelant force
-                    int jiggleForce = 20; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
-                    if (body.Position.Y < 2)
+                    int jiggleForce = 1300; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
+                    if (body.Position.Y < 1.5)
                     {
-                        body.ApplyForce(new Vector2(0, 10 * (2 - body.Position.Y) + rnd.Next(jiggleForce)));
+                        body.ApplyForce(new Vector2(0, 200 + 10 * (2 - body.Position.Y) + rnd.Next(jiggleForce)));
                     }
 
                     // Apply anti-dead zone force
