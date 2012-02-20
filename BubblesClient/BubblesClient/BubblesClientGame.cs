@@ -9,6 +9,7 @@ using BubblesClient.Physics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using BubblesClient.Utility;
 
 namespace BubblesClient
 {
@@ -18,16 +19,14 @@ namespace BubblesClient
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
         // Textures
-        private Texture2D skyTexture, handTexture, contentBox;
+        private Texture2D skyTexture, handTexture;
 
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
         private Texture2D[] balloonPopTextures;
 
         private Texture2D boxTexture;
-        private SpriteFont contentFont, summaryFont;
-
-        private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
+        private SpriteFont summaryFont;
 
         // Network
         public ScreenManager ScreenManager { get; private set; }
@@ -53,7 +52,8 @@ namespace BubblesClient
         private Bucket oldBucket = null;
 
         // If this is not null then we will be showing a balloon. We really need a state machine.
-        private ClientBalloon poppedBalloon = null;
+        private ContentBox contentBox;
+
         private List<PopAnim> popAnimations = new List<PopAnim>();
         private GameTime currentTime;
 
@@ -81,6 +81,9 @@ namespace BubblesClient
             }
             graphics.PreferMultiSampling = true;
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+
+            // Create a new content box
+            contentBox = new ContentBox(screenDimensions, graphics);
 
             // Initialise Input
             this.input = controller;
@@ -149,12 +152,10 @@ namespace BubblesClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            contentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
             summaryFont = Content.Load<SpriteFont>("Fonts/SpriteFontLarge");
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
-            contentBox = Content.Load<Texture2D>("Images/ContentBox");
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
@@ -192,6 +193,24 @@ namespace BubblesClient
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketGreen"), Color.Green));
             buckets.Add(new DecorationBucket(Content.Load<Texture2D>("Images/bucketStripes"), OverlayType.Stripes));
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketBlue"), Color.Blue));
+
+            // Set up the content box
+            contentBox.TitleFont = Content.Load<SpriteFont>("Fonts/Content-Title");
+            contentBox.ContentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
+            contentBox.BoxTexture = Content.Load<Texture2D>("Images/ContentBox");
+            contentBox.CloseIconTexture = Content.Load<Texture2D>("Images/CloseIcon");
+
+            List<Texture2D> countDownImages = new List<Texture2D>();
+            for (int i = 0; i <= 30; i++)
+            {
+                countDownImages.Add(Content.Load<Texture2D>("Images/Countdown/" + i));
+            }
+            contentBox.CountDownImages = countDownImages;
+
+            contentBox.OnClose += delegate(object sender, EventArgs args)
+            {
+                physicsManager.EnableHandCollisions();
+            };
         }
 
         /// <summary>
@@ -215,7 +234,7 @@ namespace BubblesClient
             // Query the Network Manager for events
             ProcessNetworkMessages();
 
-            this.HandleInput();
+            this.HandleInput(gameTime);
 
             physicsManager.ApplyWind();
             physicsManager.Update(gameTime);
@@ -277,6 +296,9 @@ namespace BubblesClient
                 }
             }
 
+            // Update the content box if it is visible
+            if (contentBox.VisibleBalloon != null) { contentBox.Update(gameTime); }
+
             base.Update(gameTime);
         }
 
@@ -327,20 +349,11 @@ namespace BubblesClient
                     if (!balloon.IsLabelCached)
                     {
                         string labelText = balloon.Label;
-                        balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
-
-                        if (String.IsNullOrEmpty(balloon.Content) || (balloon.Content.Trim() == string.Empty))
-                        {
-                            balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
-                        }
-                        else
-                        {
-                            balloon.Content = wrapText(contentFont, balloon.Content, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
-                        }
+                        balloon.Label = TextUtility.wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
                         balloon.IsLabelCached = true;
                     }
 
-                    drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                    TextUtility.drawTextLabel(spriteBatch, summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
                 }
             }
 
@@ -382,28 +395,10 @@ namespace BubblesClient
                 spriteBatch.Draw(bucket.Texture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
             }
 
-            //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (poppedBalloon != null)
+            // Display content page if the contentBox has a balloon
+            if (contentBox.VisibleBalloon != null)
             {
-                // Position contains the co-ordinate of the top-left corner of the box
-                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
-
-                // Draw the box itself
-                spriteBatch.Draw(contentBox, position, Color.White);
-
-                // Draw the text
-                drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
-
-                // Draw the QR Code
-                if (poppedBalloon.BalloonContentCache.QRCode != null)
-                {
-                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode,
-                        position + new Vector2(contentBox.Width - 280, 24), Color.White);
-                }
-
-                // Draw the Image
-                Texture2D balloonImage = poppedBalloon.BalloonContentCache.Image;
-                spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
+                contentBox.Draw(spriteBatch);
             }
 
             // Draw all of the registered hands
@@ -428,55 +423,34 @@ namespace BubblesClient
                 !String.IsNullOrWhiteSpace(balloon.Label);
         }
 
-        private void HandleInput()
+        private void HandleInput(GameTime gameTime)
         {
-            physicsManager.UpdateHandPositions(input.GetHandPositions());
-        }
+            Hand[] hands = input.GetHandPositions();
+            physicsManager.UpdateHandPositions(hands);
 
-        /// <summary>
-        /// This function takes a string and a vector2. It splits the string given by spaces
-        /// and then for each word it will check the length of it against the length of the
-        /// vector2 given in. When the word is passed the edge a new line is put in.
-        /// </summary>
-        /// <param name="font">The font to use for measuments</param>
-        /// <param name="text">Text to be wrapped</param>
-        /// <param name="containerDemensions">Dimensions of the container the text is to be wrapped in</param>
-        /// <returns>The text including newlines to fit into the container</returns>
-        private String wrapText(SpriteFont font, String text, Vector2 containerDemensions)
-        {
-            String line = String.Empty;
-            String returnString = String.Empty;
-            String[] wordArray = text.Split(' ');
-
-            foreach (String word in wordArray)
+            // If the content box is visible, check if the hands are in the correct position
+            if (contentBox.VisibleBalloon != null)
             {
-                if (font.MeasureString(line + word).Length() > containerDemensions.X)
+                bool insideThisFrame = false;
+                foreach (Hand hand in hands)
                 {
-                    returnString += line + '\n';
-                    line = String.Empty;
-
-                    // If the string is longer than the box, we need to stop
-                    if (font.MeasureString(returnString).Y > containerDemensions.Y)
+                    // If hand's position is inside (SW-128 -> SW, 0 -> 128) then... do something
+                    if ((hand.Position.X >= screenDimensions.X - 128 && hand.Position.X <= screenDimensions.X) &&
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 128))
                     {
+                        insideThisFrame = true;
                         break;
                     }
                 }
 
-                line += word + ' ';
-            }
-
-            return returnString + line;
-        }
-
-        private void drawTextLabel(SpriteFont font, String text, Vector2 pos)
-        {
-            try
-            {
-                spriteBatch.DrawString(font, text, pos, Color.Black);
-            }
-            catch (Exception)
-            {
-                spriteBatch.DrawString(font, "Invalid character", pos, Color.Red);
+                if (insideThisFrame)
+                {
+                    contentBox.CountDownCloseTimer(gameTime);
+                }
+                else
+                {
+                    contentBox.CancelCloseTimer();
+                }
             }
         }
 
@@ -517,13 +491,8 @@ namespace BubblesClient
             balloon.Popped = true;
             if (showContent)
             {
-                poppedBalloon = balloon;
+                contentBox.VisibleBalloon = balloon;
                 physicsManager.DisableHandCollisions();
-                ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
-                {
-                    poppedBalloon = null;
-                    physicsManager.EnableHandCollisions();
-                });
             }
 
             RemoveBalloon(balloon);
@@ -617,22 +586,6 @@ namespace BubblesClient
             Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
-
-            // Get the images from the cache
-            if (!balloonTextureCache.ContainsKey(b.ID))
-            {
-                BalloonContentCache cacheEntry = new BalloonContentCache()
-                {
-                    ID = b.ID,
-                    QRCode = String.IsNullOrEmpty(b.Url) ? null :
-                        ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
-                    Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.ImageUrl)
-                };
-
-                balloonTextureCache.Add(b.ID, cacheEntry);
-            }
-
-            b.BalloonContentCache = balloonTextureCache[b.ID];
 
             balloons.Add(b.ID, b);
             balloonEntities[b] = balloonEntity;

@@ -5,7 +5,7 @@ using System;
 using System.Drawing;
 using System.Net;
 
-namespace BubblesClient.Physics
+namespace BubblesClient.Utility
 {
     public class QRGeneratorException : Exception
     {
