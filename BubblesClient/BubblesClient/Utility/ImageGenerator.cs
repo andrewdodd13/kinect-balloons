@@ -71,11 +71,12 @@ namespace BubblesClient.Utility
         /// <returns>The given image</returns>
         public static Bitmap GenerateFromWeb(string URL)
         {
-            bool AndrewIsAwesome = true;
+            /*bool AndrewIsAwesome = true;
             if (URL == null || URL == string.Empty || AndrewIsAwesome)
             {
                 URL = "http://www2.macs.hw.ac.uk/~ad133/pussy.jpg";
-            }
+            }*/
+
             // Create the web request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.Method = "GET";

@@ -14,9 +14,11 @@
       {
       background-color:	#D0D0D0;
       border: 0px;
+      border-radius: 15px;
+      border-color: block;
       padding: 10px 20px 10px 20px;
       color: black;
-      font-size: 20px;
+      font-size: 40px;
       font-weight: bold;
       font-family: Calibri;
       vertical-align: middle;
@@ -28,16 +30,10 @@
       margin: 10px 0px 10px 0px;
       }
 
-      /*.frame
-      {
-      width: 800px;
-      height: 800px;
-      }*/
-
       .content
       {
-      font-weight: bold;
       font-family: Calibri;
+      font-size: 32px;
       width: 100%;
       }
     </style>
@@ -50,22 +46,18 @@
       <div class="content">
         <table border="0" width="100%">
           <tr>
-            <td width="70%">
-              <div style="background-color:	#D0D0D0; margin-right: 5px; padding: 5px; height: 100%;">
-                <p>
+            <td width="100%">
+              <div style="background-color:	#D0D0D0; margin-right: 5px; height: 100%;">
+                <p style="margin: 20px;">
                   @@CONTENT@@
                 </p>
               </div>
             </td>
 
-            <td width="30%" height="100%">
-              <div style="background-color:	#D0D0D0; margin-left: 5px; padding: 5px; height: 100%;">
-                <div style="width: 240px; height: 240px; margin: 5px; background-color: black;">
-                  <img src="qr.png" height="230" width="230"></img>
-                </div>
-                <div style="width: 240px; height: 240px; margin: 5px; background-color: black;">
-                  <img src="web.png" height="230" width="230"></img>
-                </div>
+            <td>
+              <div style="background-color:	#D0D0D0; margin-left: 5px; padding: 0px; height: 100%;">
+                <img src="qr.png" height="230" width="230" style="margin: 10px 10px 05px 10px;"></img>
+                <img src="web.png" height="230" width="230" style="margin: 05px 10px 10px 10px;"></img>
               </div>
             </td>
           </tr>
