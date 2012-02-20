@@ -202,18 +202,7 @@ namespace BubblesClient
             // Query the Network Manager for events
             ProcessNetworkMessages();
 
-            // Query the Input Library if there isn't currently a message displayed.
-            if (poppedBalloon == null)
-            {
-                this.HandleInput();
-            }
-            else
-            {
-                if (input.ShouldClosePopup())
-                {
-                    poppedBalloon = null;
-                }
-            }
+            this.HandleInput();
 
             physicsManager.ApplyWind();
             physicsManager.Update(gameTime);
@@ -354,7 +343,7 @@ namespace BubblesClient
                 drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
 
                 // Draw the QR Code
-                if(poppedBalloon.BalloonContentCache.QRCode != null)
+                if (poppedBalloon.BalloonContentCache.QRCode != null)
                 {
                     spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode, position + new Vector2(contentBox.Width - 280, 24), Color.White);
                 }
@@ -364,17 +353,15 @@ namespace BubblesClient
                     position + new Vector2(contentBox.Width - 280, contentBox.Height - poppedBalloon.BalloonContentCache.Image.Height - 24),
                     Color.White);
             }
-            else
+
+            // Draw all of the registered hands
+            foreach (WorldEntity handBody in physicsManager.GetHandPositions())
             {
-                // Draw all of the registered hands
-                foreach (WorldEntity handBody in physicsManager.GetHandPositions())
-                {
-                    Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
-                    Hand hand = physicsManager.GetHandForHandEntity(handBody);
-                    Color col = userColours[hand.ID];
-                    SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                    spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
-                }
+                Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
+                Hand hand = physicsManager.GetHandForHandEntity(handBody);
+                Color col = userColours[hand.ID];
+                SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
             }
 
             spriteBatch.End();
@@ -472,11 +459,13 @@ namespace BubblesClient
             if (BalloonType.Customizable != balloon.Type && showContent)
             {
                 poppedBalloon = balloon;
+                physicsManager.DisableHandCollisions();
 
                 Timer timer = new Timer();
                 timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
                 {
                     poppedBalloon = null;
+                    physicsManager.EnableHandCollisions();
                     timer.Stop();
                 };
                 timer.Interval = Configuration.MessageDisplayTime;
