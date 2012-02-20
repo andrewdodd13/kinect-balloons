@@ -250,7 +250,12 @@ namespace BubblesClient.Physics
             // Hands only collide with balloons for the moment
             handBody.OnCollision += delegate(Fixture fixtureA, Fixture fixtureB, Contact contact)
             {
-                return (entities[fixtureB.Body].Type == WorldEntity.EntityType.Balloon);
+                WorldEntity entity;
+                if(entities.TryGetValue(fixtureB.Body, out entity))
+                {
+                    return (entity.Type == WorldEntity.EntityType.Balloon);
+                }
+                return false;
             };
 
             FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
