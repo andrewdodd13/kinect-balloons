@@ -14,7 +14,7 @@
 | path to your installation.
 |
 */
-$config['base_url']	= 'http://www2.macs.hw.ac.uk/~amm22/bubblesportal';
+$config['base_url']	= 'http://www.macs.hw.ac.uk/~cgw4/balloons/';
 
 /*
 |--------------------------------------------------------------------------
