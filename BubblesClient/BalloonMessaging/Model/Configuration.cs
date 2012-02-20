@@ -55,6 +55,11 @@ namespace Balloons.Messaging.Model
         /// Whether to log or not the messages sent and received from the network.
         /// </summary>
         public static bool LogNetworkMessages = false;
+        /// <summary>
+        /// How big the dead zone is relative to the size of a balloon. Behaviour 
+        /// is undefined if this is less than or equal to 1.0f.
+        /// </summary>
+        public static float BalloonDeadzoneMultiplier = 1.1f;
         #endregion
 
         #region Client settings
@@ -186,6 +191,7 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "LogFilePath", LogFilePath);
             StoreValue(settings, "SerializerType", SerializerType);
             StoreValue(settings, "LogNetworkMessages", LogNetworkMessages);
+            StoreValue(settings, "BalloonDeadzoneMultiplier", BalloonDeadzoneMultiplier);
 
             // client settings
             StoreValue(settings, "InputType", InputType);
@@ -253,6 +259,7 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "LogFilePath", ref LogFilePath);
             LoadValue(settings, "SerializerType", ref SerializerType);
             LoadValue(settings, "LogNetworkMessages", ref LogNetworkMessages);
+            LoadValue(settings, "BalloonDeadzoneMultiplier", ref BalloonDeadzoneMultiplier);
 
             // client settings
             LoadValue(settings, "InputType", ref InputType);

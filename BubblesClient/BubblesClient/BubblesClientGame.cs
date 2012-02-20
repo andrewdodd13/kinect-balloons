@@ -226,14 +226,13 @@ namespace BubblesClient
                 WorldEntity balloonEntity = balloonEntities[balloon];
                 Vector2 balloonPosition = balloonEntity.Body.Position;
 
-                // 1.5 width for that extra bit of margin
-                if (balloonPosition.X < (ClientBalloon.BalloonWidth * -1.5) / PhysicsManager.MeterInPixels)
+                if (balloonPosition.X < (ClientBalloon.BalloonWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
                     ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
-                else if (balloonPosition.X > (ClientBalloon.BalloonWidth * 1.5 + screenDimensions.X) / PhysicsManager.MeterInPixels)
+                else if (balloonPosition.X > (ClientBalloon.BalloonWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
                     ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
