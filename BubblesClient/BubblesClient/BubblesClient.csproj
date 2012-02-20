@@ -98,9 +98,6 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Drawing.Html">
-      <HintPath>..\..\Libraries\System.Drawing.Html.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml">
       <Private>False</Private>
     </Reference>

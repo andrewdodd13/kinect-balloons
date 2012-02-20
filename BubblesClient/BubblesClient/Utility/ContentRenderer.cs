@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Html;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
@@ -104,7 +103,7 @@ namespace BubblesClient.Utility
             {
                 Stopwatch w = new Stopwatch();
                 w.Start();
-                RenderUsingHTMLite(bmp, html, images);
+                Render(bmp, html, images);
                 bmp.MakeTransparent(maskColour);
                 w.Stop();
                 Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
@@ -117,17 +116,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private void RenderUsingDrawingHtml(Bitmap img, string html, Dictionary<string, Image> images)
-        {
-            using(Graphics g = Graphics.FromImage(img))
-            {
-                g.Clear(Color.White);
-                HtmlRenderer.Render(g, html,
-                    new RectangleF(0, 0, boxSize.Width, boxSize.Height), true);
-            }
-        }
-
-        private void RenderUsingHTMLite(Bitmap img, string html, Dictionary<string, Image> images)
+        private void Render(Bitmap img, string html, Dictionary<string, Image> images)
         {
             IntPtr hLite = HTMLiteCreateInstance();
             if(hLite == IntPtr.Zero)
