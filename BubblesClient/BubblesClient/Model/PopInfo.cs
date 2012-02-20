@@ -1,23 +1,22 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Balloons.Messaging.Model;
 
 namespace BubblesClient.Model
 {
-    public class PopInfo
+    public class PopAnim
     {
         public string ID { get; set; }
-        public ClientBalloon Balloon { get; set; }
+        public Vector2 Pos { get; set; }
         public TimeSpan TimePopped { get; set; }
-        public Texture2D ContentBox { get; set; }
+        public float ElapsedSincePopped { get; set; }
+        public Texture2D PopTexture { get; set; }
+        public Colour PopColour { get; set; }
 
-        public PopInfo(ClientBalloon balloon)
+        public PopAnim(ClientBalloon balloon)
         {
-            if(balloon == null)
-            {
-                throw new ArgumentNullException("balloon");
-            }
             this.ID = balloon.ID;
-            this.Balloon = balloon;
         }
     }
 }
