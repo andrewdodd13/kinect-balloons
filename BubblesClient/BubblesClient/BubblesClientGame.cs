@@ -23,7 +23,6 @@ namespace BubblesClient
 
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
-        private Texture2D[] bucketTextures = new Texture2D[5];
         private Texture2D[] balloonPopTextures;
 
         private Texture2D boxTexture;
