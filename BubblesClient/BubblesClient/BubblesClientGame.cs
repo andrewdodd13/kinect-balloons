@@ -312,7 +312,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloon.Type != BalloonType.Customizable && !balloon.Popped)
+                if (balloon.Type != BalloonType.Customizable && !balloon.Popped && !String.IsNullOrWhiteSpace(balloon.Label))
                 {
                     Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
                     boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
