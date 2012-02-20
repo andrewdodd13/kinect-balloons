@@ -97,26 +97,36 @@ namespace BubblesClient.Utility
             byte[] htmlData = Encoding.UTF8.GetBytes(html);
 
             // this callback is used to load images
-            ThrowOnError(HTMLiteSetCallback(hLite, (handle, pMsg) => HTMLiteCallback(handle, pMsg, images)));
-            // load the HTML page data
-            ThrowOnError(HTMLiteLoadHtmlFromMemory(hLite, "content.html", htmlData, (uint)htmlData.Length));
-            // set the HTML page size
-            ThrowOnError(HTMLiteMeasure(hLite, img.Width, img.Height));
-
+            HTMLCallback callback = (handle, pMsg) => HTMLiteCallback(handle, pMsg, images);
+            // keep the callback object alive until the library is released
+            GCHandle cbHandle = GCHandle.Alloc(callback, GCHandleType.Normal);
             try
             {
-                // render the HTML page to the image
-                using(Graphics g = Graphics.FromImage(img))
+                ThrowOnError(HTMLiteSetCallback(hLite, callback));
+                // load the HTML page data
+                ThrowOnError(HTMLiteLoadHtmlFromMemory(hLite, "content.html", htmlData, (uint)htmlData.Length));
+                // set the HTML page size
+                ThrowOnError(HTMLiteMeasure(hLite, img.Width, img.Height));
+
+                try
                 {
-                    g.Clear(Color.Transparent);
-                    IntPtr hDc = g.GetHdc();
-                    ThrowOnError(HTMLiteRender(hLite, hDc, 0, 0, img.Width, img.Height));
-                    g.ReleaseHdc(hDc);
+                    // render the HTML page to the image
+                    using(Graphics g = Graphics.FromImage(img))
+                    {
+                        g.Clear(Color.Transparent);
+                        IntPtr hDc = g.GetHdc();
+                        ThrowOnError(HTMLiteRender(hLite, hDc, 0, 0, img.Width, img.Height));
+                        g.ReleaseHdc(hDc);
+                    }
+                }
+                finally
+                {
+                    ThrowOnError(HTMLiteDestroyInstance(hLite));
                 }
             }
             finally
             {
-                ThrowOnError(HTMLiteDestroyInstance(hLite));
+                cbHandle.Free();
             }
 
             // clean up the memory allocated for the images
