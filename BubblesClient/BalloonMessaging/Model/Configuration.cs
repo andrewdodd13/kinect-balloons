@@ -93,7 +93,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Scale parameter of the balloon pop animation.
         /// </summary>
-        public static float PopAnimationScale = 1.0f;
+        public static float PopAnimationScale = 2.0f;
         /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
