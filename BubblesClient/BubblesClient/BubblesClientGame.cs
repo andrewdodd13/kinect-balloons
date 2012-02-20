@@ -552,7 +552,7 @@ namespace BubblesClient
             if (showContent)
             {
                 poppedBalloon = balloon;
-                contentBoxTexture = renderer.Render(GraphicsDevice, balloon);
+                contentBoxTexture = renderer.RenderContent(GraphicsDevice, balloon);
                 ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
                 {
                     poppedBalloon = null;

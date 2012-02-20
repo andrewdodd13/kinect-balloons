@@ -50,17 +50,17 @@ namespace BubblesClient.Utility
             staticImages[key] = Image.FromFile(file);
         }
 
-        private string FillHTMLTemplate(Dictionary<string, string> vals)
+        private string FillTemplate(string templateText, Dictionary<string, string> vals)
         {
-            string html = htmlTemplate;
+            string text = templateText;
             foreach(KeyValuePair<string, string> pair in vals)
             {
-                html = html.Replace(pair.Key, pair.Value);
+                text = text.Replace(pair.Key, pair.Value);
             }
-            return html;
+            return text;
         }
 
-        public Texture2D Render(GraphicsDevice device, ClientBalloon balloon)
+        public Texture2D RenderContent(GraphicsDevice device, ClientBalloon balloon)
         {
             if(device == null)
             {
@@ -86,7 +86,7 @@ namespace BubblesClient.Utility
                 vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
                 vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
             }
-            string html = FillHTMLTemplate(vals);
+            string html = FillTemplate(htmlTemplate, vals);
 
             // prepare the images
             var images = new Dictionary<string, Image>(staticImages);
@@ -103,7 +103,7 @@ namespace BubblesClient.Utility
             {
                 Stopwatch w = new Stopwatch();
                 w.Start();
-                Render(bmp, html, images);
+                RenderHtml(bmp, html, images);
                 bmp.MakeTransparent(maskColour);
                 w.Stop();
                 Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
@@ -116,7 +116,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private void Render(Bitmap img, string html, Dictionary<string, Image> images)
+        private void RenderHtml(Bitmap img, string html, Dictionary<string, Image> images)
         {
             IntPtr hLite = HTMLiteCreateInstance();
             if(hLite == IntPtr.Zero)
