@@ -376,6 +376,7 @@ namespace BubblesClient
                     // Animate popped balloons: make the texture bigger/smaller over time through scale
                     float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
                     float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
+                    balloonScale *= Configuration.PopAnimationScale;
 
                     // Scale the texture rectangle at its center and not at its top-left corner
                     // like Draw() does when you pass a scaling factor.

@@ -91,6 +91,10 @@ namespace Balloons.Messaging.Model
         /// </summary>
         public static float PopAnimationBeta = 5.0f;
         /// <summary>
+        /// Scale parameter of the balloon pop animation.
+        /// </summary>
+        public static float PopAnimationScale = 1.0f;
+        /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
         public static IPAddress RemoteIPAddress = IPAddress.Loopback;
@@ -213,6 +217,7 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "PopAnimationEnabled", PopAnimationEnabled);
             StoreValue(settings, "PopAnimationAlpha", PopAnimationAlpha);
             StoreValue(settings, "PopAnimationBeta", PopAnimationBeta);
+            StoreValue(settings, "PopAnimationScale", PopAnimationScale);
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
             StoreValue(settings, "EnableHighFive", EnableHighFive);
@@ -284,6 +289,7 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "PopAnimationEnabled", ref PopAnimationEnabled);
             LoadValue(settings, "PopAnimationAlpha", ref PopAnimationAlpha);
             LoadValue(settings, "PopAnimationBeta", ref PopAnimationBeta);
+            LoadValue(settings, "PopAnimationScale", ref PopAnimationScale);
             LoadValue(settings, "RemoteIPAddress", ref RemoteIPAddress);
             LoadValue(settings, "RemotePort", ref RemotePort);
             LoadValue(settings, "EnableHighFive", ref EnableHighFive);
