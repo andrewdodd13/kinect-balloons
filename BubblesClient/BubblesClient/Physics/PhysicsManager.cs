@@ -27,6 +27,8 @@ namespace BubblesClient.Physics
 
         Random rnd = new Random();
 
+        private float handSize = 1f;
+
         public event EventHandler<BalloonPoppedEventArgs> BalloonPopped;
         public class BalloonPoppedEventArgs : EventArgs
         {
@@ -241,10 +243,16 @@ namespace BubblesClient.Physics
             return null;
         }
 
+        public void setHandSizePixels(float size)
+        {
+            handSize = size / MeterInPixels;
+            handSize /= 2; // we store the radius
+        }
+
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(world, 1f, 1f, 1f, handPos / MeterInPixels);
+            Body handBody = BodyFactory.CreateCircle(world, handSize, 1f, handPos / MeterInPixels);
             handBody.BodyType = BodyType.Dynamic;
 
             // Hands only collide with balloons for the moment

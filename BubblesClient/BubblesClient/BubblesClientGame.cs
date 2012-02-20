@@ -146,6 +146,9 @@ namespace BubblesClient
             handTexture = Content.Load<Texture2D>("Images/Hand");
             contentBox = Content.Load<Texture2D>("Images/ContentBox");
 
+            // This doesn't seem like the best place for this, but set hand size from the texture
+            physicsManager.setHandSizePixels(handTexture.Width);
+
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
                 { BalloonType.CustomContent, new Dictionary<OverlayType, Texture2D>() {
