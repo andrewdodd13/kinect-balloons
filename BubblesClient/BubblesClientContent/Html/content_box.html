@@ -18,7 +18,7 @@
       font-family: Calibri;
       vertical-align: middle;
       }
-      
+
       hr
       {
       border: 0px;
@@ -49,11 +49,6 @@
       height: 100%;
       }
 
-      #contentText
-      {
-      margin: 20px;
-      }
-
       #contentRight
       {
       margin-left: 10px;
@@ -65,14 +60,13 @@
       {
       height: 230px;
       width: 230px;
-      margin: 20px 20px 10px 20px;
+      margin: 10px 20px 20px 20px;
       }
 
       #webImage
       {
-      height: 230px;
       width: 230px;
-      margin: 10px 20px 20px 20px;
+      margin: 20px 20px 10px 20px;
       }
     </style>
   </head>
@@ -85,16 +79,15 @@
       <div class="content">
         <table border="0" width="100%">
           <tr>
-            <td width="100%">
+            <td>
               <div id="contentLeft">
-                <p id="contentText">@@CONTENT@@</p>
+                <img src="web.png" id="webImage"></img>
+                <img src="qr.png" id="qrImage"></img>
               </div>
             </td>
-
-            <td>
+            <td width="100%">
               <div id="contentRight">
-                <img src="qr.png" id="qrImage"></img>
-                <img src="web.png" id="webImage"></img>
+                <p id="contentText">@@CONTENT@@</p>
               </div>
             </td>
           </tr>

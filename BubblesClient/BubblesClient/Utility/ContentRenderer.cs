@@ -36,7 +36,7 @@ namespace BubblesClient.Utility
 
         public void LoadTemplate(ContentManager manager)
         {
-            string path = Path.Combine(manager.RootDirectory, "Html/test_html.html");
+            string path = Path.Combine(manager.RootDirectory, "Html/content_box.html");
             htmlTemplate = File.ReadAllText(path);
         }
 
