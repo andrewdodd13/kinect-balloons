@@ -40,16 +40,31 @@ namespace BubblesClient.Utility
             htmlTemplate = File.ReadAllText(path);
         }
 
+        private string FillHTMLTemplate(Dictionary<string, string> vals)
+        {
+            string html = htmlTemplate;
+            foreach(KeyValuePair<string, string> pair in vals)
+            {
+                html = html.Replace(pair.Key, pair.Value);
+            }
+            return html;
+        }
+
         public Texture2D Render(GraphicsDevice device, ClientBalloon balloon)
         {
             if(device == null)
             {
                 return null;
             }
+
+            // replace template parameters by their values
             string title = (balloon.Label == null) ? "" : balloon.Label;
             string content = (balloon.Content == null) ? "" : balloon.Content;
-            string html = htmlTemplate.Replace("@@TITLE@@", title);
-            html = html.Replace("@@CONTENT@@", content);
+            var vals = new Dictionary<string, string>();
+            vals.Add("@@TITLE@@", title);
+            vals.Add("@@CONTENT@@", content);
+            vals.Add("@@MASK-COLOR@@", ColorTranslator.ToHtml(maskColour));
+            string html = FillHTMLTemplate(vals);
 
             // prepare the images
             var images = new Dictionary<string, Image>();
