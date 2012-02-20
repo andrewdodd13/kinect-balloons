@@ -407,7 +407,8 @@ namespace BubblesClient
                 if(Configuration.UseHtmlRendering /* && contentBoxTexture != null */)
                 {
                     // Position contains the co-ordinate of the top-left corner of the box
-                    Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
+                    Vector2 position = (screenDimensions / 2) -
+                        (new Vector2(contentBoxTexture.Width, contentBoxTexture.Height) / 2);
 
                     // Draw the HTML-rendered box
                     spriteBatch.Draw(contentBoxTexture, position, Color.White);

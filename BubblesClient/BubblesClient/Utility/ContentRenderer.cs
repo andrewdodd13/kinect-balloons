@@ -21,14 +21,16 @@ namespace BubblesClient.Utility
         private Size boxSize;
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
+        private Color maskColour;
         private string htmlTemplate;
         private List<GCHandle> bufferList;
 
         public ContentRenderer()
         {
-            this.boxSize = new Size(1027, 722);
+            this.boxSize = new Size(1060, 630);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
+            this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
             this.bufferList = new List<GCHandle>();
         }
 
@@ -65,8 +67,10 @@ namespace BubblesClient.Utility
                 Stopwatch w = new Stopwatch();
                 w.Start();
                 RenderUsingHTMLite(bmp, html, images);
+                bmp.MakeTransparent(maskColour);
                 w.Stop();
                 Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
+                
                 using(MemoryStream ms = new MemoryStream())
                 {
                     bmp.Save(ms, imgFormat);

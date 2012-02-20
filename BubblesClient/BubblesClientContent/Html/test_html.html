@@ -2,39 +2,77 @@
   <head>
     <title>Content box</title>
     <style>
-
       html
       {
       /* Removes scrollbars with HTMLlite */
       overflow: hidden;
-      background-color: transparent;
+      background-color: #FAAFBE;
       }
 
       .header
       {
-      background-color:	#D0D0D0;
-      border: 0px;
-      border-radius: 15px;
-      border-color: block;
       padding: 10px 20px 10px 20px;
       color: black;
       font-size: 40px;
       font-weight: bold;
       font-family: Calibri;
       vertical-align: middle;
-      corner-radius: 10px;
+      }
+      
+      hr
+      {
+      border: 0px;
+      color: white;
+      background-color: white;
+      height: 2px;
+      margin: 0px 20px 0px 20px;
+      }
+
+      .frame
+      {
+      border-radius: 20px;
+      background-color:	#82cafa;
+      height: 100%;
       }
 
       .content
       {
       margin: 10px 0px 10px 0px;
+      font-family: serif;
+      font-size: 40px;
+      width: 100%;
       }
 
-      .content
+      #contentLeft
       {
-      font-family: Calibri;
-      font-size: 32px;
-      width: 100%;
+      margin-right: 10px;
+      height: 100%;
+      }
+
+      #contentText
+      {
+      margin: 20px;
+      }
+
+      #contentRight
+      {
+      margin-left: 10px;
+      padding: 0px;
+      height: 100%;
+      }
+
+      #qrImage
+      {
+      height: 230px;
+      width: 230px;
+      margin: 20px 20px 10px 20px;
+      }
+
+      #webImage
+      {
+      height: 230px;
+      width: 230px;
+      margin: 10px 20px 20px 20px;
       }
     </style>
   </head>
@@ -43,21 +81,20 @@
       <div class="header">
         <span>@@TITLE@@</span>
       </div>
+      <hr></hr>
       <div class="content">
         <table border="0" width="100%">
           <tr>
             <td width="100%">
-              <div style="background-color:	#D0D0D0; margin-right: 5px; height: 100%;">
-                <p style="margin: 20px;">
-                  @@CONTENT@@
-                </p>
+              <div id="contentLeft">
+                <p id="contentText">@@CONTENT@@</p>
               </div>
             </td>
 
             <td>
-              <div style="background-color:	#D0D0D0; margin-left: 5px; padding: 0px; height: 100%;">
-                <img src="qr.png" height="230" width="230" style="margin: 10px 10px 05px 10px;"></img>
-                <img src="web.png" height="230" width="230" style="margin: 05px 10px 10px 10px;"></img>
+              <div id="contentRight">
+                <img src="qr.png" id="qrImage"></img>
+                <img src="web.png" id="webImage"></img>
               </div>
             </td>
           </tr>
