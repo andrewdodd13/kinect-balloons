@@ -162,6 +162,11 @@ namespace BubblesClient
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
+                { BalloonType.Customizable, new Dictionary<OverlayType, Texture2D>() {
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhite") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpots") },
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripes") }
+                } },
                 { BalloonType.CustomContent, new Dictionary<OverlayType, Texture2D>() {
                     { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteCustom") },
                     { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsCustom")},
@@ -172,16 +177,6 @@ namespace BubblesClient
                     { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsTwitter") },
                     { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesTwitter") }
                 } },
-                { BalloonType.News, new Dictionary<OverlayType, Texture2D>() { 
-                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteNews") },
-                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsNews") }, 
-                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesNews") }
-                } },
-                { BalloonType.Customizable, new Dictionary<OverlayType, Texture2D>() {
-                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhite") },
-                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpots") },
-                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripes") }
-                } }
             };
 
             balloonPopTextures = new Texture2D[] {
