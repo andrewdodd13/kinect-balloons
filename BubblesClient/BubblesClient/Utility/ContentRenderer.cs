@@ -16,8 +16,8 @@ namespace BubblesClient.Utility
     /// </summary>
     public class ContentRenderer
     {
-        private Size captionMaxBoxSize;
-        private Size contentBoxSize;
+        private Size maxCaptionBoxSize;
+        private Size maxContentBoxSize;
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
         private Color maskColour;
@@ -26,8 +26,8 @@ namespace BubblesClient.Utility
 
         public ContentRenderer()
         {
-            this.captionMaxBoxSize = new Size(400, 600);
-            this.contentBoxSize = new Size(1060, 650);
+            this.maxCaptionBoxSize = new Size(400, 600);
+            this.maxContentBoxSize = new Size(1060, 700);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
             this.maskColour = Color.FromArgb(0xff, 0xfa, 0xaf, 0xbe); // pink
@@ -79,10 +79,9 @@ namespace BubblesClient.Utility
             string html = FillTemplate(templates["caption_box.html"], vals);
 
             var images = new Dictionary<string, Image>(staticImages);
-            Trace.WriteLine(String.Format("Caption box rendering for: {0}", balloon.ID));
             Stopwatch w = new Stopwatch();
             w.Start();
-            using(Bitmap bmp = RenderCaptionHtml(captionMaxBoxSize, html, images))
+            using(Bitmap bmp = RenderHtml(maxCaptionBoxSize, html, images))
             {
                 w.Stop();
                 Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
@@ -90,7 +89,6 @@ namespace BubblesClient.Utility
                 using(MemoryStream ms = new MemoryStream())
                 {
                     bmp.Save(ms, imgFormat);
-                    bmp.Save("caption-" + balloon.ID + ".png", imgFormat);
                     return Texture2D.FromStream(device, ms);
                 }
             }
@@ -134,7 +132,7 @@ namespace BubblesClient.Utility
                 vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
             }
 
-            Image webImg;
+            Image webImg = null;
             const int webImageSize = 229;
             if(images.TryGetValue("web.png", out webImg))
             {
@@ -151,19 +149,18 @@ namespace BubblesClient.Utility
             }
             else
             {
-                vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px; height: {0}px;", webImageSize));
+                vals.Add("@@WEBIMG_CSS@@", "display: none;");
             }
             string html = FillTemplate(templates["content_box.html"], vals);
 
-            using(Bitmap bmp = new Bitmap(contentBoxSize.Width, contentBoxSize.Height, pixFormat))
+            Stopwatch w = new Stopwatch();
+            w.Start();
+            using(Bitmap bmp = RenderHtml(maxContentBoxSize, html, images))
             {
-                Stopwatch w = new Stopwatch();
-                w.Start();
-                RenderContentHtml(bmp, html, images);
                 bmp.MakeTransparent(maskColour);
                 w.Stop();
                 Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
-                
+
                 using(MemoryStream ms = new MemoryStream())
                 {
                     bmp.Save(ms, imgFormat);
@@ -172,7 +169,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private Bitmap RenderCaptionHtml(Size maxSize, string html, Dictionary<string, Image> images)
+        private Bitmap RenderHtml(Size maxSize, string html, Dictionary<string, Image> images)
         {
             // encode the HTML page text to bytes
             byte[] htmlData = Encoding.UTF8.GetBytes(html);
@@ -187,12 +184,12 @@ namespace BubblesClient.Utility
                 Size size = maxSize;
                 hLite.Measure(size.Width, size.Height);
                 // detect the actual size
-                var frame = hLite.GetRootElement().Select("#content");
-                if(frame.Count > 0)
+                var bounds = hLite.GetRootElement().Select("#bounds");
+                if(bounds.Count > 0)
                 {
-                    size = frame[0].Bounds.Size;
-                    size.Width += frame[0].Bounds.Left * 2;
-                    size.Height += frame[0].Bounds.Top * 2;
+                    size = bounds[0].Bounds.Size;
+                    size.Width += bounds[0].Bounds.Left * 2;
+                    size.Height += bounds[0].Bounds.Top * 2;
                 }
                 hLite.Measure(size.Width, size.Height);
 
@@ -204,29 +201,6 @@ namespace BubblesClient.Utility
                     hLite.Render(g, 0, 0, img.Width, img.Height);
                 }
                 return img;
-            }
-        }
-
-        private void RenderContentHtml(Bitmap img, string html, Dictionary<string, Image> images)
-        {
-            // encode the HTML page text to bytes
-            byte[] htmlData = Encoding.UTF8.GetBytes(html);
-
-            using(HTMLite hLite = new HTMLite())
-            {
-                // this callback is used to load images
-                hLite.UriHandler = (uri, type) => LoadUri(uri, type, images);
-                // load the HTML page data
-                hLite.LoadHtmlFromMemory("content.html", htmlData);
-                // set the HTML page size
-                hLite.Measure(img.Width, img.Height);
-
-                // render the HTML page to the image
-                using(Graphics g = Graphics.FromImage(img))
-                {
-                    g.Clear(Color.Transparent);
-                    hLite.Render(g, 0, 0, img.Width, img.Height);
-                }
             }
         }
 
