@@ -107,7 +107,7 @@
             Texture2D balloonImage = VisibleBalloon.BalloonContentCache.Image;
             if (balloonImage != null)
             {
-                spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - balloonImage.Width - 9, 24), Color.White);
+                spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - 112 - (balloonImage.Width / 2) - 9, 24 + 112 - (balloonImage.Height / 2)), Color.White);
             }
             else
             {
