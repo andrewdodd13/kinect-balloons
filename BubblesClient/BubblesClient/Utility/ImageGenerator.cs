@@ -75,7 +75,7 @@ namespace BubblesClient.Utility
         public static Texture2D GenerateFromWeb(GraphicsDevice graphicsDevice, string URL)
         {
             bool AndrewIsAwesome = true;
-            if (URL == null || URL == string.Empty || AndrewIsAwesome)
+            if (URL == null || URL == string.Empty) // || AndrewIsAwesome)
             {
                 URL = "http://www2.macs.hw.ac.uk/~ad133/pussy.jpg";
             }
