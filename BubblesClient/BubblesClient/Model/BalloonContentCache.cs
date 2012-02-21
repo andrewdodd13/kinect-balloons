@@ -5,8 +5,13 @@
 
     public class BalloonContentCache
     {
-        public String ID { get; set; }
+        public string ID { get; set; }
         public Texture2D QRCode { get; set; }
         public Texture2D Image { get; set; }
+
+        public BalloonContentCache(string id)
+        {
+            this.ID = id;
+        }
     }
 }

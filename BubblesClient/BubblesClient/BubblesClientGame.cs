@@ -200,6 +200,7 @@ namespace BubblesClient
             contentBox.ContentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
             contentBox.BoxTexture = Content.Load<Texture2D>("Images/ContentBox");
             contentBox.CloseIconTexture = Content.Load<Texture2D>("Images/CloseIcon");
+            contentBox.LoadingSprite = Content.Load<Texture2D>("Images/LoadingSprite");
 
             List<Texture2D> countDownImages = new List<Texture2D>();
             for (int i = 0; i <= 30; i++)

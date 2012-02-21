@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using ThoughtWorks.QRCode.Codec;
-using System.IO;
-using System;
+﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Net;
+using Microsoft.Xna.Framework.Graphics;
+using ThoughtWorks.QRCode.Codec;
 
 namespace BubblesClient.Utility
 {
@@ -74,8 +74,7 @@ namespace BubblesClient.Utility
         /// <returns>A texture containing the given image</returns>
         public static Texture2D GenerateFromWeb(GraphicsDevice graphicsDevice, string URL)
         {
-            bool AndrewIsAwesome = true;
-            if (URL == null || URL == string.Empty) // || AndrewIsAwesome)
+            if (URL == null || URL == string.Empty)
             {
                 URL = "http://www2.macs.hw.ac.uk/~ad133/pussy.jpg";
             }

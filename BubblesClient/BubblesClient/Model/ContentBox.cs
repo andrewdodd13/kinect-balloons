@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using Balloons.Messaging.Model;
     using BubblesClient.Utility;
     using Microsoft.Xna.Framework;
@@ -34,6 +35,7 @@
         public SpriteFont TitleFont { get; set; }
         public Texture2D BoxTexture { get; set; }
         public Texture2D CloseIconTexture { get; set; }
+        public Texture2D LoadingSprite { get; set; }
         public List<Texture2D> CountDownImages { get; set; }
 
         // Called when the box is closed for any reason
@@ -78,7 +80,7 @@
             spriteBatch.Draw(BoxTexture, position - border, Color.White);
 
             // Draw the title 
-            TextUtility.drawTextLabel(spriteBatch, TitleFont, wrappedTitle, position + new Vector2(4, 0), Color.Black);
+            TextUtility.drawTextLabel(spriteBatch, TitleFont, wrappedTitle, position + new Vector2(4, 0));
 
             // Draw the text
             TextUtility.drawTextLabel(spriteBatch, ContentFont, wrappedContent, position + new Vector2(4, 64));
@@ -96,10 +98,21 @@
             {
                 spriteBatch.Draw(VisibleBalloon.BalloonContentCache.QRCode, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
             }
+            else
+            {
+                spriteBatch.Draw(LoadingSprite, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
+            }
 
             // Draw the Image
             Texture2D balloonImage = VisibleBalloon.BalloonContentCache.Image;
-            spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - balloonImage.Width - 9, 24), Color.White);
+            if (balloonImage != null)
+            {
+                spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - balloonImage.Width - 9, 24), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(LoadingSprite, position + new Vector2(BoxTexture.Width - 24 - LoadingSprite.Width - 9, 24), Color.White);
+            }
 
             // Draw the timer
             Texture2D currentFrame = CountDownImages[(int)(closeTimer / 1000)];
@@ -135,12 +148,12 @@
             // Get the images from the cache
             if (!balloonTextureCache.ContainsKey(_visibleBalloon.ID))
             {
-                BalloonContentCache cacheEntry = new BalloonContentCache()
+                BalloonContentCache cacheEntry = new BalloonContentCache(_visibleBalloon.ID);
+                ThreadPool.QueueUserWorkItem(o =>
                 {
-                    ID = _visibleBalloon.ID,
-                    QRCode = String.IsNullOrEmpty(_visibleBalloon.Url) ? null : ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, _visibleBalloon.Url),
-                    Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, _visibleBalloon.ImageUrl)
-                };
+                    cacheEntry.QRCode = String.IsNullOrEmpty(_visibleBalloon.Url) ? null : ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, _visibleBalloon.Url);
+                    cacheEntry.Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, _visibleBalloon.ImageUrl);
+                });
 
                 balloonTextureCache.Add(_visibleBalloon.ID, cacheEntry);
             }
