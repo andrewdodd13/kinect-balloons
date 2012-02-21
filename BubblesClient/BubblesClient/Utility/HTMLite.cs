@@ -202,7 +202,7 @@ namespace BubblesClient.Utility
             {
                 this.hEle = hEle;
                 this.Tag = GetTag();
-                this.Bounds = GetBounds();
+                this.Bounds = GetBounds(ELEMENT_AREAS.ROOT_RELATIVE | ELEMENT_AREAS.MARGIN_BOX);
                 this.Children = GetChildren();
             }
 
@@ -239,10 +239,10 @@ namespace BubblesClient.Utility
                 return e;
             }
 
-            private Rectangle GetBounds()
+            private Rectangle GetBounds(ELEMENT_AREAS areas)
             {
                 RECT rect = new RECT();
-                uint result = HTMLayoutGetElementLocation(hEle, ref rect, ELEMENT_AREAS.ROOT_RELATIVE | ELEMENT_AREAS.MARGIN_BOX);
+                uint result = HTMLayoutGetElementLocation(hEle, ref rect, areas);
                 ThrowOnError(result);
                 return new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
             }

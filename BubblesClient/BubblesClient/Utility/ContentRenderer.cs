@@ -16,7 +16,7 @@ namespace BubblesClient.Utility
     /// </summary>
     public class ContentRenderer
     {
-        private Size captionBoxSize;
+        private Size captionMaxBoxSize;
         private Size contentBoxSize;
         private PixelFormat pixFormat;
         private ImageFormat imgFormat;
@@ -26,8 +26,7 @@ namespace BubblesClient.Utility
 
         public ContentRenderer()
         {
-            //this.captionBoxSize = new Size(240, 120);
-            this.captionBoxSize = new Size(400, 600);
+            this.captionMaxBoxSize = new Size(400, 600);
             this.contentBoxSize = new Size(1060, 650);
             this.pixFormat = PixelFormat.Format32bppArgb;
             this.imgFormat = ImageFormat.Png;
@@ -83,7 +82,7 @@ namespace BubblesClient.Utility
             Trace.WriteLine(String.Format("Caption box rendering for: {0}", balloon.ID));
             Stopwatch w = new Stopwatch();
             w.Start();
-            using(Bitmap bmp = RenderCaptionHtml(captionBoxSize, html, images))
+            using(Bitmap bmp = RenderCaptionHtml(captionMaxBoxSize, html, images))
             {
                 w.Stop();
                 Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
@@ -102,6 +101,17 @@ namespace BubblesClient.Utility
             if(device == null)
             {
                 return null;
+            }
+
+            // prepare the images
+            var images = new Dictionary<string, Image>(staticImages);
+            if(!String.IsNullOrWhiteSpace(balloon.Url))
+            {
+                images["qr.png"] = ImageGenerator.GenerateQRCode(balloon.Url);
+            }
+            if(!String.IsNullOrWhiteSpace(balloon.ImageUrl))
+            {
+                images["web.png"] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
             }
 
             // replace template parameters by their values
@@ -123,18 +133,27 @@ namespace BubblesClient.Utility
                 vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
                 vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
             }
-            string html = FillTemplate(templates["content_box.html"], vals);
 
-            // prepare the images
-            var images = new Dictionary<string, Image>(staticImages);
-            if(!String.IsNullOrWhiteSpace(balloon.Url))
+            Image webImg;
+            const int webImageSize = 229;
+            if(images.TryGetValue("web.png", out webImg))
             {
-                images["qr.png"] = ImageGenerator.GenerateQRCode(balloon.Url);
+                if(webImg.Width > webImg.Height)
+                {
+                    int realSize = Math.Min(webImageSize, webImg.Width);
+                    vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
+                }
+                else
+                {
+                    int realSize = Math.Min(webImageSize, webImg.Height);
+                    vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
+                }
             }
-            if(!String.IsNullOrWhiteSpace(balloon.ImageUrl))
+            else
             {
-                images["web.png"] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+                vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px; height: {0}px;", webImageSize));
             }
+            string html = FillTemplate(templates["content_box.html"], vals);
 
             using(Bitmap bmp = new Bitmap(contentBoxSize.Width, contentBoxSize.Height, pixFormat))
             {
@@ -168,7 +187,7 @@ namespace BubblesClient.Utility
                 Size size = maxSize;
                 hLite.Measure(size.Width, size.Height);
                 // detect the actual size
-                var frame = hLite.GetRootElement().Select("div.frame > p");
+                var frame = hLite.GetRootElement().Select("#content");
                 if(frame.Count > 0)
                 {
                     size = frame[0].Bounds.Size;

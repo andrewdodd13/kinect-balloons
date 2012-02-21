@@ -4,7 +4,6 @@
     <style>
       html
       {
-      /* Removes scrollbars with HTMLlite */
       overflow: hidden;
       background-color: white;
       }
@@ -22,11 +21,17 @@
       font-family: Tahoma;
       font-size: 24px;
       }
+
+      #content
+      {
+      width: max-intrinsic;
+      max-width: 100%;
+      }
     </style>
   </head>
   <body>
     <div class="frame">  
-      <p>@@CONTENT@@</p>
+      <div id="content">@@CONTENT@@</div>
     </div>
   </body>
 </html>
