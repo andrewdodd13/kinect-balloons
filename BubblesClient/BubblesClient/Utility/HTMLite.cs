@@ -182,28 +182,31 @@ namespace BubblesClient.Utility
             
             public List<Element> Children
             {
-                get;
-                set;
+                get
+                {
+                    return GetChildren();
+                }
             }
 
             public Rectangle Bounds
             {
-                get;
-                set;
+                get
+                {
+                    return GetBounds(ELEMENT_AREAS.ROOT_RELATIVE | ELEMENT_AREAS.MARGIN_BOX);
+                }
             }
 
             public string Tag
             {
-                get;
-                set;
+                get
+                {
+                    return GetTag();
+                }
             }
 
             protected Element(IntPtr hEle)
             {
                 this.hEle = hEle;
-                this.Tag = GetTag();
-                this.Bounds = GetBounds(ELEMENT_AREAS.ROOT_RELATIVE | ELEMENT_AREAS.MARGIN_BOX);
-                this.Children = GetChildren();
             }
 
             public List<Element> Select(string cssSelector)
