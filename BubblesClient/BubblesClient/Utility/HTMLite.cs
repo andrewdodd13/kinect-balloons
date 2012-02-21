@@ -123,6 +123,14 @@ namespace BubblesClient.Utility
             }
         }
 
+        public Element GetRootElement()
+        {
+            IntPtr root = IntPtr.Zero;
+            uint result = HTMLiteGetRootElement(hLite, ref root);
+            ThrowOnError(result);
+            return Element.Get(root);
+        }
+
         protected void SetDataReady(string url, byte[] data)
         {
             GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
@@ -164,6 +172,116 @@ namespace BubblesClient.Utility
             }
             return (T)Marshal.PtrToStructure(pMsg, typeof(T));
         }
+
+        #region Elements
+        public class Element
+        {
+            private static Dictionary<IntPtr, Element> elements = new Dictionary<IntPtr, Element>();
+
+            private IntPtr hEle;
+            
+            public List<Element> Children
+            {
+                get;
+                set;
+            }
+
+            public Rectangle Bounds
+            {
+                get;
+                set;
+            }
+
+            public string Tag
+            {
+                get;
+                set;
+            }
+
+            protected Element(IntPtr hEle)
+            {
+                this.hEle = hEle;
+                this.Tag = GetTag();
+                this.Bounds = GetBounds();
+                this.Children = GetChildren();
+            }
+
+            public List<Element> Select(string cssSelector)
+            {
+                List<Element> elements = new List<Element>();
+                HTMLayoutElementCallback cb = delegate(IntPtr hEle, IntPtr user)
+                {
+                    elements.Add(Element.Get(hEle));
+                };
+                GCHandle cbHandle = GCHandle.Alloc(cb);
+                try
+                {
+                    HTMLayoutSelectElements(hEle, cssSelector, cb, IntPtr.Zero);
+                }
+                finally
+                {
+                    cbHandle.Free();
+                }
+                return elements;
+            }
+
+            internal static Element Get(IntPtr hEle)
+            {
+                Element e;
+                if(hEle == IntPtr.Zero)
+                {
+                    return null;
+                }
+                else if(!elements.TryGetValue(hEle, out e))
+                {
+                    e = new Element(hEle);
+                }
+                return e;
+            }
+
+            private Rectangle GetBounds()
+            {
+                RECT rect = new RECT();
+                uint result = HTMLayoutGetElementLocation(hEle, ref rect, ELEMENT_AREAS.ROOT_RELATIVE | ELEMENT_AREAS.MARGIN_BOX);
+                ThrowOnError(result);
+                return new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+            }
+
+            private string GetTag()
+            {
+                string tag = null;
+                uint result = HTMLayoutGetElementType(hEle, ref tag);
+                ThrowOnError(result);
+                return tag;
+            }
+
+            private List<Element> GetChildren()
+            {
+                var children = new List<Element>();
+                for(uint i = 0; i < GetChildrenCount(); i++)
+                {
+                    children.Add(GetChild(i));
+                }
+                return children;
+            }
+
+            private uint GetChildrenCount()
+            {
+                uint count = 0;
+                uint result = HTMLayoutGetChildrenCount(hEle, ref count);
+                ThrowOnError(result);
+                return count;
+            }
+
+            private Element GetChild(uint index)
+            {
+                IntPtr hChild = IntPtr.Zero;
+                uint result = HTMLayoutGetNthChild(hEle, index, ref hChild);
+                ThrowOnError(result);
+                return Get(hChild);
+            }
+        }
+        #endregion
 
         #region Enums and structs
         public enum Result : int
@@ -240,10 +358,47 @@ namespace BubblesClient.Utility
             public uint outDataSize;
             public uint dataType;
         }
+
+        protected struct SIZE
+        {
+            public int width;
+            public int height;
+        }
+
+        protected struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+
+        [Flags]
+        protected enum ELEMENT_AREAS
+        {
+            ROOT_RELATIVE = 0x01,       // - or this flag if you want to get HTMLayout window relative coordinates,
+            //   otherwise it will use nearest windowed container e.g. popup window.
+            SELF_RELATIVE = 0x02,       // - "or" this flag if you want to get coordinates relative to the origin
+            //   of element iself.
+            CONTAINER_RELATIVE = 0x03,  // - position inside immediate container.
+            VIEW_RELATIVE = 0x04,       // - position relative to view - HTMLayout window
+
+            CONTENT_BOX = 0x00,   // content (inner)  box
+            PADDING_BOX = 0x10,   // content + paddings
+            BORDER_BOX = 0x20,   // content + paddings + border
+            MARGIN_BOX = 0x30,   // content + paddings + border + margins 
+
+            BACK_IMAGE_AREA = 0x40, // relative to content origin - location of background image (if it set no-repeat)
+            FORE_IMAGE_AREA = 0x50, // relative to content origin - location of foreground image (if it set no-repeat)
+
+            SCROLLABLE_AREA = 0x60,   // scroll_area - scrollable area in content box 
+
+        };
         #endregion
 
         #region P/invoke stuff
         protected delegate uint HTMLCallback(IntPtr hLite, IntPtr pMsg);
+        protected delegate void HTMLayoutElementCallback(IntPtr hEle, IntPtr user);
 
         private const string HTMLitePath = @"Content\Html\htmlayout.dll";
 
@@ -276,7 +431,26 @@ namespace BubblesClient.Utility
         [DllImport(HTMLitePath)]
         private extern static uint HTMLiteSetCallback(IntPtr hLite, HTMLCallback cb);
 
-        private void ThrowOnError(uint result)
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLiteGetRootElement(IntPtr hLite, ref IntPtr he);
+
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLayoutGetElementType(IntPtr he, [MarshalAs(UnmanagedType.LPStr)] ref string type);
+
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLayoutGetElementLocation(IntPtr he, ref RECT location, ELEMENT_AREAS areas);
+
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLayoutSelectElements(IntPtr he, [MarshalAs(UnmanagedType.LPStr)] string cssSelectors,
+           HTMLayoutElementCallback callback, IntPtr param);
+
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLayoutGetChildrenCount(IntPtr he, ref uint count);
+
+        [DllImport(HTMLitePath)]
+        private extern static uint HTMLayoutGetNthChild(IntPtr he, uint n, ref IntPtr hChild);
+
+        private static void ThrowOnError(uint result)
         {
             if(result != 0)
             {
@@ -284,7 +458,7 @@ namespace BubblesClient.Utility
             }
         }
 
-        private string MessageFromCode(uint errorCode)
+        private static string MessageFromCode(uint errorCode)
         {
             switch((Result)errorCode)
             {
