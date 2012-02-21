@@ -127,6 +127,14 @@ namespace Balloons.Messaging.Model
         /// Unit is cos(angle) [Range 0 to 1]
         /// </summary>
         public static double KinectMinAttackAngle = 0.4;
+        /// <summary>
+        /// The multiplier applied to kinect sensor input in the x axis
+        /// </summary>
+        public static float KinectXSensitivity = 1.5f;
+        /// <summary>
+        /// The multiplier applied to kinect sensor input in the y axis
+        /// </summary>
+        public static float KinectYSensitivity = 2.0f;
         #endregion
 
         #region Server settings
@@ -230,6 +238,8 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "KinectMovementThreshold", KinectMovementThreshold);
             StoreValue(settings, "KinectMaxHandRange", KinectMaxHandRange);
             StoreValue(settings, "KinectMinAttackAngle", KinectMinAttackAngle);
+            StoreValue(settings, "KinectXSensitivity", KinectXSensitivity);
+            StoreValue(settings, "KinectYSensitivity", KinectYSensitivity);
 
             // server settings
             StoreValue(settings, "LocalIPAddress", LocalIPAddress);
@@ -303,6 +313,8 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "KinectMovementThreshold", ref KinectMovementThreshold);
             LoadValue(settings, "KinectMaxHandRange", ref KinectMaxHandRange);
             LoadValue(settings, "KinectMinAttackAngle", ref KinectMinAttackAngle);
+            LoadValue(settings, "KinectXSensitivity", ref KinectXSensitivity);
+            LoadValue(settings, "KinectYSensitivity", ref KinectYSensitivity);
 
             // server settings
             LoadValue(settings, "LocalIPAddress", ref LocalIPAddress);
