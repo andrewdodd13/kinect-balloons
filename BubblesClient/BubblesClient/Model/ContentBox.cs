@@ -235,7 +235,7 @@
             if (Configuration.UseHtmlRendering)
             {
                 BalloonContentCache cacheEntry = balloon.BalloonContentCache;
-                cacheEntry[CacheType.Content] = HtmlRenderer.RenderCaption(balloon);
+                cacheEntry[CacheType.Caption] = HtmlRenderer.RenderCaption(balloon);
             }
         }
 
