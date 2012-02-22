@@ -125,6 +125,7 @@
     <Compile Include="Model\Buckets\ColourBucket.cs" />
     <Compile Include="Model\Buckets\DecorationBucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
+    <Compile Include="Model\ContentBox.cs" />
     <Compile Include="Model\PopInfo.cs" />
     <Compile Include="Network\ScreenManager.cs" />
     <Compile Include="Physics\PhysicsManager.cs" />
@@ -135,6 +136,7 @@
     <Compile Include="Utility\ContentRenderer.cs" />
     <Compile Include="Utility\HTMLite.cs" />
     <Compile Include="Utility\ImageGenerator.cs" />
+    <Compile Include="Utility\TextUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

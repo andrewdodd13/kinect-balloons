@@ -19,7 +19,13 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		$this->load->view('login');
+		$this->show_login_page();
+	}
+	
+	public function show_login_page($errors = '') {
+		$data['main_content'] = 'login';
+		$data['bodyData'] = $errors;
+		$this->load->view('includes/template', $data);
 	}
 	
 	public function validate_user() {
@@ -29,7 +35,7 @@ class Welcome extends CI_Controller {
 		$this->form_validation->set_rules('password', 'Password', 'trim|required|min_length[4]|max_length[32]');
 		
 		if($this->form_validation->run() == FALSE) {
-			$this->load->view('login');
+			$this->show_login_page();
 			
 		}
 		else {
@@ -38,11 +44,13 @@ class Welcome extends CI_Controller {
 			
 			$isUser = $this->users_model->validate($username, $password);
 			if($isUser) {
+				$userInfo = $this->users_model->get_user_info($username);
+				$groupInfo = $this->users_model->get_user_group($userInfo['gid']);
 				$data = array(
-					'username' => $username,
+					'username' => $userInfo['name'],
+					'group' => 'staff',//$groupInfo['name'],
 					'is_logged_in' => TRUE
 				);
-				
 				$this->session->set_userdata($data);
 				redirect('submit_content/index');
 			}
@@ -50,7 +58,7 @@ class Welcome extends CI_Controller {
 				$data = array(
 					'errors' => 'The username and password supplied is incorrect. Please try again'
 				);
-				$this->load->view('login', $data);
+				$this->show_login_page($data);
 			}
 		}
 	}
