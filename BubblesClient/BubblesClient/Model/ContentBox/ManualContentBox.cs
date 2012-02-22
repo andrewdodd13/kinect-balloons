@@ -4,16 +4,13 @@
     using System.Collections.Generic;
     using System.Threading;
     using Balloons.Messaging.Model;
+    using BubblesClient.Model.ContentBox;
     using BubblesClient.Utility;
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
     using Microsoft.Xna.Framework.Graphics;
 
-    /// <summary>
-    /// The ContentBox manages the display of an article on screen as well as
-    /// related functionality such as the timed removal and user's ability to
-    /// close the box.
-    /// </summary>
-    public class ContentBox
+    public class ManualContentBox : AbstractContentBox
     {
         // Graphics
         private Vector2 screenDimensions;
@@ -38,39 +35,40 @@
         public Texture2D LoadingSprite { get; set; }
         public List<Texture2D> CountDownImages { get; set; }
 
-        // Called when the box is closed for any reason
-        public event EventHandler OnClose;
 
-        private ClientBalloon _visibleBalloon;
-        public ClientBalloon VisibleBalloon
-        {
-            get { return _visibleBalloon; }
-            set
-            {
-                _visibleBalloon = value;
 
-                // When a new visible balloon is set, kick off the initialisation stuff
-                if (_visibleBalloon != null) { initialise(); }
-            }
-        }
-
-        public ContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics)
+        public ManualContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics)
         {
             this.screenDimensions = screenDimensions;
             this.graphics = graphics;
         }
 
-        public void Update(GameTime gameTime)
+        public override void LoadResources(ContentManager contentManager)
+        {
+            this.TitleFont = contentManager.Load<SpriteFont>("Fonts/Content-Title");
+            this.ContentFont = contentManager.Load<SpriteFont>("Fonts/SpriteFontSmall");
+            this.BoxTexture = contentManager.Load<Texture2D>("Images/ContentBox");
+            this.CloseIconTexture = contentManager.Load<Texture2D>("Images/CloseIcon");
+            this.LoadingSprite = contentManager.Load<Texture2D>("Images/LoadingSprite");
+
+            this.CountDownImages = new List<Texture2D>();
+            for (int i = 0; i <= 30; i++)
+            {
+                this.CountDownImages.Add(contentManager.Load<Texture2D>("Images/Countdown/" + i));
+            }
+        }
+
+        public override void Update(GameTime gameTime)
         {
             closeTimer -= gameTime.ElapsedGameTime.Milliseconds;
             if (closeTimer < 0) { Close(); }
         }
 
         /// <summary>
-        /// Call this if and only if the VisibleBalloon property is not null.
+        /// Call this if and only if the visibleBalloon property is not null.
         /// </summary>
         /// <param name="spriteBatch"></param>
-        public void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch)
         {
             // Position contains the co-ordinate of the top-left corner of the box excluding border
             Vector2 border = new Vector2(9, 9);
@@ -87,16 +85,16 @@
 
             // Draw the votes
             Color votesColor = Color.Black;
-            if (VisibleBalloon.Votes > 0) { votesColor = Color.Green; }
-            else if (VisibleBalloon.Votes < 0) { votesColor = Color.Red; }
+            if (visibleBalloon.Votes > 0) { votesColor = Color.Green; }
+            else if (visibleBalloon.Votes < 0) { votesColor = Color.Red; }
 
-            String votesLabel = (VisibleBalloon.Votes > 0 ? "+" : "") + VisibleBalloon.Votes;
+            String votesLabel = (visibleBalloon.Votes > 0 ? "+" : "") + visibleBalloon.Votes;
             TextUtility.drawTextLabel(spriteBatch, TitleFont, votesLabel, position + new Vector2(754 - TitleFont.MeasureString(votesLabel).X, 0), votesColor);
 
             // Draw the QR Code
-            if (VisibleBalloon.BalloonContentCache.QRCode != null)
+            if (visibleBalloon.BalloonContentCache.QRCode != null)
             {
-                spriteBatch.Draw(VisibleBalloon.BalloonContentCache.QRCode, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
+                spriteBatch.Draw(visibleBalloon.BalloonContentCache.QRCode, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
             }
             else
             {
@@ -104,7 +102,7 @@
             }
 
             // Draw the Image
-            Texture2D balloonImage = VisibleBalloon.BalloonContentCache.Image;
+            Texture2D balloonImage = visibleBalloon.BalloonContentCache.Image;
             if (balloonImage != null)
             {
                 spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - 112 - (balloonImage.Width / 2) - 9, 24 + 112 - (balloonImage.Height / 2)), Color.White);
@@ -124,15 +122,23 @@
             spriteBatch.Draw(CloseIconTexture, new Vector2(screenDimensions.X - CloseIconTexture.Width - 8, 8), closeIconColor);
         }
 
-        public void CountDownCloseTimer(GameTime gameTime)
+        public override void CountDownCloseTimer(GameTime gameTime)
         {
             forceCloseTimer -= gameTime.ElapsedGameTime.Milliseconds;
             if (forceCloseTimer <= 0) { Close(); }
         }
 
-        public void CancelCloseTimer()
+        public override void CancelCloseTimer()
         {
             forceCloseTimer = DefaultForceCloseTime;
+        }
+
+        public override void SetBalloon(ClientBalloon balloon)
+        {
+            visibleBalloon = balloon;
+
+            // When a new visible balloon is set, kick off the initialisation stuff
+            if (visibleBalloon != null) { initialise(); }
         }
 
         private void initialise()
@@ -142,29 +148,23 @@
             forceCloseTimer = DefaultForceCloseTime;
 
             // Wrap the text
-            wrappedTitle = TextUtility.wrapText(TitleFont, VisibleBalloon.Label.Replace('\n', ' '), new Vector2(750, 64));
-            wrappedContent = TextUtility.wrapText(ContentFont, VisibleBalloon.Content, new Vector2(750, 430));
+            wrappedTitle = TextUtility.wrapText(TitleFont, visibleBalloon.Label.Replace('\n', ' '), new Vector2(750, 64));
+            wrappedContent = TextUtility.wrapText(ContentFont, visibleBalloon.Content, new Vector2(750, 430));
 
             // Get the images from the cache
-            if (!balloonTextureCache.ContainsKey(_visibleBalloon.ID))
+            if (!balloonTextureCache.ContainsKey(visibleBalloon.ID))
             {
-                BalloonContentCache cacheEntry = new BalloonContentCache(_visibleBalloon.ID);
+                BalloonContentCache cacheEntry = new BalloonContentCache(visibleBalloon.ID);
                 ThreadPool.QueueUserWorkItem(o =>
                 {
-                    cacheEntry.QRCode = String.IsNullOrEmpty(_visibleBalloon.Url) ? null : ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, _visibleBalloon.Url);
-                    cacheEntry.Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, _visibleBalloon.ImageUrl);
+                    cacheEntry.QRCode = String.IsNullOrEmpty(visibleBalloon.Url) ? null : ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, visibleBalloon.Url);
+                    cacheEntry.Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, visibleBalloon.ImageUrl);
                 });
 
-                balloonTextureCache.Add(_visibleBalloon.ID, cacheEntry);
+                balloonTextureCache.Add(visibleBalloon.ID, cacheEntry);
             }
 
-            _visibleBalloon.BalloonContentCache = balloonTextureCache[_visibleBalloon.ID];
-        }
-
-        private void Close()
-        {
-            this._visibleBalloon = null;
-            if (OnClose != null) { OnClose(this, null); }
+            visibleBalloon.BalloonContentCache = balloonTextureCache[visibleBalloon.ID];
         }
     }
 }

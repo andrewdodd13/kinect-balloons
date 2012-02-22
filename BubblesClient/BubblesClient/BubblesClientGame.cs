@@ -10,6 +10,7 @@ using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using BubblesClient.Model.ContentBox;
 
 namespace BubblesClient
 {
@@ -52,7 +53,7 @@ namespace BubblesClient
         private Bucket oldBucket = null;
 
         // If this is not null then we will be showing a balloon. We really need a state machine.
-        private ContentBox contentBox;
+        private AbstractContentBox contentBox;
 
         private List<PopAnim> popAnimations = new List<PopAnim>();
         private GameTime currentTime;
@@ -83,7 +84,7 @@ namespace BubblesClient
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Create a new content box
-            contentBox = new ContentBox(screenDimensions, graphics);
+            contentBox = new ManualContentBox(screenDimensions, graphics);
 
             // Initialise Input
             this.input = controller;
@@ -196,18 +197,7 @@ namespace BubblesClient
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketBlue"), Color.Blue));
 
             // Set up the content box
-            contentBox.TitleFont = Content.Load<SpriteFont>("Fonts/Content-Title");
-            contentBox.ContentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
-            contentBox.BoxTexture = Content.Load<Texture2D>("Images/ContentBox");
-            contentBox.CloseIconTexture = Content.Load<Texture2D>("Images/CloseIcon");
-            contentBox.LoadingSprite = Content.Load<Texture2D>("Images/LoadingSprite");
-
-            List<Texture2D> countDownImages = new List<Texture2D>();
-            for (int i = 0; i <= 30; i++)
-            {
-                countDownImages.Add(Content.Load<Texture2D>("Images/Countdown/" + i));
-            }
-            contentBox.CountDownImages = countDownImages;
+            contentBox.LoadResources(Content);
 
             contentBox.OnClose += delegate(object sender, EventArgs args)
             {
@@ -302,7 +292,7 @@ namespace BubblesClient
             }
 
             // Update the content box if it is visible
-            if (contentBox.VisibleBalloon != null) { contentBox.Update(gameTime); }
+            if (contentBox.IsVisible) { contentBox.Update(gameTime); }
 
             base.Update(gameTime);
         }
@@ -407,7 +397,7 @@ namespace BubblesClient
             }
 
             // Display content page if the contentBox has a balloon
-            if (contentBox.VisibleBalloon != null)
+            if (contentBox.IsVisible)
             {
                 contentBox.Draw(spriteBatch);
             }
@@ -440,7 +430,7 @@ namespace BubblesClient
             physicsManager.UpdateHandPositions(hands);
 
             // If the content box is visible, check if the hands are in the correct position
-            if (contentBox.VisibleBalloon != null)
+            if (contentBox.IsVisible)
             {
                 bool insideThisFrame = false;
                 foreach (Hand hand in hands)
@@ -502,7 +492,7 @@ namespace BubblesClient
             balloon.Popped = true;
             if (showContent)
             {
-                contentBox.VisibleBalloon = balloon;
+                contentBox.SetBalloon(balloon);
                 physicsManager.DisableHandCollisions();
             }
 
