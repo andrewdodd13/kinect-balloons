@@ -6,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
 using BubblesClient.Model;
 
 namespace BubblesClient.Utility
@@ -65,13 +64,8 @@ namespace BubblesClient.Utility
             return text;
         }
 
-        public Texture2D RenderCaption(GraphicsDevice device, ClientBalloon balloon)
+        public Bitmap RenderCaption(ClientBalloon balloon)
         {
-            if(device == null)
-            {
-                return null;
-            }
-
             // replace template parameters by their values
             string content = (balloon.Label == null) ? "" : balloon.Label;
             var vals = new Dictionary<string, string>();
@@ -81,26 +75,14 @@ namespace BubblesClient.Utility
             var images = new Dictionary<string, Image>(staticImages);
             Stopwatch w = new Stopwatch();
             w.Start();
-            using(Bitmap bmp = RenderHtml(maxCaptionBoxSize, html, images))
-            {
-                w.Stop();
-                Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
-
-                using(MemoryStream ms = new MemoryStream())
-                {
-                    bmp.Save(ms, imgFormat);
-                    return Texture2D.FromStream(device, ms);
-                }
-            }
+            Bitmap bmp = RenderHtml(maxCaptionBoxSize, html, images);
+            w.Stop();
+            Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
+            return bmp;
         }
 
-        public Texture2D RenderContent(GraphicsDevice device, ClientBalloon balloon)
+        public Bitmap RenderContent(ClientBalloon balloon)
         {
-            if(device == null)
-            {
-                return null;
-            }
-
             // prepare the images
             var images = new Dictionary<string, Image>(staticImages);
             if(!String.IsNullOrWhiteSpace(balloon.Url))
@@ -155,18 +137,11 @@ namespace BubblesClient.Utility
 
             Stopwatch w = new Stopwatch();
             w.Start();
-            using(Bitmap bmp = RenderHtml(maxContentBoxSize, html, images))
-            {
-                bmp.MakeTransparent(maskColour);
-                w.Stop();
-                Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
-
-                using(MemoryStream ms = new MemoryStream())
-                {
-                    bmp.Save(ms, imgFormat);
-                    return Texture2D.FromStream(device, ms);
-                }
-            }
+            Bitmap bmp = RenderHtml(maxContentBoxSize, html, images);
+            bmp.MakeTransparent(maskColour);
+            w.Stop();
+            Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
+            return bmp;
         }
 
         private Bitmap RenderHtml(Size maxSize, string html, Dictionary<string, Image> images)

@@ -85,7 +85,7 @@ namespace BubblesClient
 
             // Create a new content box
             renderer = new ContentRenderer();
-            contentBox = new ContentBox(screenDimensions, graphics);
+            contentBox = new ContentBox(screenDimensions, graphics, renderer);
 
             // Initialise Input
             this.input = controller;
@@ -635,7 +635,8 @@ namespace BubblesClient
             // Render the balloon's caption if we already have it
             if(Configuration.UseHtmlRendering && !String.IsNullOrWhiteSpace(b.Label))
             {
-                b.BalloonContentCache.Caption = renderer.RenderCaption(GraphicsDevice, b);
+                System.Drawing.Bitmap img = renderer.RenderCaption(b);
+                b.BalloonContentCache.Caption = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
             }
 
             balloons.Add(b.ID, b);
@@ -670,7 +671,8 @@ namespace BubblesClient
                 // Render the balloon's caption again when it changes
                 if (Configuration.UseHtmlRendering && (oldLabel != balloon.Label))
                 {
-                    balloon.BalloonContentCache.Caption = renderer.RenderCaption(GraphicsDevice, balloon);
+                    System.Drawing.Bitmap img = renderer.RenderCaption(balloon);
+                    balloon.BalloonContentCache.Caption = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
                 }
             }
         }

@@ -9,6 +9,7 @@
         public Texture2D QRCode { get; set; }
         public Texture2D Image { get; set; }
         public Texture2D Caption { get; set; }
+        public Texture2D Content { get; set; }
 
         public BalloonContentCache(string id)
         {

@@ -18,6 +18,7 @@
         // Graphics
         private Vector2 screenDimensions;
         private GraphicsDeviceManager graphics;
+        private ContentRenderer renderer;
 
         // Texture cache
         private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
@@ -54,10 +55,11 @@
             }
         }
 
-        public ContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics)
+        public ContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics, ContentRenderer renderer)
         {
             this.screenDimensions = screenDimensions;
             this.graphics = graphics;
+            this.renderer = renderer;
         }
 
         public void Update(GameTime gameTime)
@@ -71,6 +73,18 @@
         /// </summary>
         /// <param name="spriteBatch"></param>
         public void Draw(SpriteBatch spriteBatch)
+        {
+            if (Configuration.UseHtmlRendering)
+            {
+                DrawHtml(spriteBatch);
+            }
+            else
+            {
+                DrawSprites(spriteBatch);
+            }
+        }
+
+        private void DrawSprites(SpriteBatch spriteBatch)
         {
             // Position contains the co-ordinate of the top-left corner of the box excluding border
             Vector2 border = new Vector2(9, 9);
@@ -114,6 +128,36 @@
                 spriteBatch.Draw(LoadingSprite, position + new Vector2(BoxTexture.Width - 24 - LoadingSprite.Width - 9, 24), Color.White);
             }
 
+            DrawCloseTimer(spriteBatch);
+        }
+
+        private void DrawHtml(SpriteBatch spriteBatch)
+        {
+            if (_visibleBalloon == null)
+            {
+                return;
+            }
+
+            Texture2D contentBoxTexture = _visibleBalloon.BalloonContentCache.Content;
+            if (contentBoxTexture != null)
+            {
+                // Position contains the co-ordinate of the top-left corner of the box
+                Vector2 position = (screenDimensions / 2) -
+                    (new Vector2(contentBoxTexture.Width, contentBoxTexture.Height) / 2);
+
+                // Draw the HTML-rendered box
+                spriteBatch.Draw(contentBoxTexture, position, Color.White);
+            }
+            else
+            {
+                // TODO: fix mode change before the content box is rendered
+            }
+
+            DrawCloseTimer(spriteBatch);
+        }
+
+        private void DrawCloseTimer(SpriteBatch spriteBatch)
+        {
             // Draw the timer
             Texture2D currentFrame = CountDownImages[(int)(closeTimer / 1000)];
             spriteBatch.Draw(currentFrame, screenDimensions - new Vector2(currentFrame.Width + 8, currentFrame.Height + 8), Color.White);
@@ -152,13 +196,16 @@
             closeTimer = Configuration.MessageDisplayTime;
             forceCloseTimer = DefaultForceCloseTime;
 
-            // Wrap the text
-            wrappedTitle = TextUtility.wrapText(TitleFont, VisibleBalloon.Label.Replace('\n', ' '), new Vector2(750, 64));
-            wrappedContent = TextUtility.wrapText(ContentFont, VisibleBalloon.Content, new Vector2(750, 430));
+            if (!Configuration.UseHtmlRendering)
+            {
+                // Wrap the text
+                wrappedTitle = TextUtility.wrapText(TitleFont, VisibleBalloon.Label.Replace('\n', ' '), new Vector2(750, 64));
+                wrappedContent = TextUtility.wrapText(ContentFont, VisibleBalloon.Content, new Vector2(750, 430));
+            }
 
             // Get the images from the cache or generate them
             BalloonContentCache cacheEntry = GetBalloonContent(_visibleBalloon.ID);
-            if(cacheEntry.Image == null)
+            if (cacheEntry.Image == null)
             {
                 ThreadPool.QueueUserWorkItem(o =>
                 {
@@ -166,7 +213,7 @@
                     cacheEntry.Image = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
                 });
             }
-            if((cacheEntry.QRCode == null) && !String.IsNullOrEmpty(_visibleBalloon.Url))
+            if ((cacheEntry.QRCode == null) && !String.IsNullOrEmpty(_visibleBalloon.Url))
             {
                 ThreadPool.QueueUserWorkItem(o =>
                 {
@@ -174,7 +221,11 @@
                     cacheEntry.QRCode = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
                 });
             }
-            _visibleBalloon.BalloonContentCache = cacheEntry;
+            if ((cacheEntry.Content == null) && Configuration.UseHtmlRendering)
+            {
+                System.Drawing.Bitmap img = renderer.RenderContent(_visibleBalloon);
+                cacheEntry.Content = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
+            }
         }
 
         private void Close()
