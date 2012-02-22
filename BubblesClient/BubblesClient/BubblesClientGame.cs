@@ -35,7 +35,6 @@ namespace BubblesClient
         private GraphicsDeviceManager graphics;
         private Vector2 screenDimensions;
         private SpriteBatch spriteBatch;
-        private ContentRenderer renderer;
 
         // Input
         private IInputController input;
@@ -84,8 +83,7 @@ namespace BubblesClient
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Create a new content box
-            renderer = new ContentRenderer();
-            contentBox = new ContentBox(screenDimensions, graphics, renderer);
+            contentBox = new ContentBox(screenDimensions, graphics);
 
             // Initialise Input
             this.input = controller;
@@ -203,8 +201,10 @@ namespace BubblesClient
             contentBox.BoxTexture = Content.Load<Texture2D>("Images/ContentBox");
             contentBox.CloseIconTexture = Content.Load<Texture2D>("Images/CloseIcon");
             contentBox.LoadingSprite = Content.Load<Texture2D>("Images/LoadingSprite");
-
-            renderer.LoadContent(Content);
+            contentBox.HtmlRenderer.LoadTemplate(Content.RootDirectory, "caption_box.html");
+            contentBox.HtmlRenderer.LoadTemplate(Content.RootDirectory, "content_box.html");
+            contentBox.HtmlRenderer.LoadImage(Content.RootDirectory, "thumbs-up.png");
+            contentBox.HtmlRenderer.LoadImage(Content.RootDirectory, "thumbs-down.png");
 
             List<Texture2D> countDownImages = new List<Texture2D>();
             for (int i = 0; i <= 30; i++)
@@ -635,7 +635,7 @@ namespace BubblesClient
             // Render the balloon's caption if we already have it
             if(Configuration.UseHtmlRendering && !String.IsNullOrWhiteSpace(b.Label))
             {
-                b.BalloonContentCache[CacheType.Caption] = renderer.RenderCaption(b);
+                contentBox.GenerateCaption(b);
             }
 
             balloons.Add(b.ID, b);
@@ -667,10 +667,10 @@ namespace BubblesClient
                 balloon.Url = bcm.Url;
                 balloon.ImageUrl = bcm.ImageUrl;
 
-                // Render the balloon's caption again when it changes
+                // Generate the balloon's caption again when it changes
                 if (Configuration.UseHtmlRendering && (oldLabel != balloon.Label))
                 {
-                    balloon.BalloonContentCache[CacheType.Caption] = renderer.RenderCaption(balloon);
+                    contentBox.GenerateCaption(balloon);
                 }
             }
         }

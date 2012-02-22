@@ -18,7 +18,7 @@
         // Graphics
         private Vector2 screenDimensions;
         private GraphicsDeviceManager graphics;
-        private ContentRenderer renderer;
+        public HtmlRenderer HtmlRenderer { get; private set; }
 
         // Texture cache
         private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
@@ -55,11 +55,11 @@
             }
         }
 
-        public ContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics, ContentRenderer renderer)
+        public ContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics)
         {
             this.screenDimensions = screenDimensions;
             this.graphics = graphics;
-            this.renderer = renderer;
+            this.HtmlRenderer = new HtmlRenderer();
         }
 
         public void Update(GameTime gameTime)
@@ -230,12 +230,21 @@
             }
         }
 
+        public void GenerateCaption(ClientBalloon balloon)
+        {
+            if (Configuration.UseHtmlRendering)
+            {
+                BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+                cacheEntry[CacheType.Content] = HtmlRenderer.RenderCaption(balloon);
+            }
+        }
+
         private void GenerateContent(ClientBalloon balloon)
         {
             if (Configuration.UseHtmlRendering)
             {
                 BalloonContentCache cacheEntry = balloon.BalloonContentCache;
-                cacheEntry[CacheType.Content] = renderer.RenderContent(balloon);
+                cacheEntry[CacheType.Content] = HtmlRenderer.RenderContent(balloon);
             }
         }
 

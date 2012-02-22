@@ -5,15 +5,15 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework.Content;
+//using Microsoft.Xna.Framework.Content;
 using BubblesClient.Model;
 
 namespace BubblesClient.Utility
 {
     /// <summary>
-    /// Creates textures from a balloon's content, to be displayed on screen.
+    /// Creates images from a balloon's content, using HTML, to be displayed on screen.
     /// </summary>
-    public class ContentRenderer
+    public class HtmlRenderer
     {
         private Size maxCaptionBoxSize;
         private Size maxContentBoxSize;
@@ -23,7 +23,7 @@ namespace BubblesClient.Utility
         private Dictionary<string, string> templates;
         private Dictionary<string, Image> staticImages;
 
-        public ContentRenderer()
+        public HtmlRenderer()
         {
             this.maxCaptionBoxSize = new Size(400, 600);
             this.maxContentBoxSize = new Size(1060, 700);
@@ -34,21 +34,13 @@ namespace BubblesClient.Utility
             this.staticImages = new Dictionary<string, Image>();
         }
 
-        public void LoadContent(ContentManager manager)
-        {
-            LoadTemplate(manager.RootDirectory, "caption_box.html");
-            LoadTemplate(manager.RootDirectory, "content_box.html");
-            LoadImage(manager.RootDirectory, "thumbs-up.png");
-            LoadImage(manager.RootDirectory, "thumbs-down.png");
-        }
-
-        private void LoadTemplate(string path, string name)
+        public void LoadTemplate(string path, string name)
         {
             string file = Path.Combine(path, Path.Combine("Html", name));
             templates[name] = File.ReadAllText(file);
         }
 
-        private void LoadImage(string path, string name)
+        public void LoadImage(string path, string name)
         {
             string file = Path.Combine(path, Path.Combine("Images", name));
             staticImages[name] = Image.FromFile(file);
