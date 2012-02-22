@@ -73,30 +73,39 @@ namespace BubblesClient.Utility
             string html = FillTemplate(templates["caption_box.html"], vals);
 
             var images = new Dictionary<string, Image>(staticImages);
-            Stopwatch w = new Stopwatch();
-            w.Start();
-            Bitmap bmp = RenderHtml(maxCaptionBoxSize, html, images);
-            w.Stop();
-            Trace.WriteLine(String.Format("Caption box rendered in: {0} s", w.Elapsed.TotalSeconds));
-            return bmp;
+            return RenderHtml(maxCaptionBoxSize, html, images);
         }
 
         public Bitmap RenderContent(ClientBalloon balloon)
         {
             // prepare the images
+            BalloonContentCache cacheEntry = balloon.BalloonContentCache;
             var images = new Dictionary<string, Image>(staticImages);
-            if(!String.IsNullOrWhiteSpace(balloon.Url))
+            Bitmap qrImg = null, webImg = null;
+            lock (cacheEntry)
             {
-                images["qr.png"] = ImageGenerator.GenerateQRCode(balloon.Url);
-            }
-            if(!String.IsNullOrWhiteSpace(balloon.ImageUrl))
-            {
-                images["web.png"] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+                // clone images to avoid threading issues (e.g. concurrent calls to RenderContent)
+                qrImg = cacheEntry[CacheType.QRCode];
+                webImg = cacheEntry[CacheType.WebImage];
+                if (qrImg != null)
+                {
+                    qrImg = (Bitmap)qrImg.Clone();
+                    images["qr.png"] = qrImg;
+                }
+                if (webImg != null)
+                {
+                    webImg = (Bitmap)webImg.Clone();
+                    images["web.png"] = webImg;
+                }
             }
 
             // replace template parameters by their values
             string title = (balloon.Label == null) ? "" : balloon.Label;
             string content = (balloon.Content == null) ? "" : balloon.Content;
+            if (String.IsNullOrEmpty(content) && !String.IsNullOrEmpty(balloon.Url))
+            {
+                content = balloon.Url;
+            }
             var vals = new Dictionary<string, string>();
             vals.Add("@@TITLE@@", title);
             vals.Add("@@CONTENT@@", content);
@@ -114,18 +123,26 @@ namespace BubblesClient.Utility
                 vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
             }
 
-            Image webImg = null;
-            const int webImageSize = 229;
-            if(images.TryGetValue("web.png", out webImg))
+            // Generate CSS for images
+            const int imageSize = 229;
+            if (qrImg != null)
+            {
+                vals.Add("@@QRIMG_CSS@@", String.Format("width: {0}px; width: {0}px;", imageSize));
+            }
+            else
+            {
+                vals.Add("@@QRIMG_CSS@@", "display: none;");
+            }
+            if(webImg != null)
             {
                 if(webImg.Width > webImg.Height)
                 {
-                    int realSize = Math.Min(webImageSize, webImg.Width);
+                    int realSize = Math.Min(imageSize, webImg.Width);
                     vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
                 }
                 else
                 {
-                    int realSize = Math.Min(webImageSize, webImg.Height);
+                    int realSize = Math.Min(imageSize, webImg.Height);
                     vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
                 }
             }
@@ -133,14 +150,10 @@ namespace BubblesClient.Utility
             {
                 vals.Add("@@WEBIMG_CSS@@", "display: none;");
             }
-            string html = FillTemplate(templates["content_box.html"], vals);
 
-            Stopwatch w = new Stopwatch();
-            w.Start();
+            string html = FillTemplate(templates["content_box.html"], vals);
             Bitmap bmp = RenderHtml(maxContentBoxSize, html, images);
             bmp.MakeTransparent(maskColour);
-            w.Stop();
-            Trace.WriteLine(String.Format("Content box rendered in: {0} s", w.Elapsed.TotalSeconds));
             return bmp;
         }
 

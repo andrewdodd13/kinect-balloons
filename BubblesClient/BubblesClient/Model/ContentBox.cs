@@ -108,9 +108,10 @@
             TextUtility.drawTextLabel(spriteBatch, TitleFont, votesLabel, position + new Vector2(754 - TitleFont.MeasureString(votesLabel).X, 0), votesColor);
 
             // Draw the QR Code
-            if (VisibleBalloon.BalloonContentCache.QRCode != null)
+            Texture2D qrTex = VisibleBalloon.BalloonContentCache[CacheType.QRCode, graphics.GraphicsDevice];
+            if (qrTex != null)
             {
-                spriteBatch.Draw(VisibleBalloon.BalloonContentCache.QRCode, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
+                spriteBatch.Draw(qrTex, position + new Vector2(BoxTexture.Width - 24 - 224 - 9, BoxTexture.Height - 224 - 24 - 9), Color.White);
             }
             else
             {
@@ -118,7 +119,7 @@
             }
 
             // Draw the Image
-            Texture2D balloonImage = VisibleBalloon.BalloonContentCache.Image;
+            Texture2D balloonImage = VisibleBalloon.BalloonContentCache[CacheType.WebImage, graphics.GraphicsDevice];
             if (balloonImage != null)
             {
                 spriteBatch.Draw(balloonImage, position + new Vector2(BoxTexture.Width - 24 - 112 - (balloonImage.Width / 2) - 9, 24 + 112 - (balloonImage.Height / 2)), Color.White);
@@ -138,7 +139,7 @@
                 return;
             }
 
-            Texture2D contentBoxTexture = _visibleBalloon.BalloonContentCache.Content;
+            Texture2D contentBoxTexture = _visibleBalloon.BalloonContentCache[CacheType.Content, graphics.GraphicsDevice];
             if (contentBoxTexture != null)
             {
                 // Position contains the co-ordinate of the top-left corner of the box
@@ -204,27 +205,37 @@
             }
 
             // Get the images from the cache or generate them
-            BalloonContentCache cacheEntry = GetBalloonContent(_visibleBalloon.ID);
-            if (cacheEntry.Image == null)
+            GetBalloonContent(_visibleBalloon.ID);
+            ThreadPool.QueueUserWorkItem(o => GenerateQR(_visibleBalloon));
+            ThreadPool.QueueUserWorkItem(o => GenerateImage(_visibleBalloon));
+        }
+
+        private void GenerateQR(ClientBalloon balloon)
+        {
+            BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+            if ((cacheEntry[CacheType.QRCode] == null) && !String.IsNullOrEmpty(balloon.Url))
             {
-                ThreadPool.QueueUserWorkItem(o =>
-                {
-                    System.Drawing.Bitmap img = ImageGenerator.GenerateFromWeb(_visibleBalloon.ImageUrl);
-                    cacheEntry.Image = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
-                });
+                cacheEntry[CacheType.QRCode] = ImageGenerator.GenerateQRCode(balloon.Url);
+                GenerateContent(balloon);
             }
-            if ((cacheEntry.QRCode == null) && !String.IsNullOrEmpty(_visibleBalloon.Url))
+        }
+
+        private void GenerateImage(ClientBalloon balloon)
+        {
+            BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+            if (cacheEntry[CacheType.WebImage] == null)
             {
-                ThreadPool.QueueUserWorkItem(o =>
-                {
-                    System.Drawing.Bitmap img = ImageGenerator.GenerateQRCode(_visibleBalloon.Url);
-                    cacheEntry.QRCode = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
-                });
+                cacheEntry[CacheType.WebImage] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+                GenerateContent(balloon);
             }
-            if ((cacheEntry.Content == null) && Configuration.UseHtmlRendering)
+        }
+
+        private void GenerateContent(ClientBalloon balloon)
+        {
+            if (Configuration.UseHtmlRendering)
             {
-                System.Drawing.Bitmap img = renderer.RenderContent(_visibleBalloon);
-                cacheEntry.Content = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
+                BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+                cacheEntry[CacheType.Content] = renderer.RenderContent(balloon);
             }
         }
 

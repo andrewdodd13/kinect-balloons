@@ -449,7 +449,7 @@ namespace BubblesClient
                 PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
             boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
-            Texture2D caption = balloon.BalloonContentCache.Caption;
+            Texture2D caption = balloon.BalloonContentCache[CacheType.Caption, GraphicsDevice];
             if(caption != null)
             {
                 boxPosition.X -= caption.Width / 2;
@@ -635,8 +635,7 @@ namespace BubblesClient
             // Render the balloon's caption if we already have it
             if(Configuration.UseHtmlRendering && !String.IsNullOrWhiteSpace(b.Label))
             {
-                System.Drawing.Bitmap img = renderer.RenderCaption(b);
-                b.BalloonContentCache.Caption = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
+                b.BalloonContentCache[CacheType.Caption] = renderer.RenderCaption(b);
             }
 
             balloons.Add(b.ID, b);
@@ -671,8 +670,7 @@ namespace BubblesClient
                 // Render the balloon's caption again when it changes
                 if (Configuration.UseHtmlRendering && (oldLabel != balloon.Label))
                 {
-                    System.Drawing.Bitmap img = renderer.RenderCaption(balloon);
-                    balloon.BalloonContentCache.Caption = ImageGenerator.BitmapToTexture(img, graphics.GraphicsDevice);
+                    balloon.BalloonContentCache[CacheType.Caption] = renderer.RenderCaption(balloon);
                 }
             }
         }
