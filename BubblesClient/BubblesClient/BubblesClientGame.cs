@@ -5,12 +5,12 @@ using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
+using BubblesClient.Model.ContentBox;
 using BubblesClient.Physics;
 using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BubblesClient.Model.ContentBox;
 
 namespace BubblesClient
 {
@@ -84,8 +84,14 @@ namespace BubblesClient
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
             // Create a new content box
-            contentBox = new ManualContentBox(screenDimensions, graphics);
-            // contentBox = new HTMLContentBox(screenDimensions, graphics);
+            if (Configuration.UseHtmlRendering)
+            {
+                contentBox = new HTMLContentBox(screenDimensions, graphics);
+            }
+            else
+            {
+                contentBox = new ManualContentBox(screenDimensions, graphics);
+            }
 
             // Initialise Input
             this.input = controller;
@@ -334,7 +340,7 @@ namespace BubblesClient
                 // Draw the box containing the balloon text if it is not a user-customized balloon
                 if (ShouldDrawCaption(balloon))
                 {
-                    if(Configuration.UseHtmlRendering)
+                    if (Configuration.UseHtmlRendering)
                     {
                         DrawBalloonCaptionHtml(balloon);
                     }
@@ -409,7 +415,7 @@ namespace BubblesClient
             // If the label is not cached then it means it has not
             // been formatted to fit in the box; therefore format it 
             // and save it back
-            if(!balloon.IsLabelCached)
+            if (!balloon.IsLabelCached)
             {
                 string labelText = balloon.Label;
                 balloon.Label = TextUtility.wrapText(summaryFont, labelText, new Vector2(382, 168));
@@ -437,7 +443,7 @@ namespace BubblesClient
             boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
             Texture2D caption = balloon.BalloonContentCache[CacheType.Caption, GraphicsDevice];
-            if(caption != null)
+            if (caption != null)
             {
                 boxPosition.X -= caption.Width / 2;
                 spriteBatch.Draw(caption, boxPosition, Color.White);
@@ -620,7 +626,7 @@ namespace BubblesClient
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
 
             // Render the balloon's caption if we already have it
-            if(!String.IsNullOrWhiteSpace(b.Label))
+            if (!String.IsNullOrWhiteSpace(b.Label))
             {
                 contentBox.GenerateCaption(b);
             }
