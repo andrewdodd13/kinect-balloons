@@ -96,17 +96,24 @@ namespace BubblesClient.Utility
             vals.Add("@@TITLE@@", title);
             vals.Add("@@CONTENT@@", content);
             vals.Add("@@MASK-COLOR@@", ColorTranslator.ToHtml(maskColour));
-            if(balloon.Votes >= 0)
+            if (balloon.Type == Balloons.Messaging.Model.BalloonType.CustomContent)
             {
-                vals.Add("@@VOTES@@", balloon.Votes.ToString());
-                vals.Add("@@THUMBS-CLASS@@", "thumbsUp");
-                vals.Add("@@THUMBS-IMG@@", "thumbs-up.png");
+                if (balloon.Votes >= 0)
+                {
+                    vals.Add("@@VOTES@@", balloon.Votes.ToString());
+                    vals.Add("@@THUMBS-CLASS@@", "thumbsUp");
+                    vals.Add("@@THUMBS-IMG@@", "thumbs-up.png");
+                }
+                else
+                {
+                    vals.Add("@@VOTES@@", (-balloon.Votes).ToString());
+                    vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
+                    vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
+                }
             }
             else
             {
-                vals.Add("@@VOTES@@", (-balloon.Votes).ToString());
-                vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
-                vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
+                vals.Add("@@THUMBS-CLASS@@", "thumbsHidden");
             }
 
             // Generate CSS for images
