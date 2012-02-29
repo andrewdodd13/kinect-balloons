@@ -56,10 +56,6 @@
                 // Draw the HTML-rendered box
                 spriteBatch.Draw(contentBoxTexture, position, Color.White);
             }
-            else
-            {
-                // TODO: fix mode change before the content box is rendered
-            }
 
             DrawCloseTimer(spriteBatch);
         }
@@ -74,6 +70,13 @@
         {
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
             cacheEntry[CacheType.Content] = HtmlRenderer.RenderContent(balloon);
+        }
+
+        protected override void Close()
+        {
+            // clear the content box image so that it will be updated next time the balloon is popped
+            visibleBalloon.BalloonContentCache[CacheType.Content] = null;
+            base.Close();
         }
     }
 }

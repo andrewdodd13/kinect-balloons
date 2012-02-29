@@ -22,6 +22,7 @@ namespace BubblesClient.Utility
         private Color maskColour;
         private Dictionary<string, string> templates;
         private Dictionary<string, Image> staticImages;
+        private static readonly object gdiLock = new object();
 
         public HtmlRenderer()
         {
@@ -73,22 +74,15 @@ namespace BubblesClient.Utility
             // prepare the images
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
             var images = new Dictionary<string, Image>(staticImages);
-            Bitmap qrImg = null, webImg = null;
-            lock (cacheEntry)
+            Bitmap qrImg = cacheEntry[CacheType.QRCode];
+            Bitmap webImg = cacheEntry[CacheType.WebImage];
+            if (qrImg != null)
             {
-                // clone images to avoid threading issues (e.g. concurrent calls to RenderContent)
-                qrImg = cacheEntry[CacheType.QRCode];
-                webImg = cacheEntry[CacheType.WebImage];
-                if (qrImg != null)
-                {
-                    qrImg = (Bitmap)qrImg.Clone();
-                    images["qr.png"] = qrImg;
-                }
-                if (webImg != null)
-                {
-                    webImg = (Bitmap)webImg.Clone();
-                    images["web.png"] = webImg;
-                }
+                images["qr.png"] = qrImg;
+            }
+            if (webImg != null)
+            {
+                images["web.png"] = webImg;
             }
 
             // replace template parameters by their values
@@ -102,17 +96,24 @@ namespace BubblesClient.Utility
             vals.Add("@@TITLE@@", title);
             vals.Add("@@CONTENT@@", content);
             vals.Add("@@MASK-COLOR@@", ColorTranslator.ToHtml(maskColour));
-            if(balloon.Votes >= 0)
+            if (balloon.Type == Balloons.Messaging.Model.BalloonType.CustomContent)
             {
-                vals.Add("@@VOTES@@", balloon.Votes.ToString());
-                vals.Add("@@THUMBS-CLASS@@", "thumbsUp");
-                vals.Add("@@THUMBS-IMG@@", "thumbs-up.png");
+                if (balloon.Votes >= 0)
+                {
+                    vals.Add("@@VOTES@@", balloon.Votes.ToString());
+                    vals.Add("@@THUMBS-CLASS@@", "thumbsUp");
+                    vals.Add("@@THUMBS-IMG@@", "thumbs-up.png");
+                }
+                else
+                {
+                    vals.Add("@@VOTES@@", (-balloon.Votes).ToString());
+                    vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
+                    vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
+                }
             }
             else
             {
-                vals.Add("@@VOTES@@", (-balloon.Votes).ToString());
-                vals.Add("@@THUMBS-CLASS@@", "thumbsDown");
-                vals.Add("@@THUMBS-IMG@@", "thumbs-down.png");
+                vals.Add("@@THUMBS-CLASS@@", "thumbsHidden");
             }
 
             // Generate CSS for images
@@ -127,15 +128,18 @@ namespace BubblesClient.Utility
             }
             if(webImg != null)
             {
-                if(webImg.Width > webImg.Height)
+                lock (gdiLock)
                 {
-                    int realSize = Math.Min(imageSize, webImg.Width);
-                    vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
-                }
-                else
-                {
-                    int realSize = Math.Min(imageSize, webImg.Height);
-                    vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
+                    if (webImg.Width > webImg.Height)
+                    {
+                        int realSize = Math.Min(imageSize, webImg.Width);
+                        vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
+                    }
+                    else
+                    {
+                        int realSize = Math.Min(imageSize, webImg.Height);
+                        vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
+                    }
                 }
             }
             else
@@ -175,7 +179,7 @@ namespace BubblesClient.Utility
 
                 // render the HTML page to the image
                 Bitmap img = new Bitmap(size.Width, size.Height, pixFormat);
-                using(Graphics g = Graphics.FromImage(img))
+                using (Graphics g = Graphics.FromImage(img))
                 {
                     g.Clear(Color.Transparent);
                     hLite.Render(g, 0, 0, img.Width, img.Height);
@@ -190,10 +194,15 @@ namespace BubblesClient.Utility
             if(images.TryGetValue(uri, out img))
             {
                 // serialize the image to a stream of bytes
-                MemoryStream ms = new MemoryStream();
-                img.Save(ms, imgFormat);
-                byte[] data = ms.ToArray();
-                return data;
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    lock (gdiLock)
+                    {
+                        img.Save(ms, imgFormat);
+                    }
+                    byte[] data = ms.ToArray();
+                    return data;
+                }
             }
             return null;
         }

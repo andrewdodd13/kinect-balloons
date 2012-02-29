@@ -118,7 +118,7 @@
             spriteBatch.Draw(closeIconTexture, new Vector2(screenDimensions.X - closeIconTexture.Width - 8, 8), closeIconColor);
         }
 
-        protected void Close()
+        protected virtual void Close()
         {
             this.visibleBalloon = null;
             if (OnClose != null) { OnClose(this, null); }
@@ -127,9 +127,15 @@
         protected void GenerateQR(ClientBalloon balloon)
         {
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+            bool imageUpdated = false;
             if ((cacheEntry[CacheType.QRCode] == null) && !String.IsNullOrEmpty(balloon.Url))
             {
                 cacheEntry[CacheType.QRCode] = ImageGenerator.GenerateQRCode(balloon.Url);
+                imageUpdated = true;
+            }
+
+            if (imageUpdated || cacheEntry[CacheType.Content] == null)
+            {
                 GenerateTextContent(balloon);
             }
         }
@@ -137,9 +143,15 @@
         protected void GenerateImage(ClientBalloon balloon)
         {
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
+            bool imageUpdated = false;
             if (cacheEntry[CacheType.WebImage] == null)
             {
                 cacheEntry[CacheType.WebImage] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+                imageUpdated = true;
+            }
+
+            if (imageUpdated || cacheEntry[CacheType.Content] == null)
+            {
                 GenerateTextContent(balloon);
             }
         }
