@@ -121,15 +121,18 @@ namespace BubblesClient.Utility
             }
             if(webImg != null)
             {
-                if(webImg.Width > webImg.Height)
+                lock (gdiLock)
                 {
-                    int realSize = Math.Min(imageSize, webImg.Width);
-                    vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
-                }
-                else
-                {
-                    int realSize = Math.Min(imageSize, webImg.Height);
-                    vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
+                    if (webImg.Width > webImg.Height)
+                    {
+                        int realSize = Math.Min(imageSize, webImg.Width);
+                        vals.Add("@@WEBIMG_CSS@@", String.Format("width: {0}px;", realSize));
+                    }
+                    else
+                    {
+                        int realSize = Math.Min(imageSize, webImg.Height);
+                        vals.Add("@@WEBIMG_CSS@@", String.Format("height: {0}px;", realSize));
+                    }
                 }
             }
             else
