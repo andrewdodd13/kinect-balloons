@@ -22,6 +22,7 @@ namespace BubblesClient.Utility
         private Color maskColour;
         private Dictionary<string, string> templates;
         private Dictionary<string, Image> staticImages;
+        private static readonly object gdiLock = new object();
 
         public HtmlRenderer()
         {
@@ -73,22 +74,15 @@ namespace BubblesClient.Utility
             // prepare the images
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
             var images = new Dictionary<string, Image>(staticImages);
-            Bitmap qrImg = null, webImg = null;
-            lock (cacheEntry)
+            Bitmap qrImg = cacheEntry[CacheType.QRCode];
+            Bitmap webImg = cacheEntry[CacheType.WebImage];
+            if (qrImg != null)
             {
-                // clone images to avoid threading issues (e.g. concurrent calls to RenderContent)
-                qrImg = cacheEntry[CacheType.QRCode];
-                webImg = cacheEntry[CacheType.WebImage];
-                if (qrImg != null)
-                {
-                    qrImg = (Bitmap)qrImg.Clone();
-                    images["qr.png"] = qrImg;
-                }
-                if (webImg != null)
-                {
-                    webImg = (Bitmap)webImg.Clone();
-                    images["web.png"] = webImg;
-                }
+                images["qr.png"] = qrImg;
+            }
+            if (webImg != null)
+            {
+                images["web.png"] = webImg;
             }
 
             // replace template parameters by their values
@@ -175,7 +169,7 @@ namespace BubblesClient.Utility
 
                 // render the HTML page to the image
                 Bitmap img = new Bitmap(size.Width, size.Height, pixFormat);
-                using(Graphics g = Graphics.FromImage(img))
+                using (Graphics g = Graphics.FromImage(img))
                 {
                     g.Clear(Color.Transparent);
                     hLite.Render(g, 0, 0, img.Width, img.Height);
@@ -190,10 +184,15 @@ namespace BubblesClient.Utility
             if(images.TryGetValue(uri, out img))
             {
                 // serialize the image to a stream of bytes
-                MemoryStream ms = new MemoryStream();
-                img.Save(ms, imgFormat);
-                byte[] data = ms.ToArray();
-                return data;
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    lock (gdiLock)
+                    {
+                        img.Save(ms, imgFormat);
+                    }
+                    byte[] data = ms.ToArray();
+                    return data;
+                }
             }
             return null;
         }
