@@ -95,6 +95,18 @@ namespace BubblesClient
         }
 
         /// <summary>
+        /// Cause the callback function to be called on a separate thread.
+        /// </summary>
+        /// <param name="callback"> Function to be called. </param>
+        public void CallAsync(GameCallback callback)
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate(object state)
+            {
+                callback();
+            });
+        }
+
+        /// <summary>
         /// Cause the callback function to be called after a given delay.
         /// </summary>
         /// <param name="callback"> Function to be called. </param>

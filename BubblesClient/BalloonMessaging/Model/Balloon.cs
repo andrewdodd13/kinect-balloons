@@ -14,10 +14,9 @@ namespace Balloons.Messaging.Model
 
     public enum BalloonType
     {
-        Customizable,
-        Twitter,
-        News,
-        CustomContent
+        Customizable = 0,
+        CustomContent = 1,
+        Twitter = 3,
     }
 
     public enum OverlayType
@@ -49,7 +48,8 @@ namespace Balloons.Messaging.Model
             Votes = 0;
         }
 
-        public Balloon(Balloon parent) : this(parent.ID)
+        public Balloon(Balloon parent)
+            : this(parent.ID)
         {
             // Copy properties from the parent
             this.BackgroundColor = parent.BackgroundColor;

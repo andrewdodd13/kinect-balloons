@@ -334,6 +334,37 @@
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Images\LoadingSprite.png">
+      <Name>LoadingSprite</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Html\caption_box.html">
+      <Name>caption_box</Name>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Processor>PassThroughProcessor</Processor>
+    </Content>
+    <Content Include="Html\content_box.html">
+      <Name>content_box</Name>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Processor>PassThroughProcessor</Processor>
+    </Content>
+    <Compile Include="Images\thumbs-down.png">
+      <Name>thumbs-down</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+    <Compile Include="Images\thumbs-up.png">
+      <Name>thumbs-up</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
   <!--  To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

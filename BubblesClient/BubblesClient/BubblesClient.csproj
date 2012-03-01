@@ -125,7 +125,9 @@
     <Compile Include="Model\Buckets\ColourBucket.cs" />
     <Compile Include="Model\Buckets\DecorationBucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
-    <Compile Include="Model\ContentBox.cs" />
+    <Compile Include="Model\ContentBox\HTMLContentBox.cs" />
+    <Compile Include="Model\ContentBox\ManualContentBox.cs" />
+    <Compile Include="Model\ContentBox\AbstractContentBox.cs" />
     <Compile Include="Model\PopInfo.cs" />
     <Compile Include="Network\ScreenManager.cs" />
     <Compile Include="Physics\PhysicsManager.cs" />
@@ -133,6 +135,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BubblesClientGame.cs" />
+    <Compile Include="Utility\HTMLite.cs" />
+    <Compile Include="Utility\HtmlRenderer.cs" />
     <Compile Include="Utility\ImageGenerator.cs" />
     <Compile Include="Utility\TextUtility.cs" />
   </ItemGroup>
@@ -180,6 +184,9 @@
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(ProjectDir)..\..\Libraries\HTMLite\htmlayout.dll" "$(TargetDir)htmlayout.dll"</PostBuildEvent>
+  </PropertyGroup>
   <!--
       To modify your build process, add your task inside one of the targets below and uncomment it. 
       Other similar extension points exist, see Microsoft.Common.targets.
