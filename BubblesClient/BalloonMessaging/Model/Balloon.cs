@@ -91,40 +91,6 @@ namespace Balloons.Messaging.Model
                     throw new ArgumentOutOfRangeException();
             }
         }
-
-        public static string FormatBalloonType(BalloonType btype)
-        {
-            switch (btype)
-            {
-                case BalloonType.CustomContent:
-                    return "customcontent";
-                case BalloonType.Customizable:
-                    return "customizable";
-                case BalloonType.News:
-                    return "news";
-                case BalloonType.Twitter:
-                    return "twitter";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public static BalloonType ParseBalloonType(string text)
-        {
-            switch (text)
-            {
-                case "customcontent":
-                    return BalloonType.CustomContent;
-                case "customizable":
-                    return BalloonType.Customizable;
-                case "news":
-                    return BalloonType.News;
-                case "twitter":
-                    return BalloonType.Twitter;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
     }
 }
 
