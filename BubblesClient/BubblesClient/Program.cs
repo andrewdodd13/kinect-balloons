@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using BubblesClient.Input.Controllers;
@@ -24,6 +25,7 @@ namespace BubblesClient
             }
             // If this path doesn't exist, the config file will be created with default values
             Configuration.Load(configPath);
+            AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             // Initialise the input controller
             IInputController controller = null;
@@ -43,6 +45,16 @@ namespace BubblesClient
             using(BubblesClientGame game = new BubblesClientGame(screen, controller))
             {
                 game.Run();
+            }
+        }
+
+        private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.ExceptionObject as Exception;
+            if (ex != null)
+            {
+                Trace.WriteLine(String.Format("Unhandled exception: {0}", ex.Message));
+                Trace.WriteLine(ex.StackTrace);
             }
         }
     }

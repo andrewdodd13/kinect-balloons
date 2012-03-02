@@ -130,7 +130,7 @@ namespace BubblesClient
 
         private void OnConnectFailed(object sender, EventArgs args)
         {
-            Trace.WriteLine("Could not connect to the server");
+            Trace.WriteLine(String.Format("Could not connect to the server: {0}", Configuration.RemoteIPAddress));
             Environment.Exit(1);
         }
 
