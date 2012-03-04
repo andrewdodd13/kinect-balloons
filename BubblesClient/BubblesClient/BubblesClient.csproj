@@ -128,7 +128,7 @@
     <Compile Include="Model\ContentBox\HTMLContentBox.cs" />
     <Compile Include="Model\ContentBox\ManualContentBox.cs" />
     <Compile Include="Model\ContentBox\AbstractContentBox.cs" />
-    <Compile Include="Model\PopInfo.cs" />
+    <Compile Include="Model\PopAnimation.cs" />
     <Compile Include="Model\Tag\AbstractBalloonTag.cs" />
     <Compile Include="Model\Tag\ITagFactory.cs" />
     <Compile Include="Network\ScreenManager.cs" />

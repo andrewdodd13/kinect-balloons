@@ -48,6 +48,8 @@ namespace BubblesClient
 
         private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
 
+        private Random rng = new Random();
+
         //other stuff
         private bool showBuckets = true;
         private Bucket oldBucket = null;
@@ -544,7 +546,7 @@ namespace BubblesClient
                 PopAnimation anim = new PopAnimation(balloon);
                 anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
-                anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
+                anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
                 anim.PopColour = new Colour(255, 255, 255, 255);
                 popAnimations.Add(anim);
             }
@@ -610,7 +612,7 @@ namespace BubblesClient
 
                 case Direction.Any:
                 default:
-                    position.X = new Random().Next((int)screenDimensions.X);
+                    position.X = rng.Next((int)screenDimensions.X);
                     break;
             }
 
