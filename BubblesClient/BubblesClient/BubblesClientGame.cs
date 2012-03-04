@@ -11,6 +11,7 @@ using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using BubblesClient.Network;
 
 namespace BubblesClient
 {
@@ -30,7 +31,7 @@ namespace BubblesClient
         private SpriteFont summaryFont;
 
         // Network
-        public ScreenManager ScreenManager { get; private set; }
+        public INetworkManager ScreenManager { get; private set; }
 
         // XNA Graphics
         private GraphicsDeviceManager graphics;
@@ -60,7 +61,7 @@ namespace BubblesClient
         private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(ScreenManager screenManager, IInputController controller)
+        public BubblesClientGame(INetworkManager screenManager, IInputController controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
@@ -566,7 +567,7 @@ namespace BubblesClient
         #region "Networking"
         public void ProcessNetworkMessages()
         {
-            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
+            List<Message> messages = ScreenManager.GetAllMessages();
             foreach (Message msg in messages)
             {
                 if (msg == null)

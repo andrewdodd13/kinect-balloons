@@ -2,6 +2,7 @@ using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
+using BubblesClient.Network;
 
 namespace BubblesClient
 {
@@ -36,7 +37,7 @@ namespace BubblesClient
             }
 
             // Run the game
-            using (ScreenManager screen = new ScreenManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
+            using (NetworkManager screen = new NetworkManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
             using (BubblesClientGame game = new BubblesClientGame(screen, controller))
             {
                 game.Run();

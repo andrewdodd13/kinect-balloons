@@ -8,29 +8,30 @@ using Balloons.Messaging.Model;
 using BubblesClient.Model;
 using Microsoft.Xna.Framework;
 
-namespace BubblesClient
+namespace BubblesClient.Network
 {
     /// <summary>
-    /// ScreenManager manages the network connection to the Balloon Server.
+    /// NetworkManager manages the network connection to the Balloon Server
+    /// and is the default implementation of INetworkManager.
     /// </summary>
-    public class ScreenManager : IDisposable
+    public class NetworkManager : INetworkManager
     {
         private ScreenConnection m_conn;
         private IPAddress serverAddress;
         private int serverPort;
         private Dictionary<string, Balloon> balloonCache;
 
-        public CircularQueue<Message> MessageQueue { get; private set; }
+        private CircularQueue<Message> messageQueue;
 
-        public ScreenManager(IPAddress serverAddress, int serverPort)
+        public NetworkManager(IPAddress serverAddress, int serverPort)
         {
             this.serverAddress = serverAddress;
             this.serverPort = serverPort;
 
             this.balloonCache = new Dictionary<string, Balloon>();
-            this.MessageQueue = new CircularQueue<Message>(256);
+            this.messageQueue = new CircularQueue<Message>(256);
 
-            m_conn = new ScreenConnection(this.MessageQueue);
+            m_conn = new ScreenConnection(this.messageQueue);
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
@@ -119,12 +120,17 @@ namespace BubblesClient
             Timer timer = new Timer();
             timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
             {
-                MessageQueue.Enqueue(new CallbackMessage(callback));
+                messageQueue.Enqueue(new CallbackMessage(callback));
                 timer.Stop();
                 timer.Dispose();
             };
             timer.Interval = delayInMs;
             timer.Start();
+        }
+
+        public List<Message> GetAllMessages()
+        {
+             return messageQueue.DequeueAll();
         }
 
         private void OnConnected(object sender, EventArgs args)
