@@ -673,9 +673,15 @@ namespace BubblesClient
             ClientBalloon balloon;
             if (balloons.TryGetValue(bdm.BalloonID, out balloon))
             {
+                int oldVotes = balloon.Votes;
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
                 balloon.Votes = bdm.Votes;
+                // Generate the balloon's content again when the number of votes changes
+                if (oldVotes != balloon.Votes)
+                {
+                    contentBox.GenerateTextContent(balloon);
+                }
             }
         }
         #endregion
