@@ -1,0 +1,4 @@
+[diff "word"]
+  tool = word-diff
+[difftool "word-diff"]
+  cmd = "WScript.exe Documents/diff-docs.js \"$LOCAL\" \"$REMOTE\""
