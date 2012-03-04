@@ -1,8 +1,8 @@
 using Balloons.Messaging.Model;
-using BubblesClient.Input.Controllers;
-using BubblesClient.Input.Controllers.Kinect;
-using BubblesClient.Input.Controllers.Mouse;
+using BubblesClient.Input.Kinect;
+using BubblesClient.Input.Mouse;
 using BubblesClient.Network;
+using BubblesClient.Input;
 
 namespace BubblesClient
 {
@@ -24,7 +24,7 @@ namespace BubblesClient
             Configuration.Load(configPath);
 
             // Initialise the input controller
-            IInputController controller = null;
+            IInputManager controller = null;
             switch (Configuration.InputType)
             {
                 default:

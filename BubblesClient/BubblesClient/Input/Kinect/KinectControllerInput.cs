@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using Microsoft.Kinect;
 using Microsoft.Xna.Framework;
 
-namespace BubblesClient.Input.Controllers.Kinect
+namespace BubblesClient.Input.Kinect
 {
     /// <summary>
     /// Implements the IInputController interface using the Kinect sensor. 
     /// </summary>
-    public class KinectControllerInput : IInputController
+    public class KinectControllerInput : IInputManager
     {
         private float _scaleFactorX, _scaleFactorY;
         private Vector2 halfScreenSize;

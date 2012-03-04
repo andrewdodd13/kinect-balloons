@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace BubblesClient.Input.Controllers
+namespace BubblesClient.Input
 {
     /// <summary>
     /// IInputController defines the possible actions that can be performed in
     /// the game. Each Input Method retains a reference to this class, and 
     /// should call the appropriate method when it occurs.
     /// </summary>
-    public interface IInputController
+    public interface IInputManager
     {
         /// <summary>
         /// Initializes the Input Controller with the given screen dimensions.

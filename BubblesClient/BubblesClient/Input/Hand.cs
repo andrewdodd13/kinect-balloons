@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace BubblesClient.Input.Controllers
+namespace BubblesClient.Input
 {
     public enum Side { Right, Left }
     /// <summary>

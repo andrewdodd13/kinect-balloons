@@ -2,13 +2,13 @@
 using Microsoft.Xna.Framework.Input;
 using XnaMouse = Microsoft.Xna.Framework.Input.Mouse;
 
-namespace BubblesClient.Input.Controllers.Mouse
+namespace BubblesClient.Input.Mouse
 {
     /// <summary>
     /// Mouse Input is an input controller which emulates the Kinect using the
     /// mouse.
     /// </summary>
-    public class MouseInput : IInputController
+    public class MouseInput : IInputManager
     {
         private Hand _hand = new Hand() { ID = 0, Side = Side.Left };
         private Hand _altHand = new Hand() { ID = 0, Side = Side.Right };

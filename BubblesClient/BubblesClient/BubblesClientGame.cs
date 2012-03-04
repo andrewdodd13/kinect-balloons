@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Balloons.Messaging.Model;
-using BubblesClient.Input.Controllers;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Model.ContentBox;
@@ -39,7 +39,7 @@ namespace BubblesClient
         private SpriteBatch spriteBatch;
 
         // Input
-        private IInputController input;
+        private IInputManager input;
         private Color[] userColours = { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple }; // Move this to config?
 
         // Physics World
@@ -61,7 +61,7 @@ namespace BubblesClient
         private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(INetworkManager screenManager, IInputController controller)
+        public BubblesClientGame(INetworkManager screenManager, IInputManager controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);

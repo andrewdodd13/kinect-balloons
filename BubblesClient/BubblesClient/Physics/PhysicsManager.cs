@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Balloons.Messaging.Model;
-using BubblesClient.Input.Controllers;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;

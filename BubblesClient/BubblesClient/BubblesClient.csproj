@@ -115,11 +115,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Input\Controllers\Hand.cs" />
-    <Compile Include="Input\Controllers\IInputController.cs" />
-    <Compile Include="Input\Controllers\Kinect\KinectControllerInput.cs" />
-    <Compile Include="Input\Controllers\Kinect\KinectSensorException.cs" />
-    <Compile Include="Input\Controllers\Mouse\MouseInput.cs" />
+    <Compile Include="Input\Hand.cs" />
+    <Compile Include="Input\IInputManager.cs" />
+    <Compile Include="Input\Kinect\KinectControllerInput.cs" />
+    <Compile Include="Input\Kinect\KinectSensorException.cs" />
+    <Compile Include="Input\Mouse\MouseInput.cs" />
     <Compile Include="Model\BalloonContentCache.cs" />
     <Compile Include="Model\Bucket.cs" />
     <Compile Include="Model\Buckets\ColourBucket.cs" />
