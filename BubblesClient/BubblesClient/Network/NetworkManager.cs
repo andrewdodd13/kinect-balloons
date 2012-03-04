@@ -98,39 +98,9 @@ namespace BubblesClient.Network
                 balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
-        /// <summary>
-        /// Cause the callback function to be called on a separate thread.
-        /// </summary>
-        /// <param name="callback"> Function to be called. </param>
-        public void CallAsync(GameCallback callback)
-        {
-            System.Threading.ThreadPool.QueueUserWorkItem(delegate(object state)
-            {
-                callback();
-            });
-        }
-
-        /// <summary>
-        /// Cause the callback function to be called after a given delay.
-        /// </summary>
-        /// <param name="callback"> Function to be called. </param>
-        /// <param name="delayInMs"> Delay in ms before calling the function. </param>
-        public void CallLater(int delayInMs, GameCallback callback)
-        {
-            Timer timer = new Timer();
-            timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
-            {
-                messageQueue.Enqueue(new CallbackMessage(callback));
-                timer.Stop();
-                timer.Dispose();
-            };
-            timer.Interval = delayInMs;
-            timer.Start();
-        }
-
         public List<Message> GetAllMessages()
         {
-             return messageQueue.DequeueAll();
+            return messageQueue.DequeueAll();
         }
 
         private void OnConnected(object sender, EventArgs args)
