@@ -29,12 +29,6 @@
             this.HtmlRenderer.LoadImage(contentManager.RootDirectory, "thumbs-down.png");
         }
 
-        public override void Update(GameTime gameTime)
-        {
-            closeTimer -= gameTime.ElapsedGameTime.Milliseconds;
-            if (closeTimer < 0) { Close(); }
-        }
-
         /// <summary>
         /// Call this if and only if the visibleBalloon property is not null.
         /// </summary>

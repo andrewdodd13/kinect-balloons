@@ -55,7 +55,7 @@ namespace BubblesClient
         // If this is not null then we will be showing a balloon. We really need a state machine.
         private AbstractContentBox contentBox;
 
-        private List<PopAnim> popAnimations = new List<PopAnim>();
+        private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
         public BubblesClientGame(ScreenManager screenManager, IInputController controller)
@@ -360,7 +360,7 @@ namespace BubblesClient
             }
 
             // Draw all pop animations
-            foreach (PopAnim popAnim in popAnimations)
+            foreach (PopAnimation popAnim in popAnimations)
             {
                 Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
                                                 popAnim.PopTexture.Width, popAnim.PopTexture.Height);
@@ -541,7 +541,7 @@ namespace BubblesClient
             if (animate)
             {
                 // Create a new pop animation
-                PopAnim anim = new PopAnim(balloon);
+                PopAnimation anim = new PopAnimation(balloon);
                 anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
                 anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];

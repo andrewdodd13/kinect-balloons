@@ -1,10 +1,9 @@
 ﻿namespace BubblesClient.Model
 {
-    using System;
     using System.Collections.Generic;
     using System.Drawing;
-    using Microsoft.Xna.Framework.Graphics;
     using BubblesClient.Utility;
+    using Microsoft.Xna.Framework.Graphics;
 
     public enum CacheType
     {

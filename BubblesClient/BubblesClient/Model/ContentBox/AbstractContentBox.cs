@@ -34,13 +34,37 @@
         protected List<Texture2D> countDownImages;
         #endregion
 
+        #region "Abstract & Virtual Methods"
+        public abstract void Draw(SpriteBatch spriteBatch);
+
+        public virtual void GenerateCaption(ClientBalloon balloon) { }
+        public virtual void GenerateTextContent(ClientBalloon balloon) { }
+        #endregion
+
+        // Raised when the box is closed for any reason
+        public event EventHandler OnClose;
+
         public AbstractContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphicsManager)
         {
             this.screenDimensions = screenDimensions;
             this.graphicsManager = graphicsManager;
         }
 
+        /// <summary>
+        /// Updates the internal close timers
+        /// </summary>
+        /// <param name="gameTime"></param>
+        public virtual void Update(GameTime gameTime)
+        {
+            closeTimer -= gameTime.ElapsedGameTime.Milliseconds;
+            if (closeTimer < 0) { Close(); }
+        }
 
+        /// <summary>
+        /// Loads the base resources; when overriding make sure to make a base 
+        /// call to this method.
+        /// </summary>
+        /// <param name="contentManager"></param>
         public virtual void LoadResources(ContentManager contentManager)
         {
             closeIconTexture = contentManager.Load<Texture2D>("Images/CloseIcon");
@@ -51,13 +75,9 @@
             }
         }
 
-        public abstract void Update(GameTime gameTime);
-
-        public abstract void Draw(SpriteBatch spriteBatch);
-
-        // Called when the box is closed for any reason
-        public event EventHandler OnClose;
-
+        /// <summary>
+        /// Initialises the Content Box for a new balloon.
+        /// </summary>
         protected virtual void Initialise()
         {
             // Reset timers
@@ -69,7 +89,7 @@
             ThreadPool.QueueUserWorkItem(o => GenerateQR(visibleBalloon));
             ThreadPool.QueueUserWorkItem(o => GenerateImage(visibleBalloon));
         }
-        
+
         protected ClientBalloon visibleBalloon;
         public bool IsVisible
         {
@@ -155,8 +175,5 @@
                 GenerateTextContent(balloon);
             }
         }
-
-        public virtual void GenerateCaption(ClientBalloon balloon) { }
-        public virtual void GenerateTextContent(ClientBalloon balloon) { }
     }
 }

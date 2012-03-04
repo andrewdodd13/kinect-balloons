@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
-using Balloons.Messaging.Model;
-using FarseerPhysics.Dynamics.Contacts;
 
 namespace BubblesClient.Physics
 {
+    /// <summary>
+    /// Physics Manager handles the creation and management of entities inside
+    /// the physics world and provides events which affect the entire system
+    /// such as balloon popping.
+    /// </summary>
     public class PhysicsManager
     {
         public const float MeterInPixels = 64f;

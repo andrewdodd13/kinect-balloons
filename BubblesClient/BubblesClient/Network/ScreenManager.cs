@@ -10,6 +10,9 @@ using Microsoft.Xna.Framework;
 
 namespace BubblesClient
 {
+    /// <summary>
+    /// ScreenManager manages the network connection to the Balloon Server.
+    /// </summary>
     public class ScreenManager : IDisposable
     {
         private ScreenConnection m_conn;

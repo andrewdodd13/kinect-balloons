@@ -1,10 +1,7 @@
-using System;
-using System.IO;
-using System.Net;
+using Balloons.Messaging.Model;
 using BubblesClient.Input.Controllers;
 using BubblesClient.Input.Controllers.Kinect;
 using BubblesClient.Input.Controllers.Mouse;
-using Balloons.Messaging.Model;
 
 namespace BubblesClient
 {
@@ -18,7 +15,7 @@ namespace BubblesClient
         {
             // Load the configuration file
             string configPath = "BalloonClient.conf";
-            if(args.Length > 1)
+            if (args.Length > 1)
             {
                 configPath = args[1];
             }
@@ -27,20 +24,20 @@ namespace BubblesClient
 
             // Initialise the input controller
             IInputController controller = null;
-            switch(Configuration.InputType)
+            switch (Configuration.InputType)
             {
-            default:
-            case InputType.Mouse:
-                controller = new MouseInput();
-                break;
-            case InputType.Kinect:
-                controller = new KinectControllerInput();
-                break;
+                default:
+                case InputType.Mouse:
+                    controller = new MouseInput();
+                    break;
+                case InputType.Kinect:
+                    controller = new KinectControllerInput();
+                    break;
             }
 
             // Run the game
-            using(ScreenManager screen = new ScreenManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
-            using(BubblesClientGame game = new BubblesClientGame(screen, controller))
+            using (ScreenManager screen = new ScreenManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
+            using (BubblesClientGame game = new BubblesClientGame(screen, controller))
             {
                 game.Run();
             }
