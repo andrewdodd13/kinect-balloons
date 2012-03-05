@@ -56,7 +56,12 @@
         /// Retrieves all the messages that the Network Manager has received
         /// from the Server since the last call to this function.
         /// </summary>
+        /// <param name="OnNewBalloon">New Balloon Handler</param>
+        /// <param name="OnPopBalloon">Pop Balloon Handler</param>
+        /// <param name="OnBalloonContentUpdate">Content Update Handler</param>
+        /// <param name="OnBalloonStateUpdate">State Update Handler</param>
         /// <returns></returns>
-        List<Message> GetAllMessages();
+        void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopBalloonMessage> OnPopBalloon,
+            Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate);
     }
 }

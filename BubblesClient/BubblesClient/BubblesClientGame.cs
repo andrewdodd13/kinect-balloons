@@ -31,7 +31,7 @@ namespace BubblesClient
         private SpriteFont summaryFont;
 
         // Network
-        public INetworkManager ScreenManager { get; private set; }
+        public INetworkManager NetworkManager { get; private set; }
 
         // XNA Graphics
         private GraphicsDeviceManager graphics;
@@ -118,7 +118,7 @@ namespace BubblesClient
             };
 
             // Initialise network
-            this.ScreenManager = screenManager;
+            this.NetworkManager = screenManager;
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace BubblesClient
             }
 
             // Always do this last
-            this.ScreenManager.Connect();
+            this.NetworkManager.Connect();
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace BubblesClient
             currentTime = gameTime;
 
             // Query the Network Manager for events
-            ProcessNetworkMessages();
+            NetworkManager.ProcessMessages(OnNewBalloon, OnPopBalloon, OnBalloonContentUpdate, OnBalloonStateUpdate);
 
             this.HandleInput(gameTime);
 
@@ -255,13 +255,13 @@ namespace BubblesClient
                 if (balloonPosition.X < (ClientBalloon.BalloonWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
                 else if (balloonPosition.X > (ClientBalloon.BalloonWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
             }
@@ -508,7 +508,7 @@ namespace BubblesClient
             // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
-                ScreenManager.UpdateBalloonDetails(balloon);
+                NetworkManager.UpdateBalloonDetails(balloon);
             }
 
             balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
@@ -560,44 +560,11 @@ namespace BubblesClient
             // Remove balloon from server. This must be done after removing the balloon
             // from the map or an exception can be raised when the server sends a
             // "new balloon" message with the same ID when the feed is updated.
-            ScreenManager.NotifyBalloonPopped(balloon);
+            NetworkManager.NotifyBalloonPopped(balloon);
         }
         #endregion
 
         #region "Networking"
-        public void ProcessNetworkMessages()
-        {
-            List<Message> messages = ScreenManager.GetAllMessages();
-            foreach (Message msg in messages)
-            {
-                if (msg == null)
-                {
-                    // the connection to the server was closed
-                    break;
-                }
-
-                switch (msg.Type)
-                {
-                    case MessageType.NewBalloon:
-                        OnNewBalloon((NewBalloonMessage)msg);
-                        break;
-                    case MessageType.PopBalloon:
-                        OnPopBalloon((PopBalloonMessage)msg);
-                        break;
-                    case MessageType.BalloonContentUpdate:
-                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                        break;
-                    case MessageType.BalloonStateUpdate:
-                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
-                        break;
-                    case MessageType.Callback:
-                        var cm = (CallbackMessage)msg;
-                        cm.Callback();
-                        break;
-                }
-            }
-        }
-
         public void OnNewBalloon(NewBalloonMessage m)
         {
             // Choose where to place the balloon
@@ -623,7 +590,7 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
 
-            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            Balloon balloon = NetworkManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
