@@ -1,11 +1,12 @@
-﻿using System;
-using Balloons.Messaging.Model;
+﻿using Balloons.Messaging.Model;
 using Microsoft.Xna.Framework.Graphics;
-using ThoughtWorks.QRCode.Codec;
-using System.IO;
 
 namespace BubblesClient.Model
 {
+    /// <summary>
+    /// ClientBalloon is an extension of Balloon which contains details 
+    /// specific to displaying the balloon on the client side.
+    /// </summary>
     public class ClientBalloon : Balloon
     {
         /// <summary>

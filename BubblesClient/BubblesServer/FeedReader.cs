@@ -135,10 +135,19 @@ namespace Balloons.Server
         {
             // Retrieve updated feed contents
             List<FeedContent> fromFeed = GetFeedContents();
-            
+
             // Notify server of new feed contents if we managed to retrieve any
             if(fromFeed != null)
             {
+                // change items of type 2 to items of type 1
+                for (int i = 0; i < fromFeed.Count; i++)
+                {
+                    if (fromFeed[i].Type == 2)
+                    {
+                        fromFeed[i].Type = 1;
+                    }
+                }
+
                 m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
             }
         }

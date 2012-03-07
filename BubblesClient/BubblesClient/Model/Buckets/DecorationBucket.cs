@@ -1,6 +1,5 @@
 ﻿namespace BubblesClient.Model.Buckets
 {
-    using System;
     using Balloons.Messaging.Model;
     using Microsoft.Xna.Framework.Graphics;
 

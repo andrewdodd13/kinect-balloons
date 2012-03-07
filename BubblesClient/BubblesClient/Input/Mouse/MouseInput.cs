@@ -2,12 +2,13 @@
 using Microsoft.Xna.Framework.Input;
 using XnaMouse = Microsoft.Xna.Framework.Input.Mouse;
 
-namespace BubblesClient.Input.Controllers.Mouse
+namespace BubblesClient.Input.Mouse
 {
     /// <summary>
-    /// Mouse Input is an input controller which emulates one hand of the user.
+    /// Mouse Input is an input controller which emulates the Kinect using the
+    /// mouse.
     /// </summary>
-    public class MouseInput : IInputController
+    public class MouseInput : IInputManager
     {
         private Hand _hand = new Hand() { ID = 0, Side = Side.Left };
         private Hand _altHand = new Hand() { ID = 0, Side = Side.Right };
@@ -21,7 +22,9 @@ namespace BubblesClient.Input.Controllers.Mouse
         public void Initialize(Vector2 screenSize) { }
 
         /// <summary>
-        /// Returns one hand position with the position of the mouse
+        /// Returns one hand position with the position of the mouse; or two 
+        /// positions close too each other if the right mouse button is pressed
+        /// in order to emulate the popping motion.
         /// </summary>
         /// <returns></returns>
         public Hand[] GetHandPositions()
@@ -52,15 +55,6 @@ namespace BubblesClient.Input.Controllers.Mouse
                 _hand.Position = new Vector3(ms.X, ms.Y, 0);
                 return new Hand[] { _hand };
             }
-        }
-
-        /// <summary>
-        /// Returns true if the middle mouse button is clicked.
-        /// </summary>
-        /// <returns></returns>
-        public bool ShouldClosePopup()
-        {
-            return (XnaMouse.GetState().MiddleButton == ButtonState.Pressed);
         }
     }
 }

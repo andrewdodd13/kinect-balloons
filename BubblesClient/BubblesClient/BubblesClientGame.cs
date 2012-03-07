@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Balloons.Messaging.Model;
-using BubblesClient.Input.Controllers;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
+using BubblesClient.Model.ContentBox;
 using BubblesClient.Physics;
+using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using BubblesClient.Network;
 
 namespace BubblesClient
 {
@@ -18,19 +21,17 @@ namespace BubblesClient
     public class BubblesClientGame : Microsoft.Xna.Framework.Game
     {
         // Textures
-        private Texture2D skyTexture, handTexture, contentBox;
+        private Texture2D skyTexture, handTexture;
 
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
         private Texture2D[] balloonPopTextures;
 
-        private Texture2D boxTexture;
-        private SpriteFont contentFont, summaryFont;
-
-        private Dictionary<string, BalloonContentCache> balloonTextureCache = new Dictionary<string, BalloonContentCache>();
+        private Texture2D boxWhiteColour, boxBlackColour;
+        private SpriteFont summaryFont;
 
         // Network
-        public ScreenManager ScreenManager { get; private set; }
+        public INetworkManager NetworkManager { get; private set; }
 
         // XNA Graphics
         private GraphicsDeviceManager graphics;
@@ -38,7 +39,7 @@ namespace BubblesClient
         private SpriteBatch spriteBatch;
 
         // Input
-        private IInputController input;
+        private IInputManager input;
         private Color[] userColours = { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple }; // Move this to config?
 
         // Physics World
@@ -48,16 +49,19 @@ namespace BubblesClient
 
         private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
 
+        private Random rng = new Random();
+
         //other stuff
         private bool showBuckets = true;
         private Bucket oldBucket = null;
 
         // If this is not null then we will be showing a balloon. We really need a state machine.
-        private ClientBalloon poppedBalloon = null;
-        private List<PopAnim> popAnimations = new List<PopAnim>();
+        private AbstractContentBox contentBox;
+
+        private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(ScreenManager screenManager, IInputController controller)
+        public BubblesClientGame(INetworkManager screenManager, IInputManager controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
@@ -82,6 +86,16 @@ namespace BubblesClient
             graphics.PreferMultiSampling = true;
             screenDimensions = new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
 
+            // Create a new content box
+            if (Configuration.UseHtmlRendering)
+            {
+                contentBox = new HTMLContentBox(screenDimensions, graphics);
+            }
+            else
+            {
+                contentBox = new ManualContentBox(screenDimensions, graphics);
+            }
+
             // Initialise Input
             this.input = controller;
             input.Initialize(screenDimensions);
@@ -104,7 +118,7 @@ namespace BubblesClient
             };
 
             // Initialise network
-            this.ScreenManager = screenManager;
+            this.NetworkManager = screenManager;
         }
 
         /// <summary>
@@ -137,7 +151,7 @@ namespace BubblesClient
             }
 
             // Always do this last
-            this.ScreenManager.Connect();
+            this.NetworkManager.Connect();
         }
 
         /// <summary>
@@ -149,18 +163,21 @@ namespace BubblesClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            contentFont = Content.Load<SpriteFont>("Fonts/SpriteFontSmall");
             summaryFont = Content.Load<SpriteFont>("Fonts/SpriteFontLarge");
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
-            contentBox = Content.Load<Texture2D>("Images/ContentBox");
 
             // This doesn't seem like the best place for this, but set hand size from the texture
             physicsManager.setHandSizePixels(handTexture.Width);
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
+                { BalloonType.Customizable, new Dictionary<OverlayType, Texture2D>() {
+                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhite") },
+                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpots") },
+                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripes") }
+                } },
                 { BalloonType.CustomContent, new Dictionary<OverlayType, Texture2D>() {
                     { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteCustom") },
                     { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsCustom")},
@@ -171,23 +188,16 @@ namespace BubblesClient
                     { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsTwitter") },
                     { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesTwitter") }
                 } },
-                { BalloonType.News, new Dictionary<OverlayType, Texture2D>() { 
-                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhiteNews") },
-                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpotsNews") }, 
-                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripesNews") }
-                } },
-                { BalloonType.Customizable, new Dictionary<OverlayType, Texture2D>() {
-                    { OverlayType.White, Content.Load<Texture2D>("Images/BalloonWhite") },
-                    { OverlayType.Spots, Content.Load<Texture2D>("Images/BalloonSpots") },
-                    { OverlayType.Stripes, Content.Load<Texture2D>("Images/BalloonStripes") }
-                } }
             };
 
             balloonPopTextures = new Texture2D[] {
                 Content.Load<Texture2D>("Images/BalloonPop")
             };
 
-            boxTexture = Content.Load<Texture2D>("Images/Box");
+            boxBlackColour = new Texture2D(GraphicsDevice, 1, 1);
+            boxBlackColour.SetData(new[] { Color.Black });
+            boxWhiteColour = new Texture2D(GraphicsDevice, 1, 1);
+            boxWhiteColour.SetData(new[] { Color.White });
 
             // Create buckets
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/BucketRed"), Color.Red));
@@ -195,6 +205,14 @@ namespace BubblesClient
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketGreen"), Color.Green));
             buckets.Add(new DecorationBucket(Content.Load<Texture2D>("Images/bucketStripes"), OverlayType.Stripes));
             buckets.Add(new ColourBucket(Content.Load<Texture2D>("Images/bucketBlue"), Color.Blue));
+
+            // Set up the content box
+            contentBox.LoadResources(Content);
+
+            contentBox.OnClose += delegate(object sender, EventArgs args)
+            {
+                physicsManager.EnableHandCollisions();
+            };
         }
 
         /// <summary>
@@ -203,7 +221,10 @@ namespace BubblesClient
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            base.UnloadContent();
+
+            boxBlackColour.Dispose();
+            boxWhiteColour.Dispose();
         }
 
         /// <summary>
@@ -216,9 +237,9 @@ namespace BubblesClient
             currentTime = gameTime;
 
             // Query the Network Manager for events
-            ProcessNetworkMessages();
+            NetworkManager.ProcessMessages(OnNewBalloon, OnPopBalloon, OnBalloonContentUpdate, OnBalloonStateUpdate);
 
-            this.HandleInput();
+            this.HandleInput(gameTime);
 
             physicsManager.ApplyWind();
             physicsManager.Update(gameTime);
@@ -234,18 +255,18 @@ namespace BubblesClient
                 if (balloonPosition.X < (ClientBalloon.BalloonWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
                 else if (balloonPosition.X > (ClientBalloon.BalloonWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
             }
 
-            removals.ForEach(x => RemoveBalloon(x));
+            removals.ForEach(x => RemoveBalloon(x, false));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -279,6 +300,9 @@ namespace BubblesClient
                     popAnimations[i].ElapsedSincePopped = (float)(elapsedMs / 1000.0);
                 }
             }
+
+            // Update the content box if it is visible
+            if (contentBox.IsVisible) { contentBox.Update(gameTime); }
 
             base.Update(gameTime);
         }
@@ -317,33 +341,16 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (IsCaptionDrawn(balloon))
+                if (ShouldDrawCaption(balloon))
                 {
-                    Vector2 boxPosition = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position) - new Vector2(boxTexture.Width / 2, 0);
-                    boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
-
-                    spriteBatch.Draw(boxTexture, boxPosition, Color.White);
-
-                    // If the label is not cached then it means it has not
-                    // been formatted to fit in the box; therefore format it 
-                    // and save it back
-                    if (!balloon.IsLabelCached)
+                    if (Configuration.UseHtmlRendering)
                     {
-                        string labelText = balloon.Label;
-                        balloon.Label = wrapText(summaryFont, labelText, new Vector2(boxTexture.Width, boxTexture.Height));
-
-                        if (String.IsNullOrEmpty(balloon.Content) || (balloon.Content.Trim() == string.Empty))
-                        {
-                            balloon.Content = wrapText(contentFont, labelText, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
-                        }
-                        else
-                        {
-                            balloon.Content = wrapText(contentFont, balloon.Content, new Vector2(contentBox.Width - (24 * 3) - 224, contentBox.Height - (24 * 2)));
-                        }
-                        balloon.IsLabelCached = true;
+                        DrawBalloonCaptionHtml(balloon);
                     }
-
-                    drawTextLabel(summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y));
+                    else
+                    {
+                        DrawBalloonCaptionSprites(balloon);
+                    }
                 }
             }
 
@@ -356,7 +363,7 @@ namespace BubblesClient
             }
 
             // Draw all pop animations
-            foreach (PopAnim popAnim in popAnimations)
+            foreach (PopAnimation popAnim in popAnimations)
             {
                 Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
                                                 popAnim.PopTexture.Width, popAnim.PopTexture.Height);
@@ -385,28 +392,10 @@ namespace BubblesClient
                 spriteBatch.Draw(bucket.Texture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
             }
 
-            //display content page if balloonPopped is true (should only be true for 30 seconds)
-            if (poppedBalloon != null)
+            // Display content page if the contentBox has a balloon
+            if (contentBox.IsVisible)
             {
-                // Position contains the co-ordinate of the top-left corner of the box
-                Vector2 position = (screenDimensions / 2) - (new Vector2(contentBox.Width, contentBox.Height) / 2);
-
-                // Draw the box itself
-                spriteBatch.Draw(contentBox, position, Color.White);
-
-                // Draw the text
-                drawTextLabel(contentFont, poppedBalloon.Content, position + new Vector2(24, 24));
-
-                // Draw the QR Code
-                if (poppedBalloon.BalloonContentCache.QRCode != null)
-                {
-                    spriteBatch.Draw(poppedBalloon.BalloonContentCache.QRCode,
-                        position + new Vector2(contentBox.Width - 280, 24), Color.White);
-                }
-
-                // Draw the Image
-                Texture2D balloonImage = poppedBalloon.BalloonContentCache.Image;
-                spriteBatch.Draw(balloonImage, position + new Vector2(contentBox.Width - 280, contentBox.Height - balloonImage.Height - 24), Color.White);
+                contentBox.Draw(spriteBatch);
             }
 
             // Draw all of the registered hands
@@ -424,62 +413,81 @@ namespace BubblesClient
             base.Draw(gameTime);
         }
 
-        private bool IsCaptionDrawn(ClientBalloon balloon)
+        private void DrawBalloonCaptionSprites(ClientBalloon balloon)
+        {
+            // If the label is not cached then it means it has not
+            // been formatted to fit in the box; therefore format it 
+            // and save it back
+            if (!balloon.IsLabelCached)
+            {
+                string labelText = balloon.Label;
+                balloon.Label = TextUtility.wrapText(summaryFont, labelText, new Vector2(382, 168));
+                balloon.IsLabelCached = true;
+            }
+
+            // Measure the size of the string and add 4px padding
+            Vector2 boxSize = summaryFont.MeasureString(balloon.Label) + new Vector2(8, 8);
+
+            Vector2 boxPosition =
+                PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position)
+                - new Vector2(boxSize.X / 2, 0);
+            boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
+
+            spriteBatch.Draw(boxBlackColour, new Rectangle((int)boxPosition.X - 2, (int)boxPosition.Y - 2, (int)boxSize.X + 4, (int)boxSize.Y + 4), Color.White);
+            spriteBatch.Draw(boxWhiteColour, new Rectangle((int)boxPosition.X, (int)boxPosition.Y, (int)boxSize.X, (int)boxSize.Y), Color.White);
+
+            TextUtility.drawTextLabel(spriteBatch, summaryFont, balloon.Label, new Vector2(boxPosition.X, boxPosition.Y) + new Vector2(4, 4));
+        }
+
+        private void DrawBalloonCaptionHtml(ClientBalloon balloon)
+        {
+            Vector2 boxPosition =
+                PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+            boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
+
+            Texture2D caption = balloon.BalloonContentCache[CacheType.Caption, GraphicsDevice];
+            if (caption != null)
+            {
+                boxPosition.X -= caption.Width / 2;
+                spriteBatch.Draw(caption, boxPosition, Color.White);
+            }
+        }
+
+        private bool ShouldDrawCaption(ClientBalloon balloon)
         {
             return balloon.Type != BalloonType.Customizable &&
                 !balloon.Popped &&
                 !String.IsNullOrWhiteSpace(balloon.Label);
         }
 
-        private void HandleInput()
+        private void HandleInput(GameTime gameTime)
         {
-            physicsManager.UpdateHandPositions(input.GetHandPositions());
-        }
+            Hand[] hands = input.GetHandPositions();
+            physicsManager.UpdateHandPositions(hands);
 
-        /// <summary>
-        /// This function takes a string and a vector2. It splits the string given by spaces
-        /// and then for each word it will check the length of it against the length of the
-        /// vector2 given in. When the word is passed the edge a new line is put in.
-        /// </summary>
-        /// <param name="font">The font to use for measuments</param>
-        /// <param name="text">Text to be wrapped</param>
-        /// <param name="containerDemensions">Dimensions of the container the text is to be wrapped in</param>
-        /// <returns>The text including newlines to fit into the container</returns>
-        private String wrapText(SpriteFont font, String text, Vector2 containerDemensions)
-        {
-            String line = String.Empty;
-            String returnString = String.Empty;
-            String[] wordArray = text.Split(' ');
-
-            foreach (String word in wordArray)
+            // If the content box is visible, check if the hands are in the correct position
+            if (contentBox.IsVisible)
             {
-                if (font.MeasureString(line + word).Length() > containerDemensions.X)
+                bool insideThisFrame = false;
+                foreach (Hand hand in hands)
                 {
-                    returnString += line + '\n';
-                    line = String.Empty;
-
-                    // If the string is longer than the box, we need to stop
-                    if (font.MeasureString(returnString).Y > containerDemensions.Y)
+                    // If hand's position is inside (SW-128 -> SW, 0 -> 128) then... do something
+                    if ((hand.Position.X >= screenDimensions.X - 128 && hand.Position.X <= screenDimensions.X) &&
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 128))
                     {
+                        insideThisFrame = true;
                         break;
                     }
                 }
 
-                line += word + ' ';
-            }
-
-            return returnString + line;
-        }
-
-        private void drawTextLabel(SpriteFont font, String text, Vector2 pos)
-        {
-            try
-            {
-                spriteBatch.DrawString(font, text, pos, Color.Black);
-            }
-            catch (Exception)
-            {
-                spriteBatch.DrawString(font, "Invalid character", pos, Color.Red);
+                if (insideThisFrame)
+                {
+                    contentBox.CountDownCloseTimer(gameTime);
+                }
+                else
+                {
+                    contentBox.CancelCloseTimer();
+                }
             }
         }
 
@@ -500,7 +508,7 @@ namespace BubblesClient
             // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
-                ScreenManager.UpdateBalloonDetails(balloon);
+                NetworkManager.UpdateBalloonDetails(balloon);
             }
 
             balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
@@ -516,17 +524,12 @@ namespace BubblesClient
             }
 
             // Display content only asked and if balloon has a caption
-            showContent &= IsCaptionDrawn(balloon);
+            showContent &= ShouldDrawCaption(balloon);
             balloon.Popped = true;
             if (showContent)
             {
-                poppedBalloon = balloon;
+                contentBox.SetBalloon(balloon);
                 physicsManager.DisableHandCollisions();
-                ScreenManager.CallLater(Configuration.MessageDisplayTime, delegate()
-                {
-                    poppedBalloon = null;
-                    physicsManager.EnableHandCollisions();
-                });
             }
 
             RemoveBalloon(balloon);
@@ -536,15 +539,18 @@ namespace BubblesClient
         /// Removes (immediately) the given balloon from the physics world and screen.
         /// </summary>
         /// <param name="balloon">Balloon to remove. </param>
-        private void RemoveBalloon(ClientBalloon balloon)
+        private void RemoveBalloon(ClientBalloon balloon, Boolean animate = true)
         {
-            // Create a new pop animation
-            PopAnim anim = new PopAnim(balloon);
-            anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
-            anim.TimePopped = currentTime.TotalGameTime;
-            anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
-            anim.PopColour = new Colour(255, 255, 255, 255);
-            popAnimations.Add(anim);
+            if (animate)
+            {
+                // Create a new pop animation
+                PopAnimation anim = new PopAnimation(balloon);
+                anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+                anim.TimePopped = currentTime.TotalGameTime;
+                anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
+                anim.PopColour = new Colour(255, 255, 255, 255);
+                popAnimations.Add(anim);
+            }
 
             // Remove balloon from screen.
             physicsManager.RemoveEntity(balloonEntities[balloon]);
@@ -554,44 +560,11 @@ namespace BubblesClient
             // Remove balloon from server. This must be done after removing the balloon
             // from the map or an exception can be raised when the server sends a
             // "new balloon" message with the same ID when the feed is updated.
-            ScreenManager.NotifyBalloonPopped(balloon);
+            NetworkManager.NotifyBalloonPopped(balloon);
         }
         #endregion
 
         #region "Networking"
-        public void ProcessNetworkMessages()
-        {
-            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
-            foreach (Message msg in messages)
-            {
-                if (msg == null)
-                {
-                    // the connection to the server was closed
-                    break;
-                }
-
-                switch (msg.Type)
-                {
-                    case MessageType.NewBalloon:
-                        OnNewBalloon((NewBalloonMessage)msg);
-                        break;
-                    case MessageType.PopBalloon:
-                        OnPopBalloon((PopBalloonMessage)msg);
-                        break;
-                    case MessageType.BalloonContentUpdate:
-                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                        break;
-                    case MessageType.BalloonStateUpdate:
-                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
-                        break;
-                    case MessageType.Callback:
-                        var cm = (CallbackMessage)msg;
-                        cm.Callback();
-                        break;
-                }
-            }
-        }
-
         public void OnNewBalloon(NewBalloonMessage m)
         {
             // Choose where to place the balloon
@@ -607,7 +580,7 @@ namespace BubblesClient
 
                 case Direction.Any:
                 default:
-                    position.X = new Random().Next((int)screenDimensions.X);
+                    position.X = rng.Next((int)screenDimensions.X);
                     break;
             }
 
@@ -617,25 +590,16 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
 
-            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            Balloon balloon = NetworkManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
+            b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
 
-            // Get the images from the cache
-            if (!balloonTextureCache.ContainsKey(b.ID))
+            // Render the balloon's caption if we already have it
+            if (!String.IsNullOrWhiteSpace(b.Label))
             {
-                BalloonContentCache cacheEntry = new BalloonContentCache()
-                {
-                    ID = b.ID,
-                    QRCode = String.IsNullOrEmpty(b.Url) ? null :
-                        ImageGenerator.GenerateQRCode(graphics.GraphicsDevice, b.Url),
-                    Image = ImageGenerator.GenerateFromWeb(graphics.GraphicsDevice, b.ImageUrl)
-                };
-
-                balloonTextureCache.Add(b.ID, cacheEntry);
+                contentBox.GenerateCaption(b);
             }
-
-            b.BalloonContentCache = balloonTextureCache[b.ID];
 
             balloons.Add(b.ID, b);
             balloonEntities[b] = balloonEntity;
@@ -659,11 +623,18 @@ namespace BubblesClient
             ClientBalloon balloon;
             if (balloons.TryGetValue(bcm.BalloonID, out balloon))
             {
+                string oldLabel = balloon.Label;
                 balloon.Label = bcm.Label;
                 balloon.Content = bcm.Content;
                 balloon.Type = bcm.BalloonType;
                 balloon.Url = bcm.Url;
                 balloon.ImageUrl = bcm.ImageUrl;
+
+                // Generate the balloon's caption again when it changes
+                if (oldLabel != balloon.Label)
+                {
+                    contentBox.GenerateCaption(balloon);
+                }
             }
         }
 
@@ -672,9 +643,15 @@ namespace BubblesClient
             ClientBalloon balloon;
             if (balloons.TryGetValue(bdm.BalloonID, out balloon))
             {
+                int oldVotes = balloon.Votes;
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
                 balloon.Votes = bdm.Votes;
+                // Generate the balloon's content again when the number of votes changes
+                if (oldVotes != balloon.Votes)
+                {
+                    contentBox.GenerateTextContent(balloon);
+                }
             }
         }
         #endregion
