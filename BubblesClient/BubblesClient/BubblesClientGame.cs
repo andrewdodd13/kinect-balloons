@@ -6,12 +6,12 @@ using BubblesClient.Input;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Model.ContentBox;
+using BubblesClient.Network;
 using BubblesClient.Physics;
 using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BubblesClient.Network;
 
 namespace BubblesClient
 {
@@ -338,7 +338,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (ShouldDrawCaption(balloon))
+                if (balloon.ShouldDrawCaption())
                 {
                     if (Configuration.UseHtmlRendering)
                     {
@@ -450,13 +450,6 @@ namespace BubblesClient
             }
         }
 
-        private bool ShouldDrawCaption(ClientBalloon balloon)
-        {
-            return balloon.Type != BalloonType.Customizable &&
-                !balloon.Popped &&
-                !String.IsNullOrWhiteSpace(balloon.Label);
-        }
-
         private void HandleInput(GameTime gameTime)
         {
             Hand[] hands = input.GetHandPositions();
@@ -521,7 +514,7 @@ namespace BubblesClient
             }
 
             // Display content only asked and if balloon has a caption
-            showContent &= ShouldDrawCaption(balloon);
+            showContent &= balloon.ShouldDrawCaption();
             balloon.Popped = true;
             if (showContent)
             {
