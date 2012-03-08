@@ -18,7 +18,7 @@ namespace BubblesClient
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class BubblesClientGame : Microsoft.Xna.Framework.Game
+    public class BalloonClient : Microsoft.Xna.Framework.Game
     {
         // Textures
         private Texture2D skyTexture, handTexture;
@@ -61,7 +61,7 @@ namespace BubblesClient
         private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(INetworkManager screenManager, IInputManager controller)
+        public BalloonClient(INetworkManager screenManager, IInputManager controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
