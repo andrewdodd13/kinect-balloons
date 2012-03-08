@@ -103,20 +103,6 @@ namespace BubblesClient
             // Initialise Content
             Content.RootDirectory = "Content";
 
-            // Initialise Physics
-            physicsManager.Initialize();
-            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
-            {
-                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                PopBalloon(b.ID, true);
-            };
-            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
-            {
-                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
-                this.ApplyBucketToBalloon(bucket, balloon);
-            };
-
             // Initialise network
             this.NetworkManager = screenManager;
         }
@@ -131,6 +117,20 @@ namespace BubblesClient
         {
             // Initialise base
             base.Initialize();
+
+            // Initialise Physics
+            physicsManager.Initialize(handTexture.Width);
+            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
+            {
+                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                PopBalloon(b.ID, true);
+            };
+            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
+            {
+                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
+                this.ApplyBucketToBalloon(bucket, balloon);
+            };
 
             // Create a roof and floor
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
@@ -167,9 +167,6 @@ namespace BubblesClient
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
-
-            // This doesn't seem like the best place for this, but set hand size from the texture
-            physicsManager.setHandSizePixels(handTexture.Width);
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
