@@ -1,4 +1,5 @@
-﻿using Balloons.Messaging.Model;
+﻿using System;
+using Balloons.Messaging.Model;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace BubblesClient.Model
@@ -36,6 +37,13 @@ namespace BubblesClient.Model
         {
             this.Popped = false;
             this.IsLabelCached = false;
+        }
+
+        public bool ShouldDrawCaption()
+        {
+            return Type != BalloonType.Customizable &&
+                !Popped &&
+                !String.IsNullOrWhiteSpace(Label);
         }
     }
 }

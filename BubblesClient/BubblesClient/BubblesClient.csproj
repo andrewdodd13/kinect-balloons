@@ -135,7 +135,7 @@
     <Compile Include="Physics\WorldEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="BubblesClientGame.cs" />
+    <Compile Include="BalloonClient.cs" />
     <Compile Include="Utility\HTMLite.cs" />
     <Compile Include="Utility\HtmlRenderer.cs" />
     <Compile Include="Utility\ImageGenerator.cs" />

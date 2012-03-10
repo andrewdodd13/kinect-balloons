@@ -38,7 +38,7 @@ namespace BubblesClient
 
             // Run the game
             using (NetworkManager screen = new NetworkManager(Configuration.RemoteIPAddress, Configuration.RemotePort))
-            using (BubblesClientGame game = new BubblesClientGame(screen, controller))
+            using (BalloonClient game = new BalloonClient(screen, controller))
             {
                 game.Run();
             }

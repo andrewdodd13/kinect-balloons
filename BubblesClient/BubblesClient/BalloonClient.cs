@@ -6,19 +6,19 @@ using BubblesClient.Input;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Model.ContentBox;
+using BubblesClient.Network;
 using BubblesClient.Physics;
 using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BubblesClient.Network;
 
 namespace BubblesClient
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class BubblesClientGame : Microsoft.Xna.Framework.Game
+    public class BalloonClient : Microsoft.Xna.Framework.Game
     {
         // Textures
         private Texture2D skyTexture, handTexture;
@@ -61,7 +61,7 @@ namespace BubblesClient
         private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(INetworkManager screenManager, IInputManager controller)
+        public BalloonClient(INetworkManager screenManager, IInputManager controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
@@ -103,20 +103,6 @@ namespace BubblesClient
             // Initialise Content
             Content.RootDirectory = "Content";
 
-            // Initialise Physics
-            physicsManager.Initialize();
-            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
-            {
-                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                PopBalloon(b.ID, true);
-            };
-            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
-            {
-                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
-                this.ApplyBucketToBalloon(bucket, balloon);
-            };
-
             // Initialise network
             this.NetworkManager = screenManager;
         }
@@ -132,16 +118,30 @@ namespace BubblesClient
             // Initialise base
             base.Initialize();
 
+            // Initialise Physics
+            physicsManager.Initialize(handTexture.Width);
+            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
+            {
+                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                PopBalloon(b.ID, true);
+            };
+            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
+            {
+                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
+                this.ApplyBucketToBalloon(bucket, balloon);
+            };
+
             // Create a roof and floor
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, screenDimensions.Y));
 
             // Load buckets
-            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
+            float gapBetweenBuckets = (screenDimensions.X * 1.1f - (Bucket.BucketWidth * 5)) / 6.0f;
 
             for (int i = 0; i < buckets.Count; i++)
             {
-                float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
+                float x = ((i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth);
                 float y = screenDimensions.Y - Bucket.BucketHeight;
 
                 Bucket b = buckets[i];
@@ -167,9 +167,6 @@ namespace BubblesClient
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
-
-            // This doesn't seem like the best place for this, but set hand size from the texture
-            physicsManager.setHandSizePixels(handTexture.Width);
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
@@ -309,7 +306,7 @@ namespace BubblesClient
 
         private void UpdateBuckets(bool show)
         {
-            float targetY = (show ? screenDimensions.Y - Bucket.BucketHeight / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
+            float targetY = (show ? screenDimensions.Y - (Bucket.BucketHeight / 4) : screenDimensions.Y) / PhysicsManager.MeterInPixels;
 
             bool atRest = true;
             foreach (Bucket b in buckets)
@@ -341,7 +338,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (ShouldDrawCaption(balloon))
+                if (balloon.ShouldDrawCaption())
                 {
                     if (Configuration.UseHtmlRendering)
                     {
@@ -453,13 +450,6 @@ namespace BubblesClient
             }
         }
 
-        private bool ShouldDrawCaption(ClientBalloon balloon)
-        {
-            return balloon.Type != BalloonType.Customizable &&
-                !balloon.Popped &&
-                !String.IsNullOrWhiteSpace(balloon.Label);
-        }
-
         private void HandleInput(GameTime gameTime)
         {
             Hand[] hands = input.GetHandPositions();
@@ -471,9 +461,11 @@ namespace BubblesClient
                 bool insideThisFrame = false;
                 foreach (Hand hand in hands)
                 {
-                    // If hand's position is inside (SW-128 -> SW, 0 -> 128) then... do something
-                    if ((hand.Position.X >= screenDimensions.X - 128 && hand.Position.X <= screenDimensions.X) &&
-                        (hand.Position.Y >= 0 && hand.Position.Y <= 128))
+                    // If hand's position is inside the boxes then fire the event
+                    if (((hand.Position.X >= screenDimensions.X - 136 && hand.Position.X <= screenDimensions.X) &&
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)) ||
+                        ((hand.Position.X >= 0 && hand.Position.X < 136) && 
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)))
                     {
                         insideThisFrame = true;
                         break;
@@ -524,7 +516,7 @@ namespace BubblesClient
             }
 
             // Display content only asked and if balloon has a caption
-            showContent &= ShouldDrawCaption(balloon);
+            showContent &= balloon.ShouldDrawCaption();
             balloon.Popped = true;
             if (showContent)
             {
