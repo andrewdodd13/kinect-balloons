@@ -137,11 +137,11 @@ namespace BubblesClient
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, screenDimensions.Y));
 
             // Load buckets
-            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
+            float gapBetweenBuckets = (screenDimensions.X * 1.1f - (Bucket.BucketWidth * 5)) / 6.0f;
 
             for (int i = 0; i < buckets.Count; i++)
             {
-                float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
+                float x = ((i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth);
                 float y = screenDimensions.Y - Bucket.BucketHeight;
 
                 Bucket b = buckets[i];
@@ -461,9 +461,11 @@ namespace BubblesClient
                 bool insideThisFrame = false;
                 foreach (Hand hand in hands)
                 {
-                    // If hand's position is inside (SW-128 -> SW, 0 -> 128) then... do something
-                    if ((hand.Position.X >= screenDimensions.X - 128 && hand.Position.X <= screenDimensions.X) &&
-                        (hand.Position.Y >= 0 && hand.Position.Y <= 128))
+                    // If hand's position is inside the boxes then fire the event
+                    if (((hand.Position.X >= screenDimensions.X - 136 && hand.Position.X <= screenDimensions.X) &&
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)) ||
+                        ((hand.Position.X >= 0 && hand.Position.X < 136) && 
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)))
                     {
                         insideThisFrame = true;
                         break;

@@ -26,7 +26,7 @@
 
         // Timers
         protected float closeTimer = Configuration.MessageDisplayTime;
-        protected const float DefaultForceCloseTime = 2000.0f;
+        protected const float DefaultForceCloseTime = 500.0f;
         protected float forceCloseTimer = DefaultForceCloseTime;
 
         // Shared textures
@@ -136,6 +136,7 @@
             Color closeIconColor = Color.White;
             closeIconColor.A = (byte)((0.25 + (0.75 * ((DefaultForceCloseTime - forceCloseTimer) / DefaultForceCloseTime))) * 255);
             spriteBatch.Draw(closeIconTexture, new Vector2(screenDimensions.X - closeIconTexture.Width - 8, 8), closeIconColor);
+            spriteBatch.Draw(closeIconTexture, new Vector2(8, 8), closeIconColor);
         }
 
         protected virtual void Close()
