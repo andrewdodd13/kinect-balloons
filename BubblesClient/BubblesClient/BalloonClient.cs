@@ -306,7 +306,7 @@ namespace BubblesClient
 
         private void UpdateBuckets(bool show)
         {
-            float targetY = (show ? screenDimensions.Y - Bucket.BucketHeight / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
+            float targetY = (show ? screenDimensions.Y - (Bucket.BucketHeight / 4) : screenDimensions.Y) / PhysicsManager.MeterInPixels;
 
             bool atRest = true;
             foreach (Bucket b in buckets)
