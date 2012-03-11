@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using Microsoft.Kinect;
 using Microsoft.Xna.Framework;
 
-namespace BubblesClient.Input.Controllers.Kinect
+namespace BubblesClient.Input.Kinect
 {
-    public class KinectControllerInput : IInputController
+    /// <summary>
+    /// Implements the IInputController interface using the Kinect sensor. 
+    /// </summary>
+    public class KinectControllerInput : IInputManager
     {
         private float _scaleFactorX, _scaleFactorY;
         private Vector2 halfScreenSize;
@@ -17,7 +20,8 @@ namespace BubblesClient.Input.Controllers.Kinect
         private Dictionary<Skeleton, Hand[]> _handPositions = new Dictionary<Skeleton, Hand[]>();
 
         /// <summary>
-        /// Initialises the Kinect system and causes it to begin polling.
+        /// Initialises the Kinect system and causes it to begin polling. 
+        /// Will throw KinectSensorException if the Kinect is not plugged in.
         /// </summary>
         /// <param name="screenSize">Dimensions of the screen, used to rationalise the values of the Kinect sensor</param>
         public void Initialize(Vector2 screenSize)
@@ -34,6 +38,10 @@ namespace BubblesClient.Input.Controllers.Kinect
             }
         }
 
+        /// <summary>
+        /// Returns one hand for each hand detected by the Kinect sensor.
+        /// </summary>
+        /// <returns></returns>
         public Hand[] GetHandPositions()
         {
             Hand[] returnValue;
@@ -54,6 +62,18 @@ namespace BubblesClient.Input.Controllers.Kinect
             return returnValue;
         }
 
+        private Vector2 convertRawHandToScreen(SkeletonPoint raw)
+        {
+            return convertRawHandToScreen(new Vector2(raw.X, raw.Y));
+        }
+
+        private Vector2 convertRawHandToScreen(Vector2 raw)
+        {
+            raw.X *= _scaleFactorX;
+            raw.Y *= _scaleFactorY;
+
+            return new Vector2(halfScreenSize.X * raw.X + halfScreenSize.X, halfScreenSize.Y * -(raw.Y) + halfScreenSize.Y);
+        }
 
         private void SkeletonsReady(object sender, SkeletonFrameReadyEventArgs e)
         {
@@ -101,7 +121,7 @@ namespace BubblesClient.Input.Controllers.Kinect
                                             }
                                             id++;
                                         }
-                                        _handPositions.Add(skeleton, new Hand[2] { new Hand() { ID = id, Side = Side.Left}, new Hand() { ID = id, Side = Side.Right} });
+                                        _handPositions.Add(skeleton, new Hand[2] { new Hand() { ID = id, Side = Side.Left }, new Hand() { ID = id, Side = Side.Right } });
                                     }
 
                                     // Set the hands positions
@@ -126,26 +146,6 @@ namespace BubblesClient.Input.Controllers.Kinect
                     }
                 }
             }
-        }
-
-        public bool ShouldClosePopup()
-        {
-            // This shoud be removed from the interface
-            return false;
-            //throw new NotImplementedException("Gotta close the popup!");
-        }
-
-        private Vector2 convertRawHandToScreen(SkeletonPoint raw)
-        {
-            return convertRawHandToScreen(new Vector2(raw.X, raw.Y));
-        }
-
-        private Vector2 convertRawHandToScreen(Vector2 raw)
-        {
-            raw.X *= _scaleFactorX;
-            raw.Y *= _scaleFactorY;
-
-            return new Vector2(halfScreenSize.X * raw.X + halfScreenSize.X, halfScreenSize.Y * -(raw.Y) + halfScreenSize.Y);
         }
 
         #region "Kinect Boilerplate Code"

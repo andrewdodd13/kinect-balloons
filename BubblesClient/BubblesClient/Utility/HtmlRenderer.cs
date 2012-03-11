@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-//using Microsoft.Xna.Framework.Content;
 using BubblesClient.Model;
 
 namespace BubblesClient.Utility
@@ -50,7 +48,7 @@ namespace BubblesClient.Utility
         private string FillTemplate(string templateText, Dictionary<string, string> vals)
         {
             string text = templateText;
-            foreach(KeyValuePair<string, string> pair in vals)
+            foreach (KeyValuePair<string, string> pair in vals)
             {
                 text = text.Replace(pair.Key, pair.Value);
             }
@@ -126,7 +124,7 @@ namespace BubblesClient.Utility
             {
                 vals.Add("@@QRIMG_CSS@@", "display: none;");
             }
-            if(webImg != null)
+            if (webImg != null)
             {
                 lock (gdiLock)
                 {
@@ -158,7 +156,7 @@ namespace BubblesClient.Utility
             // encode the HTML page text to bytes
             byte[] htmlData = Encoding.UTF8.GetBytes(html);
 
-            using(HTMLite hLite = new HTMLite())
+            using (HTMLite hLite = new HTMLite())
             {
                 // this callback is used to load images
                 hLite.UriHandler = (uri, type) => LoadUri(uri, type, images);
@@ -169,7 +167,7 @@ namespace BubblesClient.Utility
                 hLite.Measure(size.Width, size.Height);
                 // detect the actual size
                 var bounds = hLite.GetRootElement().Select("#bounds");
-                if(bounds.Count > 0)
+                if (bounds.Count > 0)
                 {
                     size = bounds[0].Bounds.Size;
                     size.Width += bounds[0].Bounds.Left * 2;
@@ -191,7 +189,7 @@ namespace BubblesClient.Utility
         private byte[] LoadUri(string uri, HTMLite.ResourceType type, Dictionary<string, Image> images)
         {
             Image img;
-            if(images.TryGetValue(uri, out img))
+            if (images.TryGetValue(uri, out img))
             {
                 // serialize the image to a stream of bytes
                 using (MemoryStream ms = new MemoryStream())

@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BubblesClient.Input.Controllers;
+using Balloons.Messaging.Model;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
-using Balloons.Messaging.Model;
-using FarseerPhysics.Dynamics.Contacts;
 
 namespace BubblesClient.Physics
 {
+    /// <summary>
+    /// Physics Manager handles the creation and management of entities inside
+    /// the physics world and provides events which affect the entire system
+    /// such as balloon popping.
+    /// </summary>
     public class PhysicsManager
     {
         public const float MeterInPixels = 64f;
@@ -39,9 +44,11 @@ namespace BubblesClient.Physics
             public WorldEntity Bucket { get; set; }
         }
 
-        public void Initialize()
+        public void Initialize(int handSize)
         {
             world = new World(new Vector2(0, 1));
+
+            this.handSize = (handSize / MeterInPixels) / 2f;
         }
 
         public void Update(GameTime gameTime)
@@ -69,7 +76,7 @@ namespace BubblesClient.Physics
             return entity;
         }
 
-        bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
+        private bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
         {
             if (!entities.ContainsKey(fixtureA.Body))
             {
@@ -242,12 +249,6 @@ namespace BubblesClient.Physics
             }
 
             return null;
-        }
-
-        public void setHandSizePixels(float size)
-        {
-            handSize = size / MeterInPixels;
-            handSize /= 2; // we store the radius
         }
 
         private void CreateHandFixture(Hand hand)

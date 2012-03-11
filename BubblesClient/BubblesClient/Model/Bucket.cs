@@ -1,8 +1,7 @@
 ﻿namespace BubblesClient.Model
 {
-    using FarseerPhysics.Dynamics;
-    using Microsoft.Xna.Framework;
     using BubblesClient.Physics;
+    using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
 
     /// <summary>

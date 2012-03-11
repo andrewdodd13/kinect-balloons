@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BubblesClient.Input.Controllers.Kinect
+namespace BubblesClient.Input.Kinect
 {
     /// <summary>
     /// Thrown when an exception occurs during polling of the Kinect; usually to indicate that the device has malfunctioned in some way.

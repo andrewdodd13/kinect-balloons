@@ -8,26 +8,30 @@ using Balloons.Messaging.Model;
 using BubblesClient.Model;
 using Microsoft.Xna.Framework;
 
-namespace BubblesClient
+namespace BubblesClient.Network
 {
-    public class ScreenManager : IDisposable
+    /// <summary>
+    /// NetworkManager manages the network connection to the Balloon Server
+    /// and is the default implementation of INetworkManager.
+    /// </summary>
+    public class NetworkManager : INetworkManager
     {
         private ScreenConnection m_conn;
         private IPAddress serverAddress;
         private int serverPort;
         private Dictionary<string, Balloon> balloonCache;
 
-        public CircularQueue<Message> MessageQueue { get; private set; }
+        private CircularQueue<Message> messageQueue;
 
-        public ScreenManager(IPAddress serverAddress, int serverPort)
+        public NetworkManager(IPAddress serverAddress, int serverPort)
         {
             this.serverAddress = serverAddress;
             this.serverPort = serverPort;
 
             this.balloonCache = new Dictionary<string, Balloon>();
-            this.MessageQueue = new CircularQueue<Message>(256);
+            this.messageQueue = new CircularQueue<Message>(256);
 
-            m_conn = new ScreenConnection(this.MessageQueue);
+            m_conn = new ScreenConnection(this.messageQueue);
             m_conn.Connected += OnConnected;
             m_conn.ConnectFailed += OnConnectFailed;
             m_conn.Disconnected += OnDisconnected;
@@ -72,7 +76,7 @@ namespace BubblesClient
         public Balloon GetBalloonDetails(string balloonID)
         {
             Balloon balloon = null;
-            if(balloonCache.TryGetValue(balloonID, out balloon))
+            if (balloonCache.TryGetValue(balloonID, out balloon))
             {
                 return balloon;
             }
@@ -82,7 +86,7 @@ namespace BubblesClient
         public void UpdateBalloonDetails(Balloon balloon)
         {
             Balloon cachedBalloon = null;
-            if(!balloonCache.TryGetValue(balloon.ID, out cachedBalloon))
+            if (!balloonCache.TryGetValue(balloon.ID, out cachedBalloon))
             {
                 cachedBalloon = new Balloon(balloon);
                 balloonCache.Add(balloon.ID, cachedBalloon);
@@ -94,34 +98,38 @@ namespace BubblesClient
                 balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
-        /// <summary>
-        /// Cause the callback function to be called on a separate thread.
-        /// </summary>
-        /// <param name="callback"> Function to be called. </param>
-        public void CallAsync(GameCallback callback)
+        public void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopBalloonMessage> OnPopBalloon,
+            Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate)
         {
-            System.Threading.ThreadPool.QueueUserWorkItem(delegate(object state)
+            List<Message> messages = messageQueue.DequeueAll();
+            foreach (Message msg in messages)
             {
-                callback();
-            });
-        }
+                if (msg == null)
+                {
+                    // the connection to the server was closed
+                    break;
+                }
 
-        /// <summary>
-        /// Cause the callback function to be called after a given delay.
-        /// </summary>
-        /// <param name="callback"> Function to be called. </param>
-        /// <param name="delayInMs"> Delay in ms before calling the function. </param>
-        public void CallLater(int delayInMs, GameCallback callback)
-        {
-            Timer timer = new Timer();
-            timer.Elapsed += delegate(Object o, ElapsedEventArgs e)
-            {
-                MessageQueue.Enqueue(new CallbackMessage(callback));
-                timer.Stop();
-                timer.Dispose();
-            };
-            timer.Interval = delayInMs;
-            timer.Start();
+                switch (msg.Type)
+                {
+                    case MessageType.NewBalloon:
+                        OnNewBalloon((NewBalloonMessage)msg);
+                        break;
+                    case MessageType.PopBalloon:
+                        OnPopBalloon((PopBalloonMessage)msg);
+                        break;
+                    case MessageType.BalloonContentUpdate:
+                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+                        break;
+                    case MessageType.BalloonStateUpdate:
+                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
+                        break;
+                    case MessageType.Callback:
+                        var cm = (CallbackMessage)msg;
+                        cm.Callback();
+                        break;
+                }
+            }
         }
 
         private void OnConnected(object sender, EventArgs args)
@@ -143,24 +151,24 @@ namespace BubblesClient
         private void OnMessageReceived(object sender, MessageEventArgs args)
         {
             Message msg = args.Message;
-            switch(msg.Type)
+            switch (msg.Type)
             {
-            case MessageType.NewBalloon:
-                HandleNewBalloon((NewBalloonMessage)msg);
-                break;
-            case MessageType.BalloonContentUpdate:
-                HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                break;
-            case MessageType.BalloonStateUpdate:
-                HandleBalloonStateUpdate((BalloonStateUpdateMessage)msg);
-                break;
+                case MessageType.NewBalloon:
+                    HandleNewBalloon((NewBalloonMessage)msg);
+                    break;
+                case MessageType.BalloonContentUpdate:
+                    HandleBalloonContentUpdate((BalloonContentUpdateMessage)msg);
+                    break;
+                case MessageType.BalloonStateUpdate:
+                    HandleBalloonStateUpdate((BalloonStateUpdateMessage)msg);
+                    break;
             }
         }
 
         private void HandleNewBalloon(NewBalloonMessage nbm)
         {
             // ask the server to send the balloon's content
-            if(!balloonCache.ContainsKey(nbm.BalloonID))
+            if (!balloonCache.ContainsKey(nbm.BalloonID))
             {
                 balloonCache.Add(nbm.BalloonID, new Balloon(nbm.BalloonID));
                 m_conn.SendMessage(new GetBalloonContentMessage(nbm.BalloonID));
@@ -174,7 +182,7 @@ namespace BubblesClient
         private void HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
             Balloon balloon = null;
-            if(balloonCache.TryGetValue(bcm.BalloonID, out balloon))
+            if (balloonCache.TryGetValue(bcm.BalloonID, out balloon))
             {
                 balloon.Label = bcm.Label;
                 balloon.Content = bcm.Content;
@@ -187,7 +195,7 @@ namespace BubblesClient
         private void HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             Balloon balloon = null;
-            if(balloonCache.TryGetValue(bdm.BalloonID, out balloon))
+            if (balloonCache.TryGetValue(bdm.BalloonID, out balloon))
             {
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;

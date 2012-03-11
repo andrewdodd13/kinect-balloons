@@ -81,7 +81,7 @@ namespace BubblesClient.Utility
             request.Method = "GET";
 
             // Grab the response
-            using(HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             {
                 // Create the bitmap
                 return new Bitmap(response.GetResponseStream());
@@ -96,7 +96,7 @@ namespace BubblesClient.Utility
         /// <returns> Texture from the image. </returns>
         public static Texture2D BitmapToTexture(Bitmap bitmap, GraphicsDevice graphicsDevice)
         {
-            if(bitmap == null)
+            if (bitmap == null)
             {
                 return null;
             }
