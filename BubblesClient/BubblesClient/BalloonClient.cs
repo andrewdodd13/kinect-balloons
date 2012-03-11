@@ -137,11 +137,11 @@ namespace BubblesClient
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, screenDimensions.Y));
 
             // Load buckets
-            float gapBetweenBuckets = (screenDimensions.X * 1.1f - (Bucket.BucketWidth * 5)) / 6.0f;
+            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5) + 200) / 6.0f;
 
             for (int i = 0; i < buckets.Count; i++)
             {
-                float x = ((i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth);
+                float x = ((i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth) - 100;
                 float y = screenDimensions.Y - Bucket.BucketHeight;
 
                 Bucket b = buckets[i];
