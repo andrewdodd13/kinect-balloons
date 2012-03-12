@@ -43,6 +43,7 @@ content. The HTML renderer was a feature added mid-way through development but
 is now the default model as it is easier to customize and looks much more
 appealing. 
 
+\clearpage{}
 \subsection{Network Subsystem}
 The Network Subsystem implements the INetworkManager interface and is 
 responsible for managing communication between the Client and Server. The 
@@ -82,6 +83,7 @@ received from the Server. \\ \hline
 \end{tabular}
 \end{table}
 
+\clearpage{}
 \subsection{Physics Subsystem}
 The Physics Subsystem is concerned with tracking physical objects in the game
 and generates events based on collisions between them. This subsystem is 
@@ -97,8 +99,8 @@ Entity; this class represents an object as it is stored in the world and is
 used by the Game System to track the relationship between physical entities and
 model objects.
 
-\begin{table}[H]
-\begin{tabular}{|p{5cm}|p{3cm}|p{10cm}|}
+%\begin{table}[H]
+\begin{longtable}{|p{4.5cm}|p{3.5cm}|p{7.7cm}|}
 \hline
 \multicolumn{3}{|c|}{PhysicsManager} \\ \hline
 
@@ -111,12 +113,12 @@ Update & Game Time &
 Advances the physics world by the specified time. This is called once per call
 of the Update method in the Game System.\\ \hline
 
-Create Balloon & Position, Velocity, \emph{Returns} World Entity &
+Create Balloon & Position,\newline Velocity,\newline \emph{Returns} World Entity &
 Creates a World Entity object for a balloon. This object will be added to the 
 Physics Manager's internal list of Balloons and will cause events to fire when
 certain collisions are detected with it.\\ \hline
 
-Create Boundary & Width, Position, \emph{Returns} World Entity &
+Create Boundary & Width,\newline Position,\newline \emph{Returns} World Entity &
 Creates a physical boundary in the system --- used to create the roof and the 
 floor. Currently only horizontal boundaries can be created by this function.
 Vertical boundaries are not handled by the physics engine but by the Game (as 
@@ -131,7 +133,7 @@ Get Hand Positions & \emph{Returns} List of World Entity &
 Returns the World Entity object for each hand currently tracked by the system.
 \\ \hline
 
-Get Hand For Entity & World Entity, \emph{Returns} Hand &
+Get Hand For Entity & World Entity,\newline \emph{Returns} Hand &
 Returns the Hand object for the World Entity provided. Used by the Game System
 to draw the hand on screen. \\ \hline
 
@@ -151,31 +153,32 @@ Removes the given entity from the physics world. Hand entities are not removed
 with this function and would be regenerated on the next call to Update Hand 
 Positions anyway. \\ \hline
 
-\emph{Static} World To Pixel & World Position \emph{Returns} Screen Position &
+\emph{Static} World To Pixel & World Position\newline \emph{Returns} Screen Position &
 Converts a physics world co-ordinate to a screen co-ordinate.\\ \hline
 
-\emph{Static} Pixel To World & Screen Position \emph{Returns} World Position &
+\emph{Static} Pixel To World & Screen Position\newline \emph{Returns} World Position &
 Converts a screen co-ordinate to a physics world one.\\ \hline
 
-\emph{Static} World Body To Pixel & World Position, Pixel Offset, 
+\emph{Static} World Body To Pixel & World Position,\newline Pixel Offset,\newline 
 \emph{Returns} Screen Position &
 Converts a physics world co-ordinate to a screen co-ordinate, minus a pixel 
 offset (usually the width of a texture).\\ \hline
 
-\emph{Static} Pixel To World Body & Screen Position, Pixel Offset, 
+\emph{Static} Pixel To World Body & Screen Position,\newline Pixel Offset,\newline
 \emph{Returns} World Position & 
 As World Body to Pixel but in reverse.\\ \hline
 
-\emph{Event} Balloon Popped & Balloon Popped Event Args &
+\emph{Event} Balloon Popped & BalloonPopped\-EventArgs &
 Fired when the Physics Manager detects that a user has popped a balloon.
 \\ \hline
 
-\emph{Event} Bucket Collision & Bucket Collision Event Args & 
+\emph{Event} Bucket Collision & BucketCollision\-EventArgs & 
 Fired when the Physics Manager detects that a balloon has collided with a 
 bucket.\\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
+%\end{table}
 
+\clearpage{}
 \subsection{Input Subsystem}
 The Input Subsystem tracks user input and is defined by the IInputManager
 interface. Two input subsystems are implemented in the project: one for using
@@ -208,6 +211,7 @@ every frame, the physics engine will not work correctly. \\ \hline
 \end{tabular}
 \end{table}
 
+\clearpage{}
 \subsection{Graphics \& Game Systems}
 The main logic for the Graphics Subsystem lies in the Game System itself. XNA
 defines a layout for the Game System, in which game logic should be performed
