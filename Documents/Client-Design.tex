@@ -1,13 +1,13 @@
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{float}
+%\documentclass{article}
+%\usepackage{graphicx}
+%\usepackage{float}
 
-\title{Balloons Project - Client System}
-\author{Andrew Dodd}
-\begin{document}
-\maketitle
+%\title{Balloons Project - Client System}
+%\author{Andrew Dodd}
+%\begin{document}
+%\maketitle
 
-\section{Introduction}
+\subsection{Introduction}
 This document describes the Balloons Client system in detail and gives 
 reasoning behind some of the design decisions that were made. The Client system
 is the system which the user interacts with on the screen; it makes use of the
@@ -18,33 +18,33 @@ This document only describes the technical aspects of the Client system; for
 design decisions and specification relating to the user interface and input 
 controllers please consult the Client Design document.
 
-\section{System Design}
+\subsection{System Design}
 As much as is possible, the Client system is split into four components: 
 Network, Graphics, Physics and Input; however these four components also need 
-to be tied up in a central location – XNA puts the burden of this into the Game
+to be tied up in a central location --- XNA puts the burden of this into the Game
 class. With the exception of Graphics which is part of the Game class, each
 sub-system has its own code package and is quite discrete from all the other 
 parts, i.e. these components are loosely coupled.
 
-The other main part of the Client system is the model objects – these represent
+The other main part of the Client system is the model objects --- these represent
 some of the main objects in the game. They are not true model objects in the
-MVC pattern – some of the models actually contain drawing logic.
+MVC pattern --- some of the models actually contain drawing logic.
 
-\section{Models}
-\subsection{Bucket}
+\subsection{Models}
+\subsubsection{Bucket}
 The bucket model represents a paint bucket which can be used to change the 
 decoration of a balloon. A bucket implementation should implement the abstract
 Apply To Balloon method to perform the decoration. Two buckets are currently
 included in the system: one which changes the colour of the balloon and one 
 which changes the overlay. 
 
-\subsection{Client Balloon}
+\subsubsection{Client Balloon}
 The client balloon model represents a balloon as it appears on screen. It 
 contains information pertaining to the balloon's dimensions and also a cache of
 any textures which have been generated for that balloon (its image or QR code, 
 for example). 
 
-\subsection{Content Box}
+\subsubsection{Content Box}
 The content box model is used to define the logic for drawing a content box to
 the screen. Two content box implementations are available: one which uses raw
 XNA drawing calls to position elements, and one which uses HTML to render the
@@ -52,7 +52,7 @@ content. The HTML renderer was a feature added mid-way through development but
 is now the default model as it is easier to customize and looks much more
 appealing. 
 
-\section{Network Subsystem}
+\subsection{Network Subsystem}
 The Network Subsystem implements the INetworkManager interface and is 
 responsible for managing communication between the Client and Server. The 
 default implementation relies on the ScreenConnection class from the Messaging
@@ -90,7 +90,7 @@ received from the Server. \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Physics Subsystem}
+\subsection{Physics Subsystem}
 The Physics Subsystem is concerned with tracking physical objects in the game
 and generates events based on collisions between them. This subsystem is 
 slightly more coupled than other classes as it is not coded to an interface; 
@@ -125,7 +125,7 @@ Physics Manager's internal list of Balloons and will cause events to fire when
 certain collisions are detected with it.\\ \hline
 
 Create Boundary & Width, Position, \emph{Returns} World Entity &
-Creates a physical boundary in the system – used to create the roof and the 
+Creates a physical boundary in the system --- used to create the roof and the 
 floor. Currently only horizontal boundaries can be created by this function.
 Vertical boundaries are not handled by the physics engine but by the Game (as 
 they fire network events).\\ \hline
@@ -184,7 +184,7 @@ bucket.\\ \hline
 \end{tabular}
 \end{table}
 
-\section{Input Subsystem}
+\subsection{Input Subsystem}
 The Input Subsystem tracks user input and is defined by the IInputManager
 interface. Two input subsystems are implemented in the project: one for using
 the Kinect, and one for using the Mouse. The Kinect system is described 
@@ -216,7 +216,7 @@ every frame, the physics engine will not work correctly. \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Graphics \& Game Systems}
+\subsection{Graphics \& Game Systems}
 The main logic for the Graphics Subsystem lies in the Game System itself. XNA
 defines a layout for the Game System, in which game logic should be performed
 in the Update method and drawing logic in the Draw method. The Game System also
@@ -275,14 +275,14 @@ later. The following steps are performed:
 \end{tabular}
 \end{table}
 
-\section{Development Report}
+\subsection{Development Report}
 Throughout the development cycle of the project, several builds were presented
 to the client. In the first few weeks, many of the demo builds were individual
 feasibility studies of individual components needed to build the final project.
 This section gives details of what requirements were implemented in the Client
 system for each week.
 
-\subsection{Client Demo 1 - 7th February}
+\subsubsection{Client Demo 1 - 7th February}
 The first prototype presented to the client showed hand tracking using the
 Kinect and the capabilities of the physics engine using mock graphics. The
 client thought that the Kinect input seemed to work well and was generally
@@ -293,7 +293,7 @@ the user interface which the user was also pleased with; however that prototype
 was discarded as it was easier to implement the design on top of the input
 prototype.
 
-\subsection{Client Demo 2 - 14th February}
+\subsubsection{Client Demo 2 - 14th February}
 The second demo prototype was much more advanced than the first. Many of the UI
 concepts were implemented including balloons along with buckets to provide the 
 "painting" functionality. The mock graphics used in the first prototype were 
@@ -314,7 +314,7 @@ allowed balloons to be generated by the Server and pushed down to the Client
 system. Balloons could be pushed between screens although some bugs in the 
 server made this difficult to demonstrate.
 
-\subsection{Client Demo 3 - 21st February}
+\subsubsection{Client Demo 3 - 21st February}
 Several bug fixes and improvements were implemented for this build. Crashes 
 from the previous build were ironed out and fixed; the issue with the user 
 being unable to reach the top of the screen was also fixed. Text-wrapping on 
@@ -334,14 +334,14 @@ Unfortunately it seemed impossible that the Client System could be run on the
 target hardware; this demo was shown using a laptop hooked up to the screens
 rather than the hardware.
 
-\subsection{User Evaluation Build - 27th February}
+\subsubsection{User Evaluation Build - 27th February}
 During the user evaluation some fixes were applied to prevent concurrency 
 issues in the HTML renderer when rendering images; other than this the Client 
 system's build was unchanged from the previous week.
 
-\subsection{User Evaluation Iteration - 13th March}
+\subsubsection{User Evaluation Iteration - 13th March}
 From the results of the user evaluation we implemented several fixes to do with
-usability – these included:
+usability --- these included:
 \begin{itemize}
 \item{Tweaks to the close button for the content box which users found clunky 
 to use. We added a black border to it, reduced the activation time from 2.5s to
@@ -354,7 +354,7 @@ This prevents balloons from being “stuck” under the floor.}
 of actions they can take to interact with the system.}
 \end{itemize}
 
-\section{Third-Party Components}
+\subsection{Third-Party Components}
 The Client system makes use of several third-party components to reduce the 
 amount of development required:
 
@@ -382,4 +382,4 @@ rendering abilities of XNA.
 A QRCode generation library, used to convert content URLs into a format which 
 can be quickly recognised by a user’s device.
 \end{itemize}
-\end{document}
+%\end{document}
