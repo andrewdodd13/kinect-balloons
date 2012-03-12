@@ -26,11 +26,11 @@ convertRawHandToScreen & SkeletonPoint, Returns Vector2 & Converts a raw skeleto
 coordinate. This method is just a wrapper around the Vector2 method
 below.\tabularnewline
 \hline 
-convertRawHandToScreen & Vector2, Returns Vector2 & Converts a raw point from the Kinect to screen coordinates. It applies
+convertRawHandToScreen & Vector2,\newline Returns Vector2 & Converts a raw point from the Kinect to screen coordinates. It applies
 a scaling factor in each axis and the transforms it from the raw coordinate
 space to screen coordinate space (defined in Initialize).\tabularnewline
 \hline 
-SkeletonsReady & Sender Object, Event Args & This is a callback function that is assigned when the Initialize method
+SkeletonsReady & Sender Object,\newline Event Args & This is a callback function that is assigned when the Initialize method
 is called. It gets called once for each frame the Kinect calculates.
 It uses the skeleton data to generate hand data.\tabularnewline
 \hline 
