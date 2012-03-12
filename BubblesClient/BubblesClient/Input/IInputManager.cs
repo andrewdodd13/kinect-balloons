@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace BubblesClient.Input.Controllers
+namespace BubblesClient.Input
 {
     /// <summary>
     /// IInputController defines the possible actions that can be performed in
     /// the game. Each Input Method retains a reference to this class, and 
     /// should call the appropriate method when it occurs.
     /// </summary>
-    public interface IInputController
+    public interface IInputManager
     {
         /// <summary>
         /// Initializes the Input Controller with the given screen dimensions.
@@ -27,13 +27,5 @@ namespace BubblesClient.Input.Controllers
         /// <returns>An array of hands. Position should be relative to the 
         /// screen, as described by Initialize().</returns>
         Hand[] GetHandPositions();
-
-        /// <summary>
-        /// Indicates whether the user is trying to close the popup. This is
-        /// independant of whether or not the popup is currently shown. We
-        /// really need a state machine for this...
-        /// </summary>
-        /// <returns>True if the user is trying to close the popup.</returns>
-        bool ShouldClosePopup(); //This is bad - find a way to remove it
     }
 }

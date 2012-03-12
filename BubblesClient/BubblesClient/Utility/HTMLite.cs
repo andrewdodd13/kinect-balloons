@@ -31,7 +31,7 @@ namespace BubblesClient.Utility
         public HTMLite()
         {
             this.hLite = HTMLiteCreateInstance();
-            if(this.hLite == IntPtr.Zero)
+            if (this.hLite == IntPtr.Zero)
             {
                 throw new Exception("Could not load HTMLlite");
             }
@@ -50,16 +50,16 @@ namespace BubblesClient.Utility
 
         public void Dispose()
         {
-            if(cbHandle.IsAllocated)
+            if (cbHandle.IsAllocated)
             {
-                if(hLite != IntPtr.Zero)
+                if (hLite != IntPtr.Zero)
                 {
                     HTMLiteSetCallback(hLite, null);
                 }
                 cbHandle.Free();
             }
 
-            if(hLite != IntPtr.Zero)
+            if (hLite != IntPtr.Zero)
             {
                 HTMLiteDestroyInstance(hLite);
                 hLite = IntPtr.Zero;
@@ -142,7 +142,7 @@ namespace BubblesClient.Utility
         protected void FreeBuffers()
         {
             // un-pin the memory allocated for the data
-            foreach(GCHandle pData in bufferList)
+            foreach (GCHandle pData in bufferList)
             {
                 pData.Free();
             }
@@ -152,11 +152,11 @@ namespace BubblesClient.Utility
         protected uint Callback(IntPtr hLite, IntPtr pMsg)
         {
             MessageCode code = (MessageCode)Marshal.ReadInt32(pMsg, 8);
-            if((code == MessageCode.HLN_LOAD_DATA) && (UriHandler != null))
+            if ((code == MessageCode.HLN_LOAD_DATA) && (UriHandler != null))
             {
                 var loadData = ReadMessage<NMHL_LOAD_DATA>(pMsg);
                 byte[] data = UriHandler(loadData.uri, (ResourceType)loadData.dataType);
-                if(data != null)
+                if (data != null)
                 {
                     SetDataReady(loadData.uri, data);
                 }
@@ -166,7 +166,7 @@ namespace BubblesClient.Utility
 
         protected T ReadMessage<T>(IntPtr pMsg) where T : struct
         {
-            if(pMsg == IntPtr.Zero)
+            if (pMsg == IntPtr.Zero)
             {
                 throw new ArgumentNullException("pMsg");
             }
@@ -179,7 +179,7 @@ namespace BubblesClient.Utility
             private static Dictionary<IntPtr, Element> elements = new Dictionary<IntPtr, Element>();
 
             private IntPtr hEle;
-            
+
             public List<Element> Children
             {
                 get
@@ -231,11 +231,11 @@ namespace BubblesClient.Utility
             internal static Element Get(IntPtr hEle)
             {
                 Element e;
-                if(hEle == IntPtr.Zero)
+                if (hEle == IntPtr.Zero)
                 {
                     return null;
                 }
-                else if(!elements.TryGetValue(hEle, out e))
+                else if (!elements.TryGetValue(hEle, out e))
                 {
                     e = new Element(hEle);
                 }
@@ -261,7 +261,7 @@ namespace BubblesClient.Utility
             private List<Element> GetChildren()
             {
                 var children = new List<Element>();
-                for(uint i = 0; i < GetChildrenCount(); i++)
+                for (uint i = 0; i < GetChildrenCount(); i++)
                 {
                     children.Add(GetChild(i));
                 }
@@ -455,7 +455,7 @@ namespace BubblesClient.Utility
 
         private static void ThrowOnError(uint result)
         {
-            if(result != 0)
+            if (result != 0)
             {
                 throw new Exception(MessageFromCode(result));
             }
@@ -463,22 +463,22 @@ namespace BubblesClient.Utility
 
         private static string MessageFromCode(uint errorCode)
         {
-            switch((Result)errorCode)
+            switch ((Result)errorCode)
             {
-            case Result.Print_Success:
-                return "No error.";
-            case Result.Print_Failure_InvalidHandle:
-                return "Invalid handle.";
-            case Result.Print_Failure_InvalidFormat:
-                return "Invalid format.";
-            case Result.Print_Failure_FileNotFound:
-                return "File not found.";
-            case Result.Print_Failure_InvalidParameter:
-                return "Invalid parameter.";
-            case Result.Print_Failure_InvalidState:
-                return "Invalid state.";
-            default:
-                return String.Format("Unknown error code {0}.", errorCode);
+                case Result.Print_Success:
+                    return "No error.";
+                case Result.Print_Failure_InvalidHandle:
+                    return "Invalid handle.";
+                case Result.Print_Failure_InvalidFormat:
+                    return "Invalid format.";
+                case Result.Print_Failure_FileNotFound:
+                    return "File not found.";
+                case Result.Print_Failure_InvalidParameter:
+                    return "Invalid parameter.";
+                case Result.Print_Failure_InvalidState:
+                    return "Invalid state.";
+                default:
+                    return String.Format("Unknown error code {0}.", errorCode);
             }
         }
         #endregion

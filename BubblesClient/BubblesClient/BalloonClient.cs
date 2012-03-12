@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Balloons.Messaging.Model;
-using BubblesClient.Input.Controllers;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using BubblesClient.Model.Buckets;
 using BubblesClient.Model.ContentBox;
+using BubblesClient.Network;
 using BubblesClient.Physics;
 using BubblesClient.Utility;
 using FarseerPhysics.Dynamics;
@@ -17,7 +18,7 @@ namespace BubblesClient
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class BubblesClientGame : Microsoft.Xna.Framework.Game
+    public class BalloonClient : Microsoft.Xna.Framework.Game
     {
         // Textures
         private Texture2D skyTexture, handTexture;
@@ -30,7 +31,7 @@ namespace BubblesClient
         private SpriteFont summaryFont;
 
         // Network
-        public ScreenManager ScreenManager { get; private set; }
+        public INetworkManager NetworkManager { get; private set; }
 
         // XNA Graphics
         private GraphicsDeviceManager graphics;
@@ -38,7 +39,7 @@ namespace BubblesClient
         private SpriteBatch spriteBatch;
 
         // Input
-        private IInputController input;
+        private IInputManager input;
         private Color[] userColours = { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple }; // Move this to config?
 
         // Physics World
@@ -48,6 +49,8 @@ namespace BubblesClient
 
         private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
 
+        private Random rng = new Random();
+
         //other stuff
         private bool showBuckets = true;
         private Bucket oldBucket = null;
@@ -55,10 +58,10 @@ namespace BubblesClient
         // If this is not null then we will be showing a balloon. We really need a state machine.
         private AbstractContentBox contentBox;
 
-        private List<PopAnim> popAnimations = new List<PopAnim>();
+        private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
 
-        public BubblesClientGame(ScreenManager screenManager, IInputController controller)
+        public BalloonClient(INetworkManager screenManager, IInputManager controller)
         {
             // Initialise Graphics
             graphics = new GraphicsDeviceManager(this);
@@ -100,22 +103,8 @@ namespace BubblesClient
             // Initialise Content
             Content.RootDirectory = "Content";
 
-            // Initialise Physics
-            physicsManager.Initialize();
-            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
-            {
-                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                PopBalloon(b.ID, true);
-            };
-            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
-            {
-                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
-                this.ApplyBucketToBalloon(bucket, balloon);
-            };
-
             // Initialise network
-            this.ScreenManager = screenManager;
+            this.NetworkManager = screenManager;
         }
 
         /// <summary>
@@ -129,16 +118,30 @@ namespace BubblesClient
             // Initialise base
             base.Initialize();
 
+            // Initialise Physics
+            physicsManager.Initialize(handTexture.Width);
+            physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
+            {
+                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                PopBalloon(b.ID, true);
+            };
+            physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
+            {
+                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
+                this.ApplyBucketToBalloon(bucket, balloon);
+            };
+
             // Create a roof and floor
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, 0));
             physicsManager.CreateBoundary((int)screenDimensions.X * 4, new Vector2(screenDimensions.X / 2, screenDimensions.Y));
 
             // Load buckets
-            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5)) / 6;
+            float gapBetweenBuckets = (screenDimensions.X - (Bucket.BucketWidth * 5) + 200) / 6.0f;
 
             for (int i = 0; i < buckets.Count; i++)
             {
-                float x = (i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth;
+                float x = ((i + 1) * gapBetweenBuckets + (i + 0.5f) * Bucket.BucketWidth) - 100;
                 float y = screenDimensions.Y - Bucket.BucketHeight;
 
                 Bucket b = buckets[i];
@@ -148,7 +151,7 @@ namespace BubblesClient
             }
 
             // Always do this last
-            this.ScreenManager.Connect();
+            this.NetworkManager.Connect();
         }
 
         /// <summary>
@@ -164,9 +167,6 @@ namespace BubblesClient
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
-
-            // This doesn't seem like the best place for this, but set hand size from the texture
-            physicsManager.setHandSizePixels(handTexture.Width);
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
@@ -234,7 +234,7 @@ namespace BubblesClient
             currentTime = gameTime;
 
             // Query the Network Manager for events
-            ProcessNetworkMessages();
+            NetworkManager.ProcessMessages(OnNewBalloon, OnPopBalloon, OnBalloonContentUpdate, OnBalloonStateUpdate);
 
             this.HandleInput(gameTime);
 
@@ -252,13 +252,13 @@ namespace BubblesClient
                 if (balloonPosition.X < (ClientBalloon.BalloonWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
                 else if (balloonPosition.X > (ClientBalloon.BalloonWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    ScreenManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
             }
@@ -306,7 +306,7 @@ namespace BubblesClient
 
         private void UpdateBuckets(bool show)
         {
-            float targetY = (show ? screenDimensions.Y - Bucket.BucketHeight / 2 : screenDimensions.Y) / PhysicsManager.MeterInPixels;
+            float targetY = (show ? screenDimensions.Y - (Bucket.BucketHeight / 4) : screenDimensions.Y) / PhysicsManager.MeterInPixels;
 
             bool atRest = true;
             foreach (Bucket b in buckets)
@@ -338,7 +338,7 @@ namespace BubblesClient
             foreach (ClientBalloon balloon in balloons.Values)
             {
                 // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (ShouldDrawCaption(balloon))
+                if (balloon.ShouldDrawCaption())
                 {
                     if (Configuration.UseHtmlRendering)
                     {
@@ -360,7 +360,7 @@ namespace BubblesClient
             }
 
             // Draw all pop animations
-            foreach (PopAnim popAnim in popAnimations)
+            foreach (PopAnimation popAnim in popAnimations)
             {
                 Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
                                                 popAnim.PopTexture.Width, popAnim.PopTexture.Height);
@@ -450,13 +450,6 @@ namespace BubblesClient
             }
         }
 
-        private bool ShouldDrawCaption(ClientBalloon balloon)
-        {
-            return balloon.Type != BalloonType.Customizable &&
-                !balloon.Popped &&
-                !String.IsNullOrWhiteSpace(balloon.Label);
-        }
-
         private void HandleInput(GameTime gameTime)
         {
             Hand[] hands = input.GetHandPositions();
@@ -468,9 +461,11 @@ namespace BubblesClient
                 bool insideThisFrame = false;
                 foreach (Hand hand in hands)
                 {
-                    // If hand's position is inside (SW-128 -> SW, 0 -> 128) then... do something
-                    if ((hand.Position.X >= screenDimensions.X - 128 && hand.Position.X <= screenDimensions.X) &&
-                        (hand.Position.Y >= 0 && hand.Position.Y <= 128))
+                    // If hand's position is inside the boxes then fire the event
+                    if (((hand.Position.X >= screenDimensions.X - 136 && hand.Position.X <= screenDimensions.X) &&
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)) ||
+                        ((hand.Position.X >= 0 && hand.Position.X < 136) && 
+                        (hand.Position.Y >= 0 && hand.Position.Y <= 136)))
                     {
                         insideThisFrame = true;
                         break;
@@ -505,7 +500,7 @@ namespace BubblesClient
             // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
-                ScreenManager.UpdateBalloonDetails(balloon);
+                NetworkManager.UpdateBalloonDetails(balloon);
             }
 
             balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
@@ -521,7 +516,7 @@ namespace BubblesClient
             }
 
             // Display content only asked and if balloon has a caption
-            showContent &= ShouldDrawCaption(balloon);
+            showContent &= balloon.ShouldDrawCaption();
             balloon.Popped = true;
             if (showContent)
             {
@@ -541,10 +536,10 @@ namespace BubblesClient
             if (animate)
             {
                 // Create a new pop animation
-                PopAnim anim = new PopAnim(balloon);
+                PopAnimation anim = new PopAnimation(balloon);
                 anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
-                anim.PopTexture = balloonPopTextures[new Random().Next(0, balloonPopTextures.Length)];
+                anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
                 anim.PopColour = new Colour(255, 255, 255, 255);
                 popAnimations.Add(anim);
             }
@@ -557,44 +552,11 @@ namespace BubblesClient
             // Remove balloon from server. This must be done after removing the balloon
             // from the map or an exception can be raised when the server sends a
             // "new balloon" message with the same ID when the feed is updated.
-            ScreenManager.NotifyBalloonPopped(balloon);
+            NetworkManager.NotifyBalloonPopped(balloon);
         }
         #endregion
 
         #region "Networking"
-        public void ProcessNetworkMessages()
-        {
-            List<Message> messages = ScreenManager.MessageQueue.DequeueAll();
-            foreach (Message msg in messages)
-            {
-                if (msg == null)
-                {
-                    // the connection to the server was closed
-                    break;
-                }
-
-                switch (msg.Type)
-                {
-                    case MessageType.NewBalloon:
-                        OnNewBalloon((NewBalloonMessage)msg);
-                        break;
-                    case MessageType.PopBalloon:
-                        OnPopBalloon((PopBalloonMessage)msg);
-                        break;
-                    case MessageType.BalloonContentUpdate:
-                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                        break;
-                    case MessageType.BalloonStateUpdate:
-                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
-                        break;
-                    case MessageType.Callback:
-                        var cm = (CallbackMessage)msg;
-                        cm.Callback();
-                        break;
-                }
-            }
-        }
-
         public void OnNewBalloon(NewBalloonMessage m)
         {
             // Choose where to place the balloon
@@ -610,7 +572,7 @@ namespace BubblesClient
 
                 case Direction.Any:
                 default:
-                    position.X = new Random().Next((int)screenDimensions.X);
+                    position.X = rng.Next((int)screenDimensions.X);
                     break;
             }
 
@@ -620,7 +582,7 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
 
-            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            Balloon balloon = NetworkManager.GetBalloonDetails(m.BalloonID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);

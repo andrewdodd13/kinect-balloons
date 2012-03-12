@@ -1,11 +1,11 @@
 ﻿using System;
+using Balloons.Messaging.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Balloons.Messaging.Model;
 
 namespace BubblesClient.Model
 {
-    public class PopAnim
+    public class PopAnimation
     {
         public string ID { get; set; }
         public Vector2 Pos { get; set; }
@@ -14,7 +14,7 @@ namespace BubblesClient.Model
         public Texture2D PopTexture { get; set; }
         public Colour PopColour { get; set; }
 
-        public PopAnim(ClientBalloon balloon)
+        public PopAnimation(ClientBalloon balloon)
         {
             this.ID = balloon.ID;
         }

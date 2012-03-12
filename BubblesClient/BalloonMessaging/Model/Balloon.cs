@@ -48,7 +48,8 @@ namespace Balloons.Messaging.Model
             Votes = 0;
         }
 
-        public Balloon(Balloon parent) : this(parent.ID)
+        public Balloon(Balloon parent)
+            : this(parent.ID)
         {
             // Copy properties from the parent
             this.BackgroundColor = parent.BackgroundColor;
@@ -86,36 +87,6 @@ namespace Balloons.Messaging.Model
                     return Direction.Right;
                 case "any":
                     return Direction.Any;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public static string FormatBalloonType(BalloonType btype)
-        {
-            switch (btype)
-            {
-                case BalloonType.CustomContent:
-                    return "customcontent";
-                case BalloonType.Customizable:
-                    return "customizable";
-                case BalloonType.Twitter:
-                    return "twitter";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public static BalloonType ParseBalloonType(string text)
-        {
-            switch (text)
-            {
-                case "customcontent":
-                    return BalloonType.CustomContent;
-                case "customizable":
-                    return BalloonType.Customizable;
-                case "twitter":
-                    return BalloonType.Twitter;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
