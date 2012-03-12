@@ -1,0 +1,147 @@
+\documentclass[11pt]{article}
+
+\title{\textbf{Web Content Service}}
+\author{Christopher Wyllie}
+\date{}
+\begin{document}
+
+\maketitle
+
+\section{Technologies}
+
+Construction of the web components of this project was undertaken with the following technologies:
+
+\begin{itemize}
+	\item Apache 2
+	\item PHP 5
+	\item MySQL 5
+\end{itemize}
+
+The main reason behind this is that these technologies are available inside the University network, and they are widely understood by most of the development team.
+
+In order to facilitate the rapid and robust development necessary, the following libraries and frameworks were used:
+
+\begin{itemize}
+	\item Code Igniter PHP Framework
+	\item JQuery Mobile toolkit
+	\item tmhOAuth PHP Twitter library
+\end{itemize}
+
+Choice of each library was based on ease of use, and how much value they can add to the project by providing ready to use components for common tasks such as handling file uploads.
+
+\section{Web System Overview}
+
+\subsection{Content Feed}
+
+The balloon application relies upon content delivered by a web-accessible 'feed'. This feed is designed to aggregate various information sources, and provide a single authoritative reference for content to be displayed.
+
+Currently the feed provides information from the following sources:
+
+\begin{itemize}
+	\item User generated content
+	\item Twitter aggregation account
+\end{itemize}
+
+In addition to these content sources, the feed introduces blank balloons, and is responsible for selecting an appropriate number of each content type based on the total number of items requested. The following section will cover each content type in more detail.
+
+\subsection{Content Proxy}
+To facilitate a more engaging user interaction with content, a proxy is used when a user visits the link for any piece of content. This proxy allows votes for user generated content to be recorded, and would allow future extensions to be made to the way content is delivered to the user.
+
+\section{Content Types}
+
+\subsection{User Generated Content}
+By using the content submission portal, it is possible for MACS students to submit their own content to be shown on the screens. Content submitted by users is considered a priority over the other content types, but because it is expected to be posted less frequently, it may not feature heavily in the feed's content.
+
+It is possible for users to vote on this content type, with the number of votes influencing how likely the content is to be displayed.
+
+This content type will be selected with the most recent submissions first, up to the limit requested.
+
+\subsection{Top-rated User Generated Content}
+If an item submitted by a user receives lots of positive votes, it will assume the pseudo content type of 'top-rated'. Top-rated content will always feature in the feed, and be chosen at random from all top-rated items.
+
+This content type is distinct from the most recent items, and items selected for this type will not be considered for the most recent item selection.
+
+If the content item receives negative votes in this state, it is possible for it to lose its top-rated status, and it will become available for selection again to the most recent items.
+
+\subsection{Twitter}
+In order to create a dynamic, relevant information feed, a Twitter account Macs\_Aggregator has been used to provide news items. This account follows a variety of industry news outlets and accounts of interest to students in the Edinburgh area.
+
+\subsection{Blank Balloons}
+The feed introduces balloons that are deliberately left blank to allow users to customise their appearance.
+
+\section{Feed Construction}
+
+\subsection{Content Balancing}
+To ensure that there will always be enough content available for every connected screen, and that no one content type will unintentionally dominate other content types, the feed's items are balanced according to a configurable ratio.
+
+The file \texttt{application/config/feed.php} defines the content types and the values of the ratio in the \texttt{FeedContentTypes} class. It also gives the thresholds for votes which will make a balloon top-rated, or prevent a balloon from showing up again.
+
+Constants from the \texttt{FeedContentTypes} class are used throughout the application code to aid readability and reduce the likelihood of errors.
+
+\subsection{Controller}
+The file \texttt{application/controllers/api.php} implements a factory to generate feed items, and the public endpoint to access these items from.
+
+\texttt{Api::getFeed} will use the ratio defined in the feed config and the number of items requested to work out how many of each content type to include. In the case that the total number of items requested cannot be fulfilled by the available user generated content, the feed will include extra tweets to make up the difference.
+
+The public endpoint will return a JSON encoded feed of items in a standard format, regardless of initial content type.
+
+\section{Content Proxy}
+Every link presented in a QR code will pass through the content proxy page, which decides what to do based on the content type. The purpose is currently three-fold:
+
+\begin{enumerate}
+	\item Allow users to rate user generated content by voting on it
+	\item Ensure that the URLs presented for the QR codes are at most 86 characters
+	\item Provide an easy mechanism to adjust control flow in the future
+\end{enumerate}
+
+The \texttt{Content} and \texttt{Url} controllers are responsible for handling this process. It is a two-step process with the \texttt{Url} controller handling short URL redirection, and the \texttt{Content} controller implementing the intermediate voting interfaces.
+
+\subsection{Content Ratings}
+When a user scans the QR code for user generated content items, they will be presented with a page that allows them to vote the content up and down.
+
+The \texttt{Content} controller defined in \texttt{application/controllers/content.php} manipulates the \texttt{Content\_model} to facilitate this voting.
+
+\texttt{Content::visit} will look up the content item by ID and present the voting interface to the user. This interface is built using the JQuery Mobile toolkit\footnote{http://jquerymobile.com}. This toolkit allowed a cross-platform interface with standard components to be constructed with ease.
+
+On the voting page, the user is presented with three links. One link takes them to the content, and the other two links correspond to the \texttt{Content::up} and \texttt{Content::down} methods which cost a vote and then redirect to the content link.
+
+\subsection{URL Shortening}
+Due to the size limitation of 86 characters in the QR code version chosen, it is necessary to shorten all URLs passed in the feed. Doing this ensures that every URL will be less than the 86 character limit.
+
+To facilitate this, a simple database table is used to store URLs with an integer ID. The model \texttt{Url\_map} is then used to shorten and expand URLs based on this integer ID.
+
+Short URLs take the form of \texttt{baseURL + shortID}, and it is this shortID that will be used to retrieve the original URL.
+
+When using the model to shorten a URL, it is necessary to configure it with the base URL you want the shortened URL to point to. This is accomplished with the \texttt{Url\_map::set\_base\_url} method. Once configured, the \texttt{shorten} method will return a short URL relative to the base URL set.
+
+In order to resolve a short URL to the original URL, the \texttt{Url\_map::unshorten} method is used. This method expects to be given the ID it returned as the last part of the short URL.
+
+To achieve the maximum possible compression, the integer ID stored in the database table is base-62 encoded by the \texttt{shorten} function, and base-62 decoded by the \texttt{unshorten} method.
+
+The \texttt{Url} controller implements a method to redirect from the short URL to the original URL.
+
+\subsection{Future Possibilities}
+By providing a central point through which all traffic must pass, there is the potential to collect statistics about what is being visited the most frequently, and also to present additional user interfaces upon scanning of a QR code.
+
+\section{Future Work}
+
+\subsection{Feed Generation}
+It would be good to refactor the current feed generation method to use a slightly more abstract factory pattern. The initial groundwork is in place with the \texttt{BlankBalloonFactory} class, but this could be abstracted further.
+
+Ideally each content type would have its own factory class which all extend a common parent class, or implement a \texttt{BalloonFactory} interface.
+
+This would allow the code in the \texttt{Api} controller to be simplified, and increase its modularity allowing further content types to be added with ease.
+
+\subsection{Usage Metrics}
+It would be possible to use the content proxy as mentioned to gather statistics on usage. By gathering information on what types of content users tend to visit, the feed's content ratios could be adjusted, or even evolve dynamically for given times of day dependent on previous usage patterns.
+
+\subsection{Mobile Content Submission UI}
+Balloons could be introduced to the feed that would link to a mobile optimised content submission portal. This interface could be built with the JQuery Mobile toolkit and integrate with the existing controller and model setups.
+
+\subsection{Saving of Customised Balloons}
+It would be possible for the clients to provide a link to the web where a user could save an image of their customised balloon.
+
+\subsection{Additional Content Types}
+It would be possible to introduce new content types to the feed, such as items from RSS feeds, or direct messages sent to the Macs\_Aggregator Twitter account.
+
+\end{document}
