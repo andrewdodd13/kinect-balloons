@@ -69,7 +69,7 @@ namespace BubblesClient.Network
                 return;
             }
 
-            m_conn.SendMessage(new PopBalloonMessage(balloon.ID));
+            m_conn.SendMessage(new PopObjectMessage(balloon.ID));
             balloon.OffScreen = true;
         }
 
@@ -98,7 +98,7 @@ namespace BubblesClient.Network
                 balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
-        public void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopBalloonMessage> OnPopBalloon,
+        public void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopObjectMessage> OnPopBalloon,
             Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate)
         {
             List<Message> messages = messageQueue.DequeueAll();
@@ -115,8 +115,8 @@ namespace BubblesClient.Network
                     case MessageType.NewBalloon:
                         OnNewBalloon((NewBalloonMessage)msg);
                         break;
-                    case MessageType.PopBalloon:
-                        OnPopBalloon((PopBalloonMessage)msg);
+                    case MessageType.PopObject:
+                        OnPopBalloon((PopObjectMessage)msg);
                         break;
                     case MessageType.BalloonContentUpdate:
                         OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);

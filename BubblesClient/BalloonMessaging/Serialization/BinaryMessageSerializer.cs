@@ -24,7 +24,7 @@ namespace Balloons.Serialization
             m_decoders.Add(MessageType.ChangeScreen, DecodeChangeScreen);
             m_decoders.Add(MessageType.BalloonContentUpdate, DecodeBalloonContentUpdate);
             m_decoders.Add(MessageType.BalloonStateUpdate, DecodeBalloonStateUpdate);
-            m_decoders.Add(MessageType.PopBalloon, DecodeBalloon);
+            m_decoders.Add(MessageType.PopObject, DecodeBalloon);
             m_decoders.Add(MessageType.GetBalloonContent, DecodeBalloon);
             m_decoders.Add(MessageType.GetBalloonState, DecodeBalloon);
 
@@ -34,7 +34,7 @@ namespace Balloons.Serialization
             m_encoders.Add(MessageType.ChangeScreen, SerializeChangeScreen);
             m_encoders.Add(MessageType.BalloonContentUpdate, SerializeBalloonContentUpdate);
             m_encoders.Add(MessageType.BalloonStateUpdate, SerializeBalloonStateUpdate);
-            m_encoders.Add(MessageType.PopBalloon, SerializeBalloon);
+            m_encoders.Add(MessageType.PopObject, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonContent, SerializeBalloon);
             m_encoders.Add(MessageType.GetBalloonState, SerializeBalloon);
 
@@ -248,8 +248,8 @@ namespace Balloons.Serialization
             string balloonID = reader.ReadString();
             switch(type)
             {
-            case MessageType.PopBalloon:
-                return new PopBalloonMessage(balloonID);
+            case MessageType.PopObject:
+                return new PopObjectMessage(balloonID);
             case MessageType.GetBalloonContent:
                 return new GetBalloonContentMessage(balloonID);
             case MessageType.GetBalloonState:

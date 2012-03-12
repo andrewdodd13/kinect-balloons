@@ -20,7 +20,7 @@ namespace Balloons.Messaging.Model
         GetBalloonState,
 
         // Messages sent by both
-        PopBalloon,
+        PopObject,
         BalloonStateUpdate,
 
         // Internal messages
@@ -305,12 +305,12 @@ namespace Balloons.Messaging.Model
     #endregion
 
     #region Messages sent by both
-    public class PopBalloonMessage : ObjectMessage
+    public class PopObjectMessage : ObjectMessage
     {
         public const string Tag = "pop-balloon";
 
-        public PopBalloonMessage(string balloonID)
-            : base(MessageType.PopBalloon, Tag, balloonID)
+        public PopObjectMessage(string balloonID)
+            : base(MessageType.PopObject, Tag, balloonID)
         {
         }
     }

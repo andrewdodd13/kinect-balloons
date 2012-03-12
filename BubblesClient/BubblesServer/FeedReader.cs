@@ -150,6 +150,10 @@ namespace Balloons.Server
 
                 m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
             }
+
+            // TESTING PURPOSE ! -- TO BE DELETED
+            m_server.EnqueueMessage(new PopObjectMessage("PLANE"));
+            m_server.EnqueueMessage(new NewPlaneMessage("PLANE", PlaneType.BurstBallons, Direction.Any, 10.0f, new Vector2D(10.0f, 10.0f), 0.0f));
         }
 
         internal List<FeedContent> GetFeedContents()

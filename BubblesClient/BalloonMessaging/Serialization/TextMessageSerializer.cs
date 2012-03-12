@@ -29,7 +29,7 @@ namespace Balloons.Serialization
             m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreen);
             m_parsers.Add(BalloonContentUpdateMessage.Tag, ParseBalloonContentUpdate);
             m_parsers.Add(BalloonStateUpdateMessage.Tag, ParseBalloonStateUpdate);
-            m_parsers.Add(PopBalloonMessage.Tag, ParseObject);
+            m_parsers.Add(PopObjectMessage.Tag, ParseObject);
             m_parsers.Add(GetBalloonContentMessage.Tag, ParseObject);
             m_parsers.Add(GetBalloonStateMessage.Tag, ParseObject);
             
@@ -40,7 +40,7 @@ namespace Balloons.Serialization
             m_formatters.Add(ChangeScreenMessage.Tag, FormatChangeScreen);
             m_formatters.Add(BalloonContentUpdateMessage.Tag, FormatBalloonContentUpdate);
             m_formatters.Add(BalloonStateUpdateMessage.Tag, FormatBalloonStateUpdate);
-            m_formatters.Add(PopBalloonMessage.Tag, FormatBalloon);
+            m_formatters.Add(PopObjectMessage.Tag, FormatBalloon);
             m_formatters.Add(GetBalloonContentMessage.Tag, FormatBalloon);
             m_formatters.Add(GetBalloonStateMessage.Tag, FormatBalloon);
         }
@@ -234,8 +234,8 @@ namespace Balloons.Serialization
             string balloonID = args[1].ToObject<string>();
             switch(tag)
             {
-            case PopBalloonMessage.Tag:
-                return new PopBalloonMessage(balloonID);
+            case PopObjectMessage.Tag:
+                return new PopObjectMessage(balloonID);
             case GetBalloonContentMessage.Tag:
                 return new GetBalloonContentMessage(balloonID);
             case GetBalloonStateMessage.Tag:

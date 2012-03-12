@@ -61,7 +61,7 @@
         /// <param name="OnBalloonContentUpdate">Content Update Handler</param>
         /// <param name="OnBalloonStateUpdate">State Update Handler</param>
         /// <returns></returns>
-        void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopBalloonMessage> OnPopBalloon,
+        void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopObjectMessage> OnPopBalloon,
             Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate);
     }
 }

@@ -602,7 +602,7 @@ namespace BubblesClient
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnPopBalloon(PopBalloonMessage m)
+        public void OnPopBalloon(PopObjectMessage m)
         {
             if (balloons.ContainsKey(m.ObjectID))
             {

@@ -178,8 +178,8 @@ namespace Balloons.Server
                 return HandleNewBalloon((NewBalloonMessage)msg);
             case MessageType.NewPlane:
                 return HandleNewPlane((NewPlaneMessage)msg);
-            case MessageType.PopBalloon:
-                return HandlePopBalloon((PopBalloonMessage)msg);
+            case MessageType.PopObject:
+                return HandlePopObject((PopObjectMessage)msg);
             case MessageType.GetBalloonContent:
                 return HandleGetBalloonContent((GetBalloonContentMessage)msg);
             case MessageType.GetBalloonState:
@@ -388,7 +388,7 @@ namespace Balloons.Server
             return true;
         }
 
-        private bool HandlePopBalloon(PopBalloonMessage pbm)
+        private bool HandlePopObject(PopObjectMessage pbm)
         {
             if(m_bubbles.ContainsKey(pbm.ObjectID))
             {
@@ -409,6 +409,18 @@ namespace Balloons.Server
                 }
                 m_bubbles.Remove(pbm.ObjectID);
             }
+            else if (m_planes.ContainsKey(pbm.ObjectID))
+            {
+                ServerPlane p = GetPlane(pbm.ObjectID);
+                if ((p != null) && (p.Screen != null))
+                {
+                    if (!(pbm.Sender is Screen))
+                    {
+                        p.Screen.Connection.SendMessage(pbm);
+                    }
+                }
+                m_planes.Remove(pbm.ObjectID);
+            }
             return true;
         }
         
@@ -425,7 +437,7 @@ namespace Balloons.Server
                 // Check if the bubble need to be keept, or deleted
                 if(fromFeed.Find(c => c.ContentID == b.ID) == null) {
                     // Pop the balloon in the server not present in the feed
-                    EnqueueMessage(new PopBalloonMessage(b.ID), fm.Sender);
+                    EnqueueMessage(new PopObjectMessage(b.ID), fm.Sender);
                     popped++;
                 }
             }
@@ -516,14 +528,7 @@ namespace Balloons.Server
 
         private bool IsPlane(string id)
         {
-            foreach (ServerPlane p in m_planes.Values)
-            {
-                if (p.ID == id)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return m_planes.ContainsKey(id);
         }
         #endregion
 	}
