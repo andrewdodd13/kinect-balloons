@@ -1,11 +1,3 @@
-%\documentclass{article}
-%\usepackage{graphicx}
-
-%\title{Balloons Project - System Architecture}
-%\author{Andrew Dodd}
-%\begin{document}
-%\maketitle
-
 \subsection{Introduction}
 This document gives an overview of the entire Balloons Project system along 
 with a brief description of its main components. Further details on each 
@@ -13,9 +5,16 @@ individual system can be found in the corresponding section of documentation.
 
 \subsection{System Overview}
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/System-Architecture-Diagram.png}
+\par\end{centering}
 
-Items in light blue are web-based components, written in PHP and producing 
+\caption{Overview of the System Architecture}
+\label{Flo:SystemArch}
+\end{figure}
+
+On figure \ref{Flo:SystemArch}, items in light blue are web-based components, written in PHP and producing 
 either HTML/JS/CSS page output or JSON objects. Green items are written in C\#
 4.0 and the pink database is an SQL RDBMS. The QR Code URL is accessed by users
 when viewing content and is usually interpreted by a third-party device such as
@@ -66,5 +65,3 @@ interact with the display. The main elements of the display are the balloons
 themselves which have a short description of the article they represent and the
 news-reader element which displays the full content of the article as well as
 an image and QR Code which directs users via the Content Proxy to the news item.
-
-%\end{document}
