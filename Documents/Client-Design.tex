@@ -81,6 +81,10 @@ Processes messages from the Server and will be called once per Update loop.
 The four parameters are Actions which are called when the relevant message is
 received from the Server. \\ \hline
 \end{tabular}
+
+\caption{\emph{INetworkManager} reference}
+
+\label{NetworkManagerRef}
 \end{table}
 
 \clearpage{}
@@ -99,7 +103,7 @@ Entity; this class represents an object as it is stored in the world and is
 used by the Game System to track the relationship between physical entities and
 model objects.
 
-%\begin{table}[H]
+\begin{table}[H]
 \begin{longtable}{|p{4.5cm}|p{3.5cm}|p{7.7cm}|}
 \hline
 \multicolumn{3}{|c|}{PhysicsManager} \\ \hline
@@ -176,14 +180,18 @@ Fired when the Physics Manager detects that a user has popped a balloon.
 Fired when the Physics Manager detects that a balloon has collided with a 
 bucket.\\ \hline
 \end{longtable}
-%\end{table}
+\caption{\emph{BalloonClient} reference}
+
+\label{BalloonClientRef}
+\end{table}
 
 \clearpage{}
 \subsection{Input Subsystem}
 The Input Subsystem tracks user input and is defined by the IInputManager
-interface. Two input subsystems are implemented in the project: one for using
-the Kinect, and one for using the Mouse. The Kinect system is described 
-elsewhere in this report; the Mouse system is very simple in comparison.
+interface (see table \ref{InputManagerRef}. Two input subsystems are implemented in 
+the project: one for using the Kinect, and one for using the Mouse. The Kinect 
+system is described elsewhere in this report; the Mouse system is very simple in 
+comparison.
  
 When no mouse buttons are pressed, the mouse emulates a single hand which is
 centred on the position of the mouse. If the left mouse button is held down, a
@@ -209,16 +217,19 @@ represent a physical hand for the duration of said hand being focused as an
 input entity. If this is not the case, and a new Hand object is generated 
 every frame, the physics engine will not work correctly. \\ \hline
 \end{tabular}
+\caption{\emph{IInputManager} reference}
+
+\label{InputManagerRef}
 \end{table}
 
-\clearpage{}
 \subsection{Graphics \& Game Systems}
 The main logic for the Graphics Subsystem lies in the Game System itself. XNA
 defines a layout for the Game System, in which game logic should be performed
-in the Update method and drawing logic in the Draw method. The Game System also
+in the Update method and drawing logic in the Draw method (see table
+\vref{BalloonClientRef}). The Game System also
 ties together all the other components.
 
-\begin{table}[H]
+\begin{table}
 \begin{tabular}{|p{3cm}|p{3.6cm}|p{9cm}|}
 \hline
 \multicolumn{3}{|c|}{BalloonClient} \\ \hline
@@ -269,8 +280,12 @@ later. The following steps are performed:
 \end{itemize}
 \\ \hline
 \end{tabular}
+\caption{\emph{BalloonClient} reference}
+
+\label{BalloonClientRef}
 \end{table}
 
+\clearpage{}
 \subsection{Development Report}
 Throughout the development cycle of the project, several builds were presented
 to the client. In the first few weeks, many of the demo builds were individual
