@@ -1,0 +1,182 @@
+body {
+	padding:0px;
+	margin:0px;
+	background-image:url('clouds.jpg');
+	font-family:Arial;
+}
+
+p {
+	padding:0px;
+	margin:0 0 1em 0;
+}
+
+label {
+	font-weight: bold;
+	float: left;
+	width: 40%;
+	text-align: left;
+	padding:0.5em;
+}
+
+input[type=text], input[type=password] {
+	margin: 0 0 1em 0;
+	border:5px;
+	-moz-border-radius: 1px;
+	-webkit-border-radius: 1px;
+	padding:1em;
+	width:50%;
+}
+
+input[type=file] {
+	margin: 0 0 1em 0;
+	height:3em;
+	width:50%;
+	position:relative;
+	left:-20px;
+}
+
+input[type=submit], input[type=button] {
+	border:none;
+	margin-top:10px;
+	margin-bottom:20px;
+	margin-right:1em;
+	padding:20px 30px 20px 30px;
+	font-size:12pt;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	background-color:#EEEEEE;
+}
+
+input[type=submit]:hover, input[type=button]:hover {
+	cursor:pointer;
+	background-color:#DDDDDD;
+}
+
+.table {
+	width:95%;
+	margin-left:auto;
+	margin-right:auto;
+	margin-bottom:20px;
+	background-color: #AADDFF;
+	
+}
+
+.table thead {
+	background-color: #88BBFF;
+}
+
+.table thead th {
+	padding:10px;
+}
+
+.table td {
+	padding:8px;
+	border-left:solid 1px #88BBFF;
+	border-right:solid 1px #88BBFF;
+}
+
+.form-item {
+	text-align:center;
+	padding:0px;
+	margin:0px;
+}
+
+.errors {
+	font-family: Arial;
+	color:red;
+	font-size:10pt;
+}
+
+.userdetails {
+	font-family: Arial;
+	color: blue;
+	font-size:15px;
+	margin-left: 20px;
+}
+
+#header {
+	padding:0px;
+	margin:0px 0px 50px 0px;
+	height:120px;
+	background-color: #99CCFF;
+	-moz-border-radius: 0 0 15px 15px;
+	-webkit-border-radius: 0 0 15px 15px;
+}
+
+#header img {
+	float:left;
+}
+
+#header h1 {
+	font-family:Arial;
+	padding:10px;
+	margin:0px;
+	width:60%;
+	margin-left:120px;
+}
+
+#header ul {
+	list-style:none;
+	padding:0px;
+	margin:0px;
+	float:right;
+}
+
+#header li {
+	padding:20px;
+	display:inline;
+	border:solid;
+	border-width:1px 1px 1px 1px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+}
+
+#header li a {
+	padding:20px;
+}
+
+#header li a:hover {
+	background-color:#33AAFF;
+}
+
+#SignInDiv {
+	margin-bottom:30px;
+	width:300px;
+	height:70px;
+	margin-right:auto;
+	margin-left:auto;
+}
+
+#btnSignUp {
+	padding:0px;
+	margin:0px;
+	height:70px;
+	width:300px;
+	background-image:url('newspaper_bw.jpg');
+	background-repeat:no-repeat;
+	background-size: 70px 70px;
+	text-align:right;
+}
+
+#form_container {
+	height:300px;
+	width:700px;
+	margin-left:auto;
+	margin-right:auto;
+	padding-bottom:40px;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	background-color:#99CCFF;
+}
+
+#form {
+	width:80%;
+	height:150px;
+	margin-left:auto;
+	margin-right:auto;
+	padding: 1em;
+	font-size:20px;
+	font-family:Arial;
+}
+
+

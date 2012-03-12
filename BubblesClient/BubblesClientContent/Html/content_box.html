@@ -1,0 +1,132 @@
+﻿<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Content box</title>
+    <style>
+      html
+      {
+      /* Removes scrollbars with HTMLlite */
+      overflow: hidden;
+      background-color: @@MASK-COLOR@@;
+      }
+
+      body
+      {
+      padding: 0px;
+      margin: 0px;
+      }
+
+      .header
+      {
+      padding: 20px 30px 20px 30px;
+      color: black;
+      border-bottom: 2px solid grey;
+      }
+
+      .heading
+      {
+      font-size: 40px;
+      font-weight: bold;
+      font-family: Cambria;
+      }
+
+      .thumbsUp, .thumbsDown
+      {
+      font-size: 40px;
+      font-family: Calibri;
+      font-weight: bold;
+      }
+
+      .thumbsUp
+      {
+      color: green;
+      }
+
+      .thumbsDown
+      {
+      color: red;
+      }
+
+      .thumbsHidden
+      {
+      display: none;
+      }
+
+      .thumbsUp > img, .thumbsDown > img
+      {
+      width: 30px;
+      }
+
+      .frame
+      {
+      border-radius: 20px;
+      background-color: white white #82cafa #82cafa;
+      border: 2px solid grey;
+      }
+
+      .content
+      {
+      margin: 10px 0px 10px 0px;
+      font-family: Tahoma;
+      font-size: 40px;
+      width: 100%;
+      }
+
+      #contentLeft
+      {
+      margin-right: 10px;
+      height: 100%;
+      }
+
+      #contentRight
+      {
+      margin-left: 10px;
+      padding: 0px;
+      height: 100%;
+      }
+
+      #qrImage
+      {
+      @@QRIMG_CSS@@
+      margin: 10px 20px 20px 20px;
+      border: 2px solid grey;
+      }
+
+      #webImage
+      {
+      @@WEBIMG_CSS@@
+      margin: 20px 20px 10px 20px;
+      border: 2px solid grey;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame" id="bounds">
+      <div class="header">
+        <table border="0" width="100%">
+          <tr>
+            <td width="90%"><span class="heading">@@TITLE@@</span></td>
+            <td><span class="@@THUMBS-CLASS@@"><img src="@@THUMBS-IMG@@"> @@VOTES@@</span></td>
+          </tr>
+        </table>
+      </div>
+      <div class="content">
+        <table border="0" width="100%">
+          <tr>
+            <td>
+              <div id="contentLeft">
+                <img src="web.png" id="webImage"></img>
+                <img src="qr.png" id="qrImage"></img>
+              </div>
+            </td>
+            <td width="100%">
+              <div id="contentRight">
+                <p id="contentText">@@CONTENT@@</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

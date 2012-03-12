@@ -189,7 +189,7 @@ namespace Balloons.Messaging
             {
                 m_socket.EndConnect(result);
             }
-            catch (SocketException)
+            catch (Exception)
             {
                 OnConnectFailed();
                 return;

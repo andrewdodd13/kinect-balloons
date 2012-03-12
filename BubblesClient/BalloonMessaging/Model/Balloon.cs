@@ -14,10 +14,9 @@ namespace Balloons.Messaging.Model
 
     public enum BalloonType
     {
-        Customizable,
-        Twitter,
-        News,
-        CustomContent
+        Customizable = 0,
+        CustomContent = 1,
+        Twitter = 3,
     }
 
     public enum OverlayType
@@ -100,8 +99,6 @@ namespace Balloons.Messaging.Model
                     return "customcontent";
                 case BalloonType.Customizable:
                     return "customizable";
-                case BalloonType.News:
-                    return "news";
                 case BalloonType.Twitter:
                     return "twitter";
                 default:
@@ -117,8 +114,6 @@ namespace Balloons.Messaging.Model
                     return BalloonType.CustomContent;
                 case "customizable":
                     return BalloonType.Customizable;
-                case "news":
-                    return BalloonType.News;
                 case "twitter":
                     return BalloonType.Twitter;
                 default:

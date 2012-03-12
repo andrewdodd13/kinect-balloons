@@ -1,31 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BubblesClient.Input.Controllers;
+using Balloons.Messaging.Model;
+using BubblesClient.Input;
 using BubblesClient.Model;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
-using Balloons.Messaging.Model;
-using FarseerPhysics.Dynamics.Contacts;
 
 namespace BubblesClient.Physics
 {
+    /// <summary>
+    /// Physics Manager handles the creation and management of entities inside
+    /// the physics world and provides events which affect the entire system
+    /// such as balloon popping.
+    /// </summary>
     public class PhysicsManager
     {
-        public enum ExitPosition
-        {
-            Left, Right, Neither
-        }
-
         public const float MeterInPixels = 64f;
 
         private World world;
         private Dictionary<Body, WorldEntity> entities = new Dictionary<Body, WorldEntity>();
         private Dictionary<Hand, WorldEntity> handBodies = new Dictionary<Hand, WorldEntity>();
 
-        Random rnd = new Random();
+        private bool handCollisionsEnabled = true;
+
+        private Random rnd = new Random();
+
+        private float handSize = 1f;
 
         public event EventHandler<BalloonPoppedEventArgs> BalloonPopped;
         public class BalloonPoppedEventArgs : EventArgs
@@ -40,9 +44,11 @@ namespace BubblesClient.Physics
             public WorldEntity Bucket { get; set; }
         }
 
-        public void Initialize()
+        public void Initialize(int handSize)
         {
             world = new World(new Vector2(0, 1));
+
+            this.handSize = (handSize / MeterInPixels) / 2f;
         }
 
         public void Update(GameTime gameTime)
@@ -70,7 +76,7 @@ namespace BubblesClient.Physics
             return entity;
         }
 
-        bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
+        private bool onBalloonCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
         {
             if (!entities.ContainsKey(fixtureA.Body))
             {
@@ -98,7 +104,7 @@ namespace BubblesClient.Physics
                     BucketCollision(this, new BucketCollisionEventArgs { Balloon = A, Bucket = B });
                 }
             }
-            else if (B.Type == WorldEntity.EntityType.Hand)
+            else if (B.Type == WorldEntity.EntityType.Hand && handCollisionsEnabled)
             {
                 float movementThreshold = Configuration.KinectMovementThreshold;
                 float altHandRange = Configuration.KinectMaxHandRange;
@@ -171,6 +177,10 @@ namespace BubblesClient.Physics
                     }
                 }
             }
+            else if (!handCollisionsEnabled)
+            {
+                return false;
+            }
 
             return true;
         }
@@ -229,7 +239,7 @@ namespace BubblesClient.Physics
 
         public Hand GetHandForHandEntity(WorldEntity ent)
         {
-            if(ent.Type != WorldEntity.EntityType.Hand)
+            if (ent.Type != WorldEntity.EntityType.Hand)
                 return null;
 
             foreach (Hand hand in handBodies.Keys)
@@ -244,14 +254,18 @@ namespace BubblesClient.Physics
         private void CreateHandFixture(Hand hand)
         {
             Vector2 handPos = new Vector2(hand.Position.X, hand.Position.Y);
-            Body handBody = BodyFactory.CreateRectangle(world, 1f, 1f, 1f, handPos / MeterInPixels);
+            Body handBody = BodyFactory.CreateCircle(world, handSize, 1f, handPos / MeterInPixels);
             handBody.BodyType = BodyType.Dynamic;
 
-            // Hands only collide with balloons for the moment
-            handBody.OnCollision += delegate(Fixture fixtureA, Fixture fixtureB, Contact contact)
+            // Check what hands should be colliding with
+            if (handCollisionsEnabled)
             {
-                return (entities[fixtureB.Body].Type == WorldEntity.EntityType.Balloon);
-            };
+                handBody.OnCollision += HandCollisionCheckDelegate;
+            }
+            else
+            {
+                handBody.OnCollision += HandCollisionFalseDelegate;
+            }
 
             FixedMouseJoint handJoint = new FixedMouseJoint(handBody, handBody.Position);
             handJoint.MaxForce = 10000f;
@@ -271,11 +285,53 @@ namespace BubblesClient.Physics
             handBodies.Remove(hand);
             entities.Remove(bodyEntity.Body);
         }
+
+        public void EnableHandCollisions()
+        {
+            lock (handBodies)
+            {
+                foreach (WorldEntity entity in handBodies.Values)
+                {
+                    entity.Body.OnCollision -= HandCollisionFalseDelegate;
+                    entity.Body.OnCollision += HandCollisionCheckDelegate;
+                }
+                handCollisionsEnabled = true;
+            }
+        }
+
+        public void DisableHandCollisions()
+        {
+            lock (handBodies)
+            {
+                foreach (WorldEntity entity in handBodies.Values)
+                {
+                    entity.Body.OnCollision += HandCollisionFalseDelegate;
+                    entity.Body.OnCollision -= HandCollisionCheckDelegate;
+                }
+                handCollisionsEnabled = false;
+            }
+        }
+
+        private bool HandCollisionFalseDelegate(Fixture fixtureA, Fixture fixtureB, Contact contact)
+        {
+            return false;
+        }
+
+        private bool HandCollisionCheckDelegate(Fixture fixtureA, Fixture fixtureB, Contact contact)
+        {
+            WorldEntity entity;
+            if (entities.TryGetValue(fixtureB.Body, out entity))
+            {
+                return (entity.Type == WorldEntity.EntityType.Balloon);
+            }
+            return false;
+        }
+
         #endregion
 
         public void ApplyWind()
         {
-            Vector2 windForce = new Vector2(1, 0);
+            Vector2 windForce = new Vector2(4, 0);
             // Hmm, is there a better way to get the balloon & bodies?
             foreach (Body body in entities.Keys)
             {
@@ -286,10 +342,10 @@ namespace BubblesClient.Physics
                     body.ApplyForce(new Vector2(0, -7));
 
                     // Apply roof repelant force
-                    int jiggleForce = 20; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
-                    if (body.Position.Y < 2)
+                    int jiggleForce = 1300; // Increasing jiggleForce makes the balloons less likely to reach equilibrium along the roof
+                    if (body.Position.Y < 1.5)
                     {
-                        body.ApplyForce(new Vector2(0, 10*(2-body.Position.Y) + rnd.Next(jiggleForce)));
+                        body.ApplyForce(new Vector2(0, 200 + 10 * (2 - body.Position.Y) + rnd.Next(jiggleForce)));
                     }
 
                     // Apply anti-dead zone force
