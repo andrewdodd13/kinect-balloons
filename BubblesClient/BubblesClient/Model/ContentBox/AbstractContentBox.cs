@@ -28,6 +28,7 @@
         protected float closeTimer = Configuration.MessageDisplayTime;
         protected const float DefaultForceCloseTime = 500.0f;
         protected float forceCloseTimer = DefaultForceCloseTime;
+        protected long internalTimer = 0;
 
         // Shared textures
         protected Texture2D closeIconTexture;
@@ -57,6 +58,7 @@
         public virtual void Update(GameTime gameTime)
         {
             closeTimer -= gameTime.ElapsedGameTime.Milliseconds;
+            internalTimer += gameTime.ElapsedGameTime.Milliseconds;
             if (closeTimer < 0) { Close(); }
         }
 
@@ -129,8 +131,22 @@
         protected void DrawCloseTimer(SpriteBatch spriteBatch)
         {
             // Draw the timer
+            // Animate timer: make the texture bigger/smaller over time through scale
+            float timerScale = 1.0f + 0.1f * (float)Math.Sin(internalTimer / 500f);
+            
             Texture2D currentFrame = countDownImages[(int)(closeTimer / 1000)];
-            spriteBatch.Draw(currentFrame, screenDimensions - new Vector2(currentFrame.Width + 8, currentFrame.Height + 8), Color.White);
+            Vector2 position = screenDimensions - new Vector2(currentFrame.Width + 8, currentFrame.Height + 8);
+            Rectangle textureRect = new Rectangle((int)position.X, (int)position.Y, currentFrame.Width, currentFrame.Height);
+
+            // Scale the texture rectangle at its center and not at its top-left corner
+            // like Draw() does when you pass a scaling factor.
+            float newWidth = (textureRect.Width * timerScale);
+            float newHeight = (textureRect.Height * timerScale);
+            float newX = (textureRect.Center.X - newWidth * 0.5f);
+            float newY = (textureRect.Center.Y - newHeight * 0.5f);
+            textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
+
+            spriteBatch.Draw(currentFrame, textureRect, Color.White);
 
             // Draw the close icon
             Color closeIconColor = Color.White;
