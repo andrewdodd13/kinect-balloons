@@ -37,6 +37,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="ServerPlane.cs" />
     <Compile Include="ServerBalloon.cs" />
     <Compile Include="Screen.cs" />
     <Compile Include="Server.cs" />
