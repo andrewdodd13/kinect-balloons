@@ -233,7 +233,7 @@ namespace Balloons.Server
                 foreach(ServerBalloon balloon in balloons)
                 {
                     // Choose randomly between left or right screen
-                    int random = m_random.Next(1);
+                    int random = m_random.Next(2);
                     Screen newScreen = null;
                     NewBalloonMessage nbm = null;
                     if(random == 0) {
@@ -255,7 +255,7 @@ namespace Balloons.Server
                 foreach (ServerPlane plane in m_planes.Values)
                 {
                     // Choose randomly between left or right screen
-                    int random = m_random.Next(1);
+                    int random = m_random.Next(2);
                     Screen newScreen = null;
                     NewPlaneMessage npm = null;
                     if (random == 0)
