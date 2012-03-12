@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Kinect;
 using Microsoft.Xna.Framework;
+using Balloons.Messaging.Model;
 
 namespace BubblesClient.Input.Kinect
 {
@@ -26,8 +27,8 @@ namespace BubblesClient.Input.Kinect
         /// <param name="screenSize">Dimensions of the screen, used to rationalise the values of the Kinect sensor</param>
         public void Initialize(Vector2 screenSize)
         {
-            _scaleFactorX = 1.5f;
-            _scaleFactorY = 2;
+            _scaleFactorX = Configuration.KinectXSensitivity;
+            _scaleFactorY = Configuration.KinectYSensitivity;
 
             halfScreenSize = screenSize / 2;
 
