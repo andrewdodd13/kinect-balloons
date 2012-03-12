@@ -20,6 +20,7 @@ namespace Balloons.Serialization
         {
             m_decoders = new Dictionary<MessageType, MessageDecoder>();
             m_decoders.Add(MessageType.NewBalloon, DecodeNewBalloon);
+            m_decoders.Add(MessageType.NewPlane, DecodeNewPlane);
             m_decoders.Add(MessageType.ChangeScreen, DecodeChangeScreen);
             m_decoders.Add(MessageType.BalloonContentUpdate, DecodeBalloonContentUpdate);
             m_decoders.Add(MessageType.BalloonStateUpdate, DecodeBalloonStateUpdate);
@@ -29,6 +30,7 @@ namespace Balloons.Serialization
 
             m_encoders = new Dictionary<MessageType, MessageEncoder>();
             m_encoders.Add(MessageType.NewBalloon, SerializeNewBalloon);
+            m_encoders.Add(MessageType.NewPlane, SerializeNewPlane);
             m_encoders.Add(MessageType.ChangeScreen, SerializeChangeScreen);
             m_encoders.Add(MessageType.BalloonContentUpdate, SerializeBalloonContentUpdate);
             m_encoders.Add(MessageType.BalloonStateUpdate, SerializeBalloonStateUpdate);
@@ -89,17 +91,29 @@ namespace Balloons.Serialization
         private void SerializeNewBalloon(BinaryWriter writer, Message msg)
         {
             NewBalloonMessage nbm = (NewBalloonMessage)msg;
-            writer.Write(nbm.BalloonID);
+            writer.Write(nbm.ObjectID);
             writer.Write((int)nbm.Direction);
             writer.Write(nbm.Y);
             writer.Write(nbm.Velocity.X);
             writer.Write(nbm.Velocity.Y);
         }
 
+        private void SerializeNewPlane(BinaryWriter writer, Message msg)
+        {
+            NewPlaneMessage npm = (NewPlaneMessage)msg;
+            writer.Write(npm.ObjectID);
+            writer.Write((int)npm.Type);
+            writer.Write((int)npm.Direction);
+            writer.Write(npm.Y);
+            writer.Write(npm.Velocity.X);
+            writer.Write(npm.Velocity.Y);
+            writer.Write(npm.Time);
+        }
+
         private void SerializeChangeScreen(BinaryWriter writer, Message msg)
         {
             ChangeScreenMessage csm = (ChangeScreenMessage)msg;
-            writer.Write(csm.BalloonID);
+            writer.Write(csm.ObjectID);
             writer.Write((int)csm.Direction);
             writer.Write(csm.Y);
             writer.Write(csm.Velocity.X);
@@ -109,7 +123,7 @@ namespace Balloons.Serialization
         private void SerializeBalloonStateUpdate(BinaryWriter writer, Message msg)
         {
             BalloonStateUpdateMessage bdm = (BalloonStateUpdateMessage)msg;
-            writer.Write(bdm.BalloonID);
+            writer.Write(bdm.ObjectID);
             writer.Write((int)bdm.OverlayType);
             writer.Write(bdm.BackgroundColor.Red);
             writer.Write(bdm.BackgroundColor.Green);
@@ -121,7 +135,7 @@ namespace Balloons.Serialization
         private void SerializeBalloonContentUpdate(BinaryWriter writer, Message msg)
         {
             BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)msg;
-            writer.Write(bcm.BalloonID);
+            writer.Write(bcm.ObjectID);
             writer.Write((int)bcm.BalloonType);
             writer.Write(bcm.Label == null ? "" : bcm.Label);
             writer.Write(bcm.Content == null ? "" : bcm.Content);
@@ -131,8 +145,8 @@ namespace Balloons.Serialization
         
         private void SerializeBalloon(BinaryWriter writer, Message msg)
         {
-            BalloonMessage bm = (BalloonMessage)msg;
-            writer.Write(bm.BalloonID);
+            ObjectMessage bm = (ObjectMessage)msg;
+            writer.Write(bm.ObjectID);
         }
         #endregion
 
@@ -181,6 +195,18 @@ namespace Balloons.Serialization
             float velocityX = reader.ReadSingle();
             float velocityY = reader.ReadSingle();
             return new NewBalloonMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
+        }
+
+        private Message DecodeNewPlane(BinaryReader reader, MessageType type)
+        {
+            string balloonID = reader.ReadString();
+            PlaneType planetype = (PlaneType)reader.ReadInt32();
+            Direction direction = (Direction)reader.ReadInt32();
+            float y = reader.ReadSingle();
+            float velocityX = reader.ReadSingle();
+            float velocityY = reader.ReadSingle();
+            float time = reader.ReadSingle();
+            return new NewPlaneMessage(balloonID, planetype, direction, y, new Vector2D(velocityX, velocityY), time);
         }
 
         private Message DecodeChangeScreen(BinaryReader reader, MessageType type)

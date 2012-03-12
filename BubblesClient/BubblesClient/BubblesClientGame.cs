@@ -620,7 +620,7 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
 
-            Balloon balloon = ScreenManager.GetBalloonDetails(m.BalloonID);
+            Balloon balloon = ScreenManager.GetBalloonDetails(m.ObjectID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
@@ -642,16 +642,16 @@ namespace BubblesClient
         /// <param name="e"></param>
         public void OnPopBalloon(PopBalloonMessage m)
         {
-            if (balloons.ContainsKey(m.BalloonID))
+            if (balloons.ContainsKey(m.ObjectID))
             {
-                PopBalloon(m.BalloonID);
+                PopBalloon(m.ObjectID);
             }
         }
 
         public void OnBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
             ClientBalloon balloon;
-            if (balloons.TryGetValue(bcm.BalloonID, out balloon))
+            if (balloons.TryGetValue(bcm.ObjectID, out balloon))
             {
                 string oldLabel = balloon.Label;
                 balloon.Label = bcm.Label;
@@ -671,7 +671,7 @@ namespace BubblesClient
         public void OnBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             ClientBalloon balloon;
-            if (balloons.TryGetValue(bdm.BalloonID, out balloon))
+            if (balloons.TryGetValue(bdm.ObjectID, out balloon))
             {
                 int oldVotes = balloon.Votes;
                 balloon.OverlayType = bdm.OverlayType;

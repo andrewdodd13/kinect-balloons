@@ -160,21 +160,21 @@ namespace BubblesClient
         private void HandleNewBalloon(NewBalloonMessage nbm)
         {
             // ask the server to send the balloon's content
-            if(!balloonCache.ContainsKey(nbm.BalloonID))
+            if(!balloonCache.ContainsKey(nbm.ObjectID))
             {
-                balloonCache.Add(nbm.BalloonID, new Balloon(nbm.BalloonID));
-                m_conn.SendMessage(new GetBalloonContentMessage(nbm.BalloonID));
+                balloonCache.Add(nbm.ObjectID, new Balloon(nbm.ObjectID));
+                m_conn.SendMessage(new GetBalloonContentMessage(nbm.ObjectID));
             }
 
             // ask the server to send up-to-date state
             // TODO: only do this if the details have been changed
-            m_conn.SendMessage(new GetBalloonStateMessage(nbm.BalloonID));
+            m_conn.SendMessage(new GetBalloonStateMessage(nbm.ObjectID));
         }
 
         private void HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
             Balloon balloon = null;
-            if(balloonCache.TryGetValue(bcm.BalloonID, out balloon))
+            if(balloonCache.TryGetValue(bcm.ObjectID, out balloon))
             {
                 balloon.Label = bcm.Label;
                 balloon.Content = bcm.Content;
@@ -187,7 +187,7 @@ namespace BubblesClient
         private void HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
             Balloon balloon = null;
-            if(balloonCache.TryGetValue(bdm.BalloonID, out balloon))
+            if(balloonCache.TryGetValue(bdm.ObjectID, out balloon))
             {
                 balloon.OverlayType = bdm.OverlayType;
                 balloon.BackgroundColor = bdm.BackgroundColor;
