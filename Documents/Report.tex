@@ -126,6 +126,12 @@
     \markboth{\authorheadertitle{Appendix: #1}{#2}}{}
 }
 
+\newcommand{\appendixsection}[1]{
+    \addtocounter{section}{1}
+    \addcontentsline{toc}{section}{\Alph{section} \hspace{0.1mm} Appendix: #1}
+    \markboth{Appendix: #1}{}
+}
+
 % use TexGyre Schola for tables (clone of Century Schoolbook)
 \newcommand{\tablefont}[1]{{\fontfamily{qcs} \selectfont #1}}
 
@@ -147,27 +153,63 @@
 
 \tableofcontents{}
 
-\newpage{}
-
 \listoffigures
 \listoftables
 \clearpage{}
 
 \pagenumbering{arabic}
 
-\sectionauthor{Client Design}{Andrew Dodd}
-\input{Client-Design.tex}
+\input{Introduction.tex}
+
+\clearpage{}
+\sectionauthor{Specifications}{Lauren Hill \& John Truesdale}
+\input{Specifications.tex}
+
+\clearpage{}
+\sectionauthor{Research}{Ryan Oswald}
+%\input{Research.tex}
+
+\clearpage{}
+\sectionauthor{Project Structure}{Lauren Hill \& John Truesdale}
+\input{Project-Structure.tex}
+
+\clearpage{}
+\sectionauthor{Design}{Lauren Hill \& John Truesdale}
+\input{Design.tex}
 
 \clearpage{}
 \sectionauthor{System Architecture}{Andrew Dodd}
 \input{System-Architecture.tex}
 
 \clearpage{}
+\sectionauthor{Client Design}{Andrew Dodd}
+\input{Client-Design.tex}
+
+\clearpage{}
 \sectionauthor{Kinect Input \& Gestures}{William Reily}
 \input{Kinect-Input-Gestures.tex}
 
 \clearpage{}
+\sectionauthor{Server Design}{Brieuc Roblin \& Pierre-Andr\'{e} Saulais}
+%\input{Server-Design.tex}
+
+\clearpage{}
 \sectionauthor{Web Feed Design}{Christopher Wyllie}
 \input{Feed-Design.tex}
+
+\clearpage{}
+\input{Conclusion.tex}
+
+\clearpage{}
+\appendix
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{flushright}
+\textsf{\textbf{\huge Appendices}}\vspace*{\fill}
+\par\end{flushright}
+\vspace*{\fill}
+\pagebreak{}
+
+\section{Appendix: Configuration File}
 
 \end{document}
