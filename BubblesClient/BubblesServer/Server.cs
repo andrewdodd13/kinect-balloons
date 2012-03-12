@@ -251,6 +251,31 @@ namespace Balloons.Server
                         newScreen.Connection.SendMessage(nbm);
                     }
                 }
+
+                foreach (ServerPlane plane in m_planes.Values)
+                {
+                    // Choose randomly between left or right screen
+                    int random = m_random.Next(1);
+                    Screen newScreen = null;
+                    NewPlaneMessage npm = null;
+                    if (random == 0)
+                    {
+                        newScreen = left;
+                        npm = new NewPlaneMessage(plane.ID, plane.Type, Direction.Right,
+                                                    0.1f, Configuration.VelocityLeft, 0.0f);
+                    }
+                    else
+                    {
+                        newScreen = right;
+                        npm = new NewPlaneMessage(plane.ID, plane.Type, Direction.Left,
+                                                    0.1f, Configuration.VelocityRight, 0.0f);
+                    }
+                    plane.Screen = newScreen;
+                    if (newScreen != null)
+                    {
+                        newScreen.Connection.SendMessage(npm);
+                    }
+                }
             }
             m_screens.Remove(s);
             return true;
