@@ -356,6 +356,7 @@ namespace BubblesClient
             }
         }
 
+        #region "Draw"
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
@@ -371,68 +372,31 @@ namespace BubblesClient
             // Draw all of the boxes first
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                // Draw the box containing the balloon text if it is not a user-customized balloon
-                if (balloon.ShouldDrawCaption())
-                {
-                    if (Configuration.UseHtmlRendering)
-                    {
-                        DrawBalloonCaptionHtml(balloon);
-                    }
-                    else
-                    {
-                        DrawBalloonCaptionSprites(balloon);
-                    }
-                }
+                DrawBalloonCaption(gameTime, balloon);
             }
 
             // Draw all of the balloons
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloon.Entity.Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
-                Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
-                spriteBatch.Draw(balloon.Texture, balloonPosition, balloonColour);
+                DrawBalloon(gameTime, balloon);
             }
 
             // Draw all of the planes
             foreach (ClientPlane plane in planes.Values)
             {
-                Vector2 planeSize = new Vector2(planeTexture.Width, ClientPlane.PlaneHeight);
-                Vector2 planePosition = PhysicsManager.WorldBodyToPixel(plane.Position, planeSize);
-                Color planeColour = new Color(1.0f, 1.0f, 1.0f, 1.0f);
-                SpriteEffects effects = (plane.Direction == Direction.Right) ?
-                    SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                spriteBatch.Draw(planeTexture, planePosition, null, planeColour, 0.0f, Vector2.Zero,
-                    1.0f,  effects, 0.0f);
+                DrawPlane(gameTime, plane);
             }
 
             // Draw all pop animations
             foreach (PopAnimation popAnim in popAnimations)
             {
-                Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
-                                                popAnim.PopTexture.Width, popAnim.PopTexture.Height);
-                Color popColour = new Color(popAnim.PopColour.Red, popAnim.PopColour.Green, popAnim.PopColour.Blue, popAnim.PopColour.Alpha);
-                if (Configuration.PopAnimationEnabled)
-                {
-                    // Animate popped balloons: make the texture bigger/smaller over time through scale
-                    float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
-                    float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
-                    balloonScale *= Configuration.PopAnimationScale;
-
-                    // Scale the texture rectangle at its center and not at its top-left corner
-                    // like Draw() does when you pass a scaling factor.
-                    float newWidth = (textureRect.Width * balloonScale);
-                    float newHeight = (textureRect.Height * balloonScale);
-                    float newX = (textureRect.Center.X - newWidth * 0.5f);
-                    float newY = (textureRect.Center.Y - newHeight * 0.5f);
-                    textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
-                }
-                spriteBatch.Draw(popAnim.PopTexture, textureRect, popColour);
+                DrawPopAnimation(gameTime, popAnim);
             }
 
             // Draw all buckets
             foreach (Bucket bucket in buckets)
             {
-                spriteBatch.Draw(bucket.Texture, PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size)), Color.White);
+                DrawBucket(gameTime, bucket);
             }
 
             // Display content page if the contentBox has a balloon
@@ -444,16 +408,35 @@ namespace BubblesClient
             // Draw all of the registered hands
             foreach (WorldEntity handBody in physicsManager.GetHandPositions())
             {
-                Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
-                Hand hand = physicsManager.GetHandForHandEntity(handBody);
-                Color col = userColours[hand.ID % 2];
-                SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
+                DrawHand(gameTime, handBody);
             }
 
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void DrawBalloon(GameTime gameTime, ClientBalloon balloon)
+        {
+            Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloon.Entity.Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
+            Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
+            spriteBatch.Draw(balloon.Texture, balloonPosition, balloonColour);
+        }
+
+        private void DrawBalloonCaption(GameTime gameTime, ClientBalloon balloon)
+        {
+            // Draw the box containing the balloon text if it is not a user-customized balloon
+            if (balloon.ShouldDrawCaption())
+            {
+                if (Configuration.UseHtmlRendering)
+                {
+                    DrawBalloonCaptionHtml(balloon);
+                }
+                else
+                {
+                    DrawBalloonCaptionSprites(balloon);
+                }
+            }
         }
 
         private void DrawBalloonCaptionSprites(ClientBalloon balloon)
@@ -495,6 +478,55 @@ namespace BubblesClient
                 spriteBatch.Draw(caption, boxPosition, Color.White);
             }
         }
+
+        private void DrawPlane(GameTime gameTime, ClientPlane plane)
+        {
+            Vector2 planeSize = new Vector2(planeTexture.Width, ClientPlane.PlaneHeight);
+            Vector2 planePosition = PhysicsManager.WorldBodyToPixel(plane.Position, planeSize);
+            SpriteEffects effects = (plane.Direction == Direction.Right) ?
+                SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            spriteBatch.Draw(planeTexture, planePosition, null, Color.White, 0.0f, Vector2.Zero,
+                1.0f, effects, 0.0f);
+        }
+
+        private void DrawPopAnimation(GameTime gameTime, PopAnimation popAnim)
+        {
+            Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
+                                                popAnim.PopTexture.Width, popAnim.PopTexture.Height);
+            Color popColour = new Color(popAnim.PopColour.Red, popAnim.PopColour.Green, popAnim.PopColour.Blue, popAnim.PopColour.Alpha);
+            if (Configuration.PopAnimationEnabled)
+            {
+                // Animate popped balloons: make the texture bigger/smaller over time through scale
+                float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
+                float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
+                balloonScale *= Configuration.PopAnimationScale;
+
+                // Scale the texture rectangle at its center and not at its top-left corner
+                // like Draw() does when you pass a scaling factor.
+                float newWidth = (textureRect.Width * balloonScale);
+                float newHeight = (textureRect.Height * balloonScale);
+                float newX = (textureRect.Center.X - newWidth * 0.5f);
+                float newY = (textureRect.Center.Y - newHeight * 0.5f);
+                textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
+            }
+            spriteBatch.Draw(popAnim.PopTexture, textureRect, popColour);
+        }
+
+        private void DrawBucket(GameTime gameTime, Bucket bucket)
+        {
+            Vector2 bucketPos = PhysicsManager.WorldBodyToPixel(bucket.Entity.Body.Position, PhysicsManager.WorldToPixel(bucket.Size));
+            spriteBatch.Draw(bucket.Texture, bucketPos, Color.White);
+        }
+
+        private void DrawHand(GameTime gameTime, WorldEntity handBody)
+        {
+            Vector2 cursorPos = PhysicsManager.WorldBodyToPixel(handBody.Body.Position, new Vector2(handTexture.Width, handTexture.Height));
+            Hand hand = physicsManager.GetHandForHandEntity(handBody);
+            Color col = userColours[hand.ID % 2];
+            SpriteEffects eff = hand.Side == Side.Left ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            spriteBatch.Draw(handTexture, cursorPos, null, col, 0, Vector2.Zero, 1, eff, 0);
+        }
+        #endregion
 
         private void HandleInput(GameTime gameTime)
         {
