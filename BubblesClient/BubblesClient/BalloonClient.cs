@@ -232,6 +232,7 @@ namespace BubblesClient
             boxWhiteColour.Dispose();
         }
 
+        #region "Updating"
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -356,7 +357,31 @@ namespace BubblesClient
             }
         }
 
-        #region "Draw"
+        private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)
+        {
+            OverlayType oldOverlay = balloon.OverlayType;
+            Colour oldBackgroundColor = balloon.BackgroundColor;
+
+            // Only change colour if we're touching a new bucket
+            if (bucket != oldBucket)
+            {
+                bucket.ApplyToBalloon(balloon);
+
+                oldBucket = bucket;
+            }
+
+            // notify the server that the ballon's decoration changed.
+            // otherwise decorations are lost when balloons change screens
+            if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
+            {
+                NetworkManager.UpdateBalloonDetails(balloon);
+            }
+
+            balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
+        }
+        #endregion
+
+        #region "Drawing"
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
@@ -487,6 +512,26 @@ namespace BubblesClient
                 SpriteEffects.None : SpriteEffects.FlipHorizontally;
             spriteBatch.Draw(planeTexture, planePosition, null, Color.White, 0.0f, Vector2.Zero,
                 1.0f, effects, 0.0f);
+
+            if (plane.CaptionTexture == null && plane.Caption != null)
+            {
+                plane.CaptionTexture = ImageGenerator.BitmapToTexture(plane.Caption, GraphicsDevice);
+            }
+
+            if (plane.CaptionTexture != null)
+            {
+                Vector2 captionPosition = planePosition;
+                const int margin = 20;
+                if (plane.Direction == Direction.Left)
+                {
+                    captionPosition.X += (planeSize.X + margin);
+                }
+                else
+                {
+                    captionPosition.X -= (plane.CaptionTexture.Width + margin);
+                }
+                spriteBatch.Draw(plane.CaptionTexture, captionPosition, Color.White);
+            }
         }
 
         private void DrawPopAnimation(GameTime gameTime, PopAnimation popAnim)
@@ -559,29 +604,6 @@ namespace BubblesClient
                     contentBox.CancelCloseTimer();
                 }
             }
-        }
-
-        private void ApplyBucketToBalloon(Bucket bucket, ClientBalloon balloon)
-        {
-            OverlayType oldOverlay = balloon.OverlayType;
-            Colour oldBackgroundColor = balloon.BackgroundColor;
-
-            // Only change colour if we're touching a new bucket
-            if (bucket != oldBucket)
-            {
-                bucket.ApplyToBalloon(balloon);
-
-                oldBucket = bucket;
-            }
-
-            // notify the server that the ballon's decoration changed.
-            // otherwise decorations are lost when balloons change screens
-            if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
-            {
-                NetworkManager.UpdateBalloonDetails(balloon);
-            }
-
-            balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
         }
 
         #region "Balloon Popping"
@@ -676,15 +698,10 @@ namespace BubblesClient
 
         public void OnNewPlane(NewPlaneMessage m)
         {
-            if (planes.ContainsKey(m.ObjectID))
-            {
-                return;
-            }
-
             // Choose where to place the plane
             Direction planeDirection;
             Vector2D velocity;
-            const float velocityMod = 0.5f;
+            const float velocityMod = 0.3f;
             switch (m.Direction)
             {
             default:
@@ -710,6 +727,12 @@ namespace BubblesClient
             plane.Direction = planeDirection;
             plane.Entity = physicsManager.CreatePlane(plane.Position);
             planes.Add(plane.ID, plane);
+
+            // start rendering the content
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate(object o)
+            {
+                contentBox.GeneratePlaneCaption(plane);
+            });
         }
 
         private Vector2 GetInitialPosition(Direction dir, float y, float objWidth)

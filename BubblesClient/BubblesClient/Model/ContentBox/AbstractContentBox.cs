@@ -40,6 +40,7 @@
 
         public virtual void GenerateCaption(ClientBalloon balloon) { }
         public virtual void GenerateTextContent(ClientBalloon balloon) { }
+        public virtual void GeneratePlaneCaption(ClientPlane plane) { }
         #endregion
 
         // Raised when the box is closed for any reason

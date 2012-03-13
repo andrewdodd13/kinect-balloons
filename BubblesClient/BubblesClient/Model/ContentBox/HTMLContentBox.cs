@@ -1,9 +1,11 @@
 ﻿namespace BubblesClient.Model.ContentBox
 {
+    using Balloons.Messaging.Model;
     using BubblesClient.Utility;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
     using Microsoft.Xna.Framework.Graphics;
+    using System.Collections.Generic;
 
     /// <summary>
     /// HTML Content Box renders its contents using an HTML rendering library.
@@ -13,10 +15,13 @@
         // Graphics
         public HtmlRenderer HtmlRenderer { get; private set; }
 
+        private Dictionary<PlaneType, System.Drawing.Bitmap> planeCaptions;
+
         public HTMLContentBox(Vector2 screenDimensions, GraphicsDeviceManager graphics) :
             base(screenDimensions, graphics)
         {
             this.HtmlRenderer = new HtmlRenderer();
+            planeCaptions = new Dictionary<PlaneType, System.Drawing.Bitmap>();
         }
 
         public override void LoadResources(ContentManager contentManager)
@@ -64,6 +69,17 @@
         {
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
             cacheEntry[CacheType.Content] = HtmlRenderer.RenderContent(balloon);
+        }
+
+        public override void GeneratePlaneCaption(ClientPlane plane)
+        {
+            System.Drawing.Bitmap img;
+            if (!planeCaptions.TryGetValue(plane.Type, out img))
+            {
+                img = HtmlRenderer.RenderCaption(plane.Message);
+                planeCaptions[plane.Type] = img;
+            }
+            plane.Caption = img;
         }
 
         protected override void Close()

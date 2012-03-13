@@ -27,7 +27,8 @@ namespace BubblesClient.Model
 
         public WorldEntity Entity { get; set; }
 
-        public Texture2D Caption { get; set; }
+        public System.Drawing.Bitmap Caption { get; set; }
+        public Texture2D CaptionTexture { get; set; }
 
         public ClientPlane(string id, PlaneType type)
             : base(id, type)
