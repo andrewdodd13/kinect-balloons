@@ -311,9 +311,23 @@ namespace Balloons.Server
                 {
                     return true;
                 }
-                p.Screen = newScreen;
-                newScreen.Connection.SendMessage(new NewPlaneMessage(
-                    csm.ObjectID, p.Type, newDirection, csm.Y, csm.Velocity, csm.Time)); 
+                p.Ttl--;
+                
+                if (p.Ttl > 0)
+                {
+                    Trace.WriteLine(String.Format("Plane {0} changed screens and has now TTL={1}.", p.ID, p.Ttl));
+                    p.Screen = newScreen;
+                    newScreen.Connection.SendMessage(new NewPlaneMessage(
+                        csm.ObjectID, p.Type, newDirection, csm.Y, csm.Velocity, csm.Time));
+                }
+                else
+                {
+                    // the plane has no time left to live
+                    Trace.WriteLine(String.Format("Plane {0}'s time has come.", p.ID));
+                    PopObjectMessage pom = new PopObjectMessage(csm.ObjectID);
+                    pom.Sender = p.Screen;
+                    HandlePopObject(pom);
+                }
             }
             else
             {
@@ -357,7 +371,7 @@ namespace Balloons.Server
         {
             if (m_planes.ContainsKey(npm.ObjectID))
             {
-                // Balloon already present !
+                // Plane already present !
                 Trace.WriteLine(String.Format("Plane {0} already present!", npm.ObjectID));
                 return true;
             }
@@ -367,9 +381,8 @@ namespace Balloons.Server
                 return true;
             }
 
-            int numberOfType = 2;
-            PlaneType planetype = (PlaneType)m_random.Next(numberOfType);
-            ServerPlane plane = new ServerPlane(npm.ObjectID, planetype);
+            ServerPlane plane = new ServerPlane(npm.ObjectID, npm.PlaneType);
+            plane.Ttl = m_screens.Count + 1;
             m_planes[npm.ObjectID] = plane;
 
             // choose a random screen
@@ -378,6 +391,8 @@ namespace Balloons.Server
             // Notify screen with new plane message
             plane.Screen = m_screens[screen_idx];
             plane.Screen.Connection.SendMessage(npm);
+
+            Trace.WriteLine(String.Format("New plane {0} with TTL={1}.", npm.ObjectID, plane.Ttl));
 
             return true;
         }
