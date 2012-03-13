@@ -686,8 +686,7 @@ namespace BubblesClient
             planes.Add(plane.ID, plane);
 
             // Setup the plane's body
-            //WorldEntity planeEntity = physicsManager.CreatePlane(position);
-            WorldEntity planeEntity = null;
+            WorldEntity planeEntity = physicsManager.CreatePlane(plane.Position);
             planeEntities[plane] = planeEntity;
         }
 

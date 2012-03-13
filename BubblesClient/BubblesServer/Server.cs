@@ -21,6 +21,7 @@ namespace Balloons.Server
                                   ProtocolType.Tcp);
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
+            m_nextPlaneID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
             m_planes = new Dictionary<string, ServerPlane>();
@@ -146,10 +147,11 @@ namespace Balloons.Server
         private int m_port;
         private Socket m_socket;
         private CircularQueue<Message> m_queue;
-        private int m_nextScreenID;
         private List<Screen> m_screens;
+        private int m_nextScreenID;
         private Dictionary<string, ServerBalloon> m_bubbles;
         private Dictionary<string, ServerPlane> m_planes;
+        private int m_nextPlaneID;
         private FeedReader m_feed;
         
         private Random m_random;
@@ -481,6 +483,23 @@ namespace Balloons.Server
                     added++;
                 }
             }
+
+            // TESTING PURPOSE ! -- TO BE DELETED
+
+            // remove all existing planes
+            foreach (ServerPlane plane in m_planes.Values)
+            {
+                if (plane.Screen != null)
+                {
+                    plane.Screen.Connection.SendMessage(new PopObjectMessage(plane.ID));
+                }
+            }
+            m_planes.Clear();
+
+            // add a new plane
+            string planeID = String.Format("PLANE-{0}", m_nextPlaneID++);
+            EnqueueMessage(new PopObjectMessage(planeID));
+            EnqueueMessage(new NewPlaneMessage(planeID, PlaneType.BurstBallons, Direction.Right, 0.7f, new Vector2D(0.0f, 0.0f), 0.0f));
 
             Trace.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
             return true;

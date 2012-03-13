@@ -19,14 +19,12 @@ namespace Balloons.Server
         private System.Timers.Timer m_timer;
         private Thread m_thread;
         private CircularQueue<Message> m_queue;
-        private int m_nextPlaneID;
         
         public FeedReader(Server server, string feedUrl, double pullIntervals)
         {
             this.m_server = server;
             this.m_feedUrl = feedUrl;
             this.m_interval = pullIntervals;
-            this.m_nextPlaneID = 0;
             this.m_queue = new CircularQueue<Message>(64);
             this.m_client = new WebClient();
             this.m_timer = new System.Timers.Timer(m_interval);
@@ -152,11 +150,6 @@ namespace Balloons.Server
 
                 m_server.EnqueueMessage(new FeedUpdatedMessage(fromFeed), this);
             }
-
-            // TESTING PURPOSE ! -- TO BE DELETED
-            string planeID = String.Format("PLANE-{0}", m_nextPlaneID++);
-            m_server.EnqueueMessage(new PopObjectMessage(planeID));
-            m_server.EnqueueMessage(new NewPlaneMessage(planeID, PlaneType.BurstBallons, Direction.Right, 0.7f, new Vector2D(0.0f, 0.0f), 0.0f));
         }
 
         internal List<FeedContent> GetFeedContents()
