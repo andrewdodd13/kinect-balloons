@@ -51,7 +51,6 @@ namespace BubblesClient
         private PhysicsManager physicsManager = new PhysicsManager();
 
         private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
-        private Dictionary<ClientPlane, WorldEntity> planeEntities = new Dictionary<ClientPlane, WorldEntity>();
 
         private Random rng = new Random();
 
@@ -280,12 +279,11 @@ namespace BubblesClient
             var planeRemovals = new List<ClientPlane>();
             foreach (ClientPlane plane in planes.Values)
             {
-                WorldEntity planeEntity = planeEntities[plane];
                 Vector2 delta = plane.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 plane.Position += delta;
-                if (planeEntity != null)
+                if (plane.Entity != null)
                 {
-                    planeEntity.Body.Position = plane.Position;
+                    plane.Entity.Body.Position = plane.Position;
                 }
 
                 if (plane.Position.X < (ClientPlane.PlaneWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
@@ -401,7 +399,6 @@ namespace BubblesClient
             // Draw all of the planes
             foreach (ClientPlane plane in planes.Values)
             {
-                WorldEntity planeEntity = planeEntities[plane];
                 Vector2 planeSize = new Vector2(planeTexture.Width, ClientPlane.PlaneHeight);
                 Vector2 planePosition = PhysicsManager.WorldBodyToPixel(plane.Position, planeSize);
                 Color planeColour = new Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -614,12 +611,11 @@ namespace BubblesClient
             {
                 throw new ArgumentOutOfRangeException("e", "No such plane in received message.");
             }
-            WorldEntity planeEntity = planeEntities[plane];
-            if (planeEntity != null)
+            if (plane.Entity != null)
             {
-                physicsManager.RemoveEntity(planeEntity);
+                physicsManager.RemoveEntity(plane.Entity);
+                plane.Entity = null;
             }
-            planeEntities.Remove(plane);
             planes.Remove(plane.ID);
         }
         #endregion
@@ -683,11 +679,8 @@ namespace BubblesClient
             plane.Velocity = new Vector2(velocity.X, velocity.Y) * velocityMod;
             plane.Position = PhysicsManager.PixelToWorld(pixPosition);
             plane.Direction = planeDirection;
+            plane.Entity = physicsManager.CreatePlane(plane.Position);
             planes.Add(plane.ID, plane);
-
-            // Setup the plane's body
-            WorldEntity planeEntity = physicsManager.CreatePlane(plane.Position);
-            planeEntities[plane] = planeEntity;
         }
 
         private Vector2 GetInitialPosition(Direction dir, float y, float objWidth)
