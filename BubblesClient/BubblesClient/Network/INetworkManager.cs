@@ -54,18 +54,22 @@
         void NotifyBalloonPopped(ClientBalloon balloon);
 
         /// <summary>
-        /// Retrieves the details of a balloon from the Server.
+        /// Requests the balloon's content from the server.
         /// </summary>
         /// <param name="balloonID"></param>
-        /// <returns></returns>
-        Balloon GetBalloonDetails(string balloonID);
+        void RequestBalloonContent(string balloonID);
 
         /// <summary>
-        /// Notifies the Server that a balloon's details have changed 
-        /// (usually its decoration).
+        /// Requests the balloon's state from the server.
+        /// </summary>
+        /// <param name="balloonID"></param>
+        void RequestBalloonState(string balloonID);
+
+        /// <summary>
+        /// Notifies the Server that the state of a balloon (usually decoration) has been changed by a user.
         /// </summary>
         /// <param name="balloon"></param>
-        void UpdateBalloonDetails(Balloon balloon);
+        void UpdateBalloonState(Balloon balloon);
 
         /// <summary>
         /// Retrieves all the messages that the Network Manager has received

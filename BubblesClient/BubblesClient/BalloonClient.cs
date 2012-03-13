@@ -58,6 +58,7 @@ namespace BubblesClient
 
         // If this is not null then we will be showing a balloon. We really need a state machine.
         private AbstractContentBox contentBox;
+        private Dictionary<string, Balloon> balloonCache;
 
         private List<PopAnimation> popAnimations = new List<PopAnimation>();
         private GameTime currentTime;
@@ -96,6 +97,7 @@ namespace BubblesClient
             {
                 contentBox = new ManualContentBox(screenDimensions, graphics);
             }
+            balloonCache = new Dictionary<string, Balloon>();
 
             // Initialise Input
             this.input = controller;
@@ -374,7 +376,7 @@ namespace BubblesClient
             // otherwise decorations are lost when balloons change screens
             if (balloon.OverlayType != oldOverlay || !balloon.BackgroundColor.Equals(oldBackgroundColor))
             {
-                NetworkManager.UpdateBalloonDetails(balloon);
+                UpdateBalloonDetails(balloon);
             }
 
             balloon.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
@@ -681,7 +683,7 @@ namespace BubblesClient
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             WorldEntity balloonEntity = physicsManager.CreateBalloon(position, velocity);
 
-            Balloon balloon = NetworkManager.GetBalloonDetails(m.ObjectID);
+            Balloon balloon = GetBalloonDetails(m.ObjectID);
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
@@ -694,6 +696,17 @@ namespace BubblesClient
             }
 
             balloons.Add(b.ID, b);
+
+            // ask the server to send the balloon's content
+            if (!balloonCache.ContainsKey(m.ObjectID))
+            {
+                balloonCache.Add(m.ObjectID, new Balloon(m.ObjectID));
+                NetworkManager.RequestBalloonContent(m.ObjectID);
+            }
+
+            // ask the server to send up-to-date state
+            // TODO: only do this if the details have been changed
+            NetworkManager.RequestBalloonState(m.ObjectID);
         }
 
         public void OnNewPlane(NewPlaneMessage m)
@@ -791,6 +804,16 @@ namespace BubblesClient
                     contentBox.GenerateCaption(balloon);
                 }
             }
+
+            Balloon cached;
+            if (balloonCache.TryGetValue(bcm.ObjectID, out cached))
+            {
+                cached.Label = bcm.Label;
+                cached.Content = bcm.Content;
+                cached.Type = bcm.BalloonType;
+                cached.Url = bcm.Url;
+                cached.ImageUrl = bcm.ImageUrl;
+            }
         }
 
         public void OnBalloonStateUpdate(BalloonStateUpdateMessage bdm)
@@ -808,6 +831,48 @@ namespace BubblesClient
                     contentBox.GenerateTextContent(balloon);
                 }
             }
+
+            Balloon cached;
+            if (balloonCache.TryGetValue(bdm.ObjectID, out cached))
+            {
+                cached.OverlayType = bdm.OverlayType;
+                cached.BackgroundColor = bdm.BackgroundColor;
+                cached.Votes = bdm.Votes;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the details of a balloon from the Server.
+        /// </summary>
+        /// <param name="balloonID"></param>
+        /// <returns></returns>
+        private Balloon GetBalloonDetails(string balloonID)
+        {
+            Balloon balloon = null;
+            if (balloonCache.TryGetValue(balloonID, out balloon))
+            {
+                return balloon;
+            }
+            return new Balloon(balloonID) { Label = "Test Label", Content = "Test Content", Type = BalloonType.CustomContent };
+        }
+
+        /// <summary>
+        /// Notifies the Server that a balloon's details have changed 
+        /// (usually its decoration).
+        /// </summary>
+        /// <param name="balloon"></param>
+        private void UpdateBalloonDetails(Balloon balloon)
+        {
+            Balloon cachedBalloon = null;
+            if (!balloonCache.TryGetValue(balloon.ID, out cachedBalloon))
+            {
+                cachedBalloon = new Balloon(balloon);
+                balloonCache.Add(balloon.ID, cachedBalloon);
+            }
+            cachedBalloon.OverlayType = balloon.OverlayType;
+            cachedBalloon.BackgroundColor = balloon.BackgroundColor;
+            cachedBalloon.Votes = balloon.Votes;
+            NetworkManager.UpdateBalloonState(balloon);
         }
 
         /// <summary>
