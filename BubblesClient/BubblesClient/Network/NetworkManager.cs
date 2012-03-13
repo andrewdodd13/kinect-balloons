@@ -62,6 +62,20 @@ namespace BubblesClient.Network
             balloon.OffScreen = true;
         }
 
+        public void MovePlaneOffscreen(ClientPlane plane, Direction direction, float exitHeight, Vector2 velocity, float time)
+        {
+            Trace.WriteLine("Sending plane away!");
+            // Did we already notify the server that the plane is off-screen?
+            if (plane.OffScreen)
+            {
+                return;
+            }
+
+            // notify the server that the plane is moving off-screen
+            m_conn.SendMessage(new ChangeScreenMessage(plane.ID, direction, exitHeight, new Vector2D(velocity.X, velocity.Y), time));
+            plane.OffScreen = true;
+        }
+
         public void NotifyBalloonPopped(ClientBalloon balloon)
         {
             if (balloon.OffScreen)
@@ -98,8 +112,7 @@ namespace BubblesClient.Network
                 balloon.OverlayType, balloon.BackgroundColor, balloon.Votes));
         }
 
-        public void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopObjectMessage> OnPopBalloon,
-            Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate)
+        public void ProcessMessages(Dictionary<MessageType, Action<Message>> handlers)
         {
             List<Message> messages = messageQueue.DequeueAll();
             foreach (Message msg in messages)
@@ -110,24 +123,17 @@ namespace BubblesClient.Network
                     break;
                 }
 
-                switch (msg.Type)
+                // special treatment of callback messages
+                if (msg.Type == MessageType.Callback)
                 {
-                    case MessageType.NewBalloon:
-                        OnNewBalloon((NewBalloonMessage)msg);
-                        break;
-                    case MessageType.PopObject:
-                        OnPopBalloon((PopObjectMessage)msg);
-                        break;
-                    case MessageType.BalloonContentUpdate:
-                        OnBalloonContentUpdate((BalloonContentUpdateMessage)msg);
-                        break;
-                    case MessageType.BalloonStateUpdate:
-                        OnBalloonStateUpdate((BalloonStateUpdateMessage)msg);
-                        break;
-                    case MessageType.Callback:
-                        var cm = (CallbackMessage)msg;
-                        cm.Callback();
-                        break;
+                    ((CallbackMessage)msg).Callback();
+                }
+
+                // call the corresponding message handler, if any
+                Action<Message> handler;
+                if (handlers.TryGetValue(msg.Type, out handler))
+                {
+                    handler(msg);
                 }
             }
         }

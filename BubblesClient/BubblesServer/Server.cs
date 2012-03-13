@@ -229,6 +229,7 @@ namespace Balloons.Server
                 // if next or previous screen are equal to current screen
                 // it means that this was the last screen left
                 m_bubbles.Clear();
+                m_planes.Clear();
             } else {
                 foreach(ServerBalloon balloon in balloons)
                 {

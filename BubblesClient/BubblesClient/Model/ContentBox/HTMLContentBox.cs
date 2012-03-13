@@ -57,7 +57,7 @@
         public override void GenerateCaption(ClientBalloon balloon)
         {
             BalloonContentCache cacheEntry = balloon.BalloonContentCache;
-            cacheEntry[CacheType.Caption] = HtmlRenderer.RenderCaption(balloon);
+            cacheEntry[CacheType.Caption] = HtmlRenderer.RenderCaption(balloon.Label);
         }
 
         public override void GenerateTextContent(ClientBalloon balloon)

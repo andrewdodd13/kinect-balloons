@@ -55,10 +55,10 @@ namespace BubblesClient.Utility
             return text;
         }
 
-        public Bitmap RenderCaption(ClientBalloon balloon)
+        public Bitmap RenderCaption(string label)
         {
             // replace template parameters by their values
-            string content = (balloon.Label == null) ? "" : balloon.Label;
+            string content = (label == null) ? "" : label;
             var vals = new Dictionary<string, string>();
             vals.Add("@@CONTENT@@", content);
             string html = FillTemplate(templates["caption_box.html"], vals);

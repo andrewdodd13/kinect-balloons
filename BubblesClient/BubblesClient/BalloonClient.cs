@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Balloons.Messaging.Model;
 using BubblesClient.Input;
@@ -21,7 +22,7 @@ namespace BubblesClient
     public class BalloonClient : Microsoft.Xna.Framework.Game
     {
         // Textures
-        private Texture2D skyTexture, handTexture;
+        private Texture2D skyTexture, handTexture, planeTexture;
 
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
@@ -32,6 +33,7 @@ namespace BubblesClient
 
         // Network
         public INetworkManager NetworkManager { get; private set; }
+        private Dictionary<MessageType, Action<Message>> messageHandlers;
 
         // XNA Graphics
         private GraphicsDeviceManager graphics;
@@ -44,10 +46,12 @@ namespace BubblesClient
 
         // Physics World
         private Dictionary<string, ClientBalloon> balloons = new Dictionary<string, ClientBalloon>();
+        private Dictionary<string, ClientPlane> planes = new Dictionary<string, ClientPlane>();
         private List<Bucket> buckets = new List<Bucket>();
         private PhysicsManager physicsManager = new PhysicsManager();
 
         private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
+        private Dictionary<ClientPlane, WorldEntity> planeEntities = new Dictionary<ClientPlane, WorldEntity>();
 
         private Random rng = new Random();
 
@@ -105,6 +109,12 @@ namespace BubblesClient
 
             // Initialise network
             this.NetworkManager = screenManager;
+            messageHandlers = new Dictionary<MessageType, Action<Message>>();
+            messageHandlers[MessageType.NewBalloon] = Wrap<NewBalloonMessage>(OnNewBalloon);
+            messageHandlers[MessageType.NewPlane] = Wrap<NewPlaneMessage>(OnNewPlane);
+            messageHandlers[MessageType.PopObject] = Wrap<PopObjectMessage>(OnPopObject);
+            messageHandlers[MessageType.BalloonContentUpdate] = Wrap<BalloonContentUpdateMessage>(OnBalloonContentUpdate);
+            messageHandlers[MessageType.BalloonStateUpdate] = Wrap<BalloonStateUpdateMessage>(OnBalloonStateUpdate);
         }
 
         /// <summary>
@@ -167,6 +177,7 @@ namespace BubblesClient
 
             skyTexture = Content.Load<Texture2D>("Images/Sky");
             handTexture = Content.Load<Texture2D>("Images/Hand");
+            planeTexture = Content.Load<Texture2D>("Images/plane-right");
 
             balloonTextures = new Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>>()
             {
@@ -234,7 +245,7 @@ namespace BubblesClient
             currentTime = gameTime;
 
             // Query the Network Manager for events
-            NetworkManager.ProcessMessages(OnNewBalloon, OnPopBalloon, OnBalloonContentUpdate, OnBalloonStateUpdate);
+            NetworkManager.ProcessMessages(messageHandlers);
 
             this.HandleInput(gameTime);
 
@@ -264,6 +275,34 @@ namespace BubblesClient
             }
 
             removals.ForEach(x => RemoveBalloon(x, false));
+
+            // Move planes and check if any has left the screen
+            var planeRemovals = new List<ClientPlane>();
+            foreach (ClientPlane plane in planes.Values)
+            {
+                WorldEntity planeEntity = planeEntities[plane];
+                Vector2 delta = plane.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                plane.Position += delta;
+                if (planeEntity != null)
+                {
+                    planeEntity.Body.Position = plane.Position;
+                }
+
+                if (plane.Position.X < (ClientPlane.PlaneWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
+                {
+                    float exitHeight = (plane.Position.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
+                    NetworkManager.MovePlaneOffscreen(plane, Direction.Left, exitHeight, plane.Velocity, 0.0f);
+                    planeRemovals.Add(plane);
+                }
+                else if (plane.Position.X > (ClientPlane.PlaneWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
+                {
+                    float exitHeight = (plane.Position.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
+                    NetworkManager.MovePlaneOffscreen(plane, Direction.Right, exitHeight, plane.Velocity, 0.0f);
+                    planeRemovals.Add(plane);
+                }
+            }
+
+            planeRemovals.ForEach(x => RemovePlane(x.ID));
 
             //Show buckets if a balloon is in lower 1/3 of screen
             //I don't like how this is implemented - animation speed is dependant on frame rate
@@ -357,6 +396,19 @@ namespace BubblesClient
                 Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
                 Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
                 spriteBatch.Draw(balloon.Texture, balloonPosition, balloonColour);
+            }
+
+            // Draw all of the planes
+            foreach (ClientPlane plane in planes.Values)
+            {
+                WorldEntity planeEntity = planeEntities[plane];
+                Vector2 planeSize = new Vector2(planeTexture.Width, ClientPlane.PlaneHeight);
+                Vector2 planePosition = PhysicsManager.WorldBodyToPixel(plane.Position, planeSize);
+                Color planeColour = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+                SpriteEffects effects = (plane.Direction == Direction.Right) ?
+                    SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                spriteBatch.Draw(planeTexture, planePosition, null, planeColour, 0.0f, Vector2.Zero,
+                    1.0f,  effects, 0.0f);
             }
 
             // Draw all pop animations
@@ -554,29 +606,29 @@ namespace BubblesClient
             // "new balloon" message with the same ID when the feed is updated.
             NetworkManager.NotifyBalloonPopped(balloon);
         }
+
+        private void RemovePlane(string planeID)
+        {
+            ClientPlane plane = planes[planeID];
+            if (plane == null)
+            {
+                throw new ArgumentOutOfRangeException("e", "No such plane in received message.");
+            }
+            WorldEntity planeEntity = planeEntities[plane];
+            if (planeEntity != null)
+            {
+                physicsManager.RemoveEntity(planeEntity);
+            }
+            planeEntities.Remove(plane);
+            planes.Remove(plane.ID);
+        }
         #endregion
 
         #region "Networking"
         public void OnNewBalloon(NewBalloonMessage m)
         {
             // Choose where to place the balloon
-            Vector2 position = new Vector2();
-            switch (m.Direction)
-            {
-                case Direction.Left:
-                    position.X = ClientBalloon.BalloonWidth * -1;
-                    break;
-                case Direction.Right:
-                    position.X = ClientBalloon.BalloonWidth + screenDimensions.X;
-                    break;
-
-                case Direction.Any:
-                default:
-                    position.X = rng.Next((int)screenDimensions.X);
-                    break;
-            }
-
-            position.Y = m.Y * screenDimensions.Y;
+            Vector2 position = GetInitialPosition(m.Direction, m.Y, ClientBalloon.BalloonWidth);
 
             // Setup the balloon's body
             Vector2 velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
@@ -597,16 +649,83 @@ namespace BubblesClient
             balloonEntities[b] = balloonEntity;
         }
 
+        public void OnNewPlane(NewPlaneMessage m)
+        {
+            if (planes.ContainsKey(m.ObjectID))
+            {
+                return;
+            }
+
+            // Choose where to place the plane
+            Direction planeDirection;
+            Vector2D velocity;
+            const float velocityMod = 0.5f;
+            switch (m.Direction)
+            {
+            default:
+            case Direction.Any:
+                throw new Exception("Invalid direction for new plane");
+            case Direction.Left:
+                // The plane appears on the left side of the screen, it is going right
+                planeDirection = Direction.Right;
+                velocity = Configuration.VelocityRight;
+                break;
+            case Direction.Right:
+                // The plane appears on the right side of the screen, it is going left
+                planeDirection = Direction.Left;
+                velocity = Configuration.VelocityLeft;
+                break;
+            }
+
+            Vector2 pixPosition = GetInitialPosition(m.Direction, m.Y, ClientPlane.PlaneWidth);
+
+            ClientPlane plane = new ClientPlane(m.ObjectID, m.PlaneType);
+            plane.Velocity = new Vector2(velocity.X, velocity.Y) * velocityMod;
+            plane.Position = PhysicsManager.PixelToWorld(pixPosition);
+            plane.Direction = planeDirection;
+            planes.Add(plane.ID, plane);
+
+            // Setup the plane's body
+            //WorldEntity planeEntity = physicsManager.CreatePlane(position);
+            WorldEntity planeEntity = null;
+            planeEntities[plane] = planeEntity;
+        }
+
+        private Vector2 GetInitialPosition(Direction dir, float y, float objWidth)
+        {
+            Vector2 position = new Vector2();
+            switch (dir)
+            {
+            case Direction.Left:
+                position.X = objWidth * -1;
+                break;
+            case Direction.Right:
+                position.X = objWidth + screenDimensions.X;
+                break;
+
+            case Direction.Any:
+            default:
+                position.X = rng.Next((int)screenDimensions.X);
+                break;
+            }
+
+            position.Y = y * screenDimensions.Y;
+            return position;
+        }
+
         /// <summary>
-        /// Handles the case where the server forces us to pop a balloon
+        /// Handles the case where the server forces us to pop an object (ballon or plane).
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void OnPopBalloon(PopObjectMessage m)
+        public void OnPopObject(PopObjectMessage m)
         {
             if (balloons.ContainsKey(m.ObjectID))
             {
                 PopBalloon(m.ObjectID);
+            }
+
+            if (planes.ContainsKey(m.ObjectID))
+            {
+                RemovePlane(m.ObjectID);
             }
         }
 
@@ -645,6 +764,20 @@ namespace BubblesClient
                     contentBox.GenerateTextContent(balloon);
                 }
             }
+        }
+
+        /// <summary>
+        /// Wrap a type-specific message handler to a generic handler.
+        /// </summary>
+        /// <typeparam name="T"> Type of the message to handle. </typeparam>
+        /// <param name="handler"> Handler delegate to wrap. </param>
+        /// <returns> Generic message handler. </returns>
+        private static Action<Message> Wrap<T>(Action<T> handler) where T : Message
+        {
+            return delegate(Message msg)
+            {
+                handler((T)msg);
+            };
         }
         #endregion
     }

@@ -146,6 +146,11 @@ namespace Balloons.Messaging.Model
             get { return this.m_direction; }
         }
 
+        public PlaneType PlaneType
+        {
+            get { return this.m_planeType; }
+        }
+
         public float Y
         {
             get { return this.m_y; }
@@ -161,18 +166,18 @@ namespace Balloons.Messaging.Model
             get { return this.m_time; }
         }
 
-        public NewPlaneMessage(string planeID, PlaneType type, Direction direction, float y, Vector2D velocity, float time)
+        public NewPlaneMessage(string planeID, PlaneType planeType, Direction direction, float y, Vector2D velocity, float time)
             : base(MessageType.NewPlane, Tag, planeID)
         {
             m_direction = direction;
             m_y = y;
             m_velocity = velocity;
-            m_type = type;
+            m_planeType = planeType;
             m_time = time;
         }
 
         private Direction m_direction;
-        private PlaneType m_type;
+        private PlaneType m_planeType;
         private Vector2D m_velocity;
         private float m_y;
         private float m_time;

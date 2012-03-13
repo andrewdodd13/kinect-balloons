@@ -8,7 +8,7 @@ namespace BubblesClient.Physics
     /// </summary>
     public class WorldEntity
     {
-        public enum EntityType { Balloon, Bucket, Hand, Landscape };
+        public enum EntityType { Balloon, Plane, Bucket, Hand, Landscape };
 
         public Body Body { get; private set; }
         public Joint Joint { get; private set; }
