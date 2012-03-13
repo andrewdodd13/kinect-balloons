@@ -50,8 +50,6 @@ namespace BubblesClient
         private List<Bucket> buckets = new List<Bucket>();
         private PhysicsManager physicsManager = new PhysicsManager();
 
-        private Dictionary<ClientBalloon, WorldEntity> balloonEntities = new Dictionary<ClientBalloon, WorldEntity>();
-
         private Random rng = new Random();
 
         //other stuff
@@ -131,12 +129,12 @@ namespace BubblesClient
             physicsManager.Initialize(handTexture.Width);
             physicsManager.BalloonPopped += delegate(object o, PhysicsManager.BalloonPoppedEventArgs args)
             {
-                Balloon b = balloonEntities.First(x => x.Value == args.Balloon).Key;
-                PopBalloon(b.ID, true);
+                string balloonID = balloons.First(x => x.Value.Entity == args.Balloon).Key;
+                PopBalloon(balloonID, true);
             };
             physicsManager.BucketCollision += delegate(object o, PhysicsManager.BucketCollisionEventArgs args)
             {
-                ClientBalloon balloon = balloonEntities.First(x => x.Value == args.Balloon).Key;
+                ClientBalloon balloon = balloons.First(x => x.Value.Entity == args.Balloon).Value;
                 Bucket bucket = buckets.First(x => x.Entity == args.Bucket);
                 this.ApplyBucketToBalloon(bucket, balloon);
             };
@@ -256,19 +254,18 @@ namespace BubblesClient
 
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                WorldEntity balloonEntity = balloonEntities[balloon];
-                Vector2 balloonPosition = balloonEntity.Body.Position;
+                Vector2 balloonPosition = balloon.Entity.Body.Position;
 
                 if (balloonPosition.X < (ClientBalloon.BalloonWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Left, exitHeight, balloon.Entity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
                 else if (balloonPosition.X > (ClientBalloon.BalloonWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     float exitHeight = (balloonPosition.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloonEntity.Body.LinearVelocity);
+                    NetworkManager.MoveBalloonOffscreen(balloon, Direction.Right, exitHeight, balloon.Entity.Body.LinearVelocity);
                     removals.Add(balloon);
                 }
             }
@@ -309,7 +306,7 @@ namespace BubblesClient
             Vector2 screen = PhysicsManager.PixelToWorld(screenDimensions);
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Body balloonBody = balloonEntities[balloon].Body;
+                Body balloonBody = balloon.Entity.Body;
                 if (balloonBody.Position.Y + (128f / PhysicsManager.MeterInPixels) > screen.Y * 2 / 3)
                 {
                     shouldShowBuckets = true;
@@ -391,7 +388,7 @@ namespace BubblesClient
             // Draw all of the balloons
             foreach (ClientBalloon balloon in balloons.Values)
             {
-                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloonEntities[balloon].Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
+                Vector2 balloonPosition = PhysicsManager.WorldBodyToPixel(balloon.Entity.Body.Position, new Vector2(balloon.Texture.Width, ClientBalloon.BalloonHeight));
                 Color balloonColour = new Color(balloon.BackgroundColor.Red, balloon.BackgroundColor.Green, balloon.BackgroundColor.Blue, balloon.BackgroundColor.Alpha);
                 spriteBatch.Draw(balloon.Texture, balloonPosition, balloonColour);
             }
@@ -475,7 +472,7 @@ namespace BubblesClient
             Vector2 boxSize = summaryFont.MeasureString(balloon.Label) + new Vector2(8, 8);
 
             Vector2 boxPosition =
-                PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position)
+                PhysicsManager.WorldToPixel(balloon.Entity.Body.Position)
                 - new Vector2(boxSize.X / 2, 0);
             boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
@@ -488,7 +485,7 @@ namespace BubblesClient
         private void DrawBalloonCaptionHtml(ClientBalloon balloon)
         {
             Vector2 boxPosition =
-                PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+                PhysicsManager.WorldToPixel(balloon.Entity.Body.Position);
             boxPosition.Y += balloon.Texture.Height - (ClientBalloon.BalloonHeight / 2);
 
             Texture2D caption = balloon.BalloonContentCache[CacheType.Caption, GraphicsDevice];
@@ -586,7 +583,7 @@ namespace BubblesClient
             {
                 // Create a new pop animation
                 PopAnimation anim = new PopAnimation(balloon);
-                anim.Pos = PhysicsManager.WorldToPixel(balloonEntities[balloon].Body.Position);
+                anim.Pos = PhysicsManager.WorldToPixel(balloon.Entity.Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
                 anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
                 anim.PopColour = new Colour(255, 255, 255, 255);
@@ -594,8 +591,8 @@ namespace BubblesClient
             }
 
             // Remove balloon from screen.
-            physicsManager.RemoveEntity(balloonEntities[balloon]);
-            balloonEntities.Remove(balloon);
+            physicsManager.RemoveEntity(balloon.Entity);
+            balloon.Entity = null;
             balloons.Remove(balloon.ID);
 
             // Remove balloon from server. This must be done after removing the balloon
@@ -634,6 +631,7 @@ namespace BubblesClient
             ClientBalloon b = new ClientBalloon(balloon);
             b.Texture = balloonTextures[balloon.Type][balloon.OverlayType];
             b.BalloonContentCache = contentBox.GetBalloonContent(b.ID);
+            b.Entity = balloonEntity;
 
             // Render the balloon's caption if we already have it
             if (!String.IsNullOrWhiteSpace(b.Label))
@@ -642,7 +640,6 @@ namespace BubblesClient
             }
 
             balloons.Add(b.ID, b);
-            balloonEntities[b] = balloonEntity;
         }
 
         public void OnNewPlane(NewPlaneMessage m)
