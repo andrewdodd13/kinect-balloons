@@ -23,6 +23,9 @@ namespace BubblesClient.Model
 
         public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
+        public double Time { get; set; }
+
+        public float InitialY { get; set; }
         public Direction Direction { get; set; }
 
         public WorldEntity Entity { get; set; }

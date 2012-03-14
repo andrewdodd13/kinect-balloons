@@ -41,7 +41,5 @@ namespace Balloons.Messaging.Model
             : this(parent.ID, parent.Type, parent.Time)
         {
         }
-
-        
     }
 }

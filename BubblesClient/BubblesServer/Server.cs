@@ -516,7 +516,7 @@ namespace Balloons.Server
             Direction screenSide = (m_random.Next(2) == 0) ? Direction.Left : Direction.Right;
             PlaneType planeType = (PlaneType)m_random.Next((int)PlaneType.InvalidType);
             EnqueueMessage(new PopObjectMessage(planeID));
-            EnqueueMessage(new NewPlaneMessage(planeID, planeType, screenSide, 0.7f, new Vector2D(0.0f, 0.0f), 0.0f));
+            EnqueueMessage(new NewPlaneMessage(planeID, planeType, screenSide, 0.5f, new Vector2D(0.0f, 0.0f), 0.0f));
 
             Trace.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
             return true;

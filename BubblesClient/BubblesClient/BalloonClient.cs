@@ -275,27 +275,37 @@ namespace BubblesClient
 
             removals.ForEach(x => RemoveBalloon(x, false));
 
-            // Move planes and check if any has left the screen
             var planeRemovals = new List<ClientPlane>();
             foreach (ClientPlane plane in planes.Values)
             {
-                Vector2 delta = plane.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                plane.Position += delta;
+                // Move the plane
+                const float amplitudeY = 2.0f;
+                float deltaX = plane.Velocity.X * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float deltaY = (float)(Math.Cos(plane.Time * 3.5) * Math.Cos(plane.Time) * Math.Cos(plane.Time));
+                Vector2 newPos = plane.Position;
+                plane.Time += gameTime.ElapsedGameTime.TotalSeconds;
+                newPos.X += deltaX;
+                newPos.Y = ((plane.InitialY * screenDimensions.Y) / PhysicsManager.MeterInPixels) + (deltaY * amplitudeY);
+                plane.Position = newPos;
                 if (plane.Entity != null)
                 {
                     plane.Entity.Body.Position = plane.Position;
                 }
 
+                // Check if the plane has left the screen
+                Direction exitDir = Direction.Any;
                 if (plane.Position.X < (ClientPlane.PlaneWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
-                    float exitHeight = (plane.Position.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    NetworkManager.MovePlaneOffscreen(plane, Direction.Left, exitHeight, plane.Velocity, 0.0f);
-                    planeRemovals.Add(plane);
+                    exitDir = Direction.Left;
                 }
                 else if (plane.Position.X > (ClientPlane.PlaneWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
+                    exitDir = Direction.Right;
+                }
+                if (exitDir != Direction.Any)
+                {
                     float exitHeight = (plane.Position.Y * PhysicsManager.MeterInPixels) / screenDimensions.Y;
-                    NetworkManager.MovePlaneOffscreen(plane, Direction.Right, exitHeight, plane.Velocity, 0.0f);
+                    NetworkManager.MovePlaneOffscreen(plane, exitDir, exitHeight, plane.Velocity, (float)plane.Time);
                     planeRemovals.Add(plane);
                 }
             }
@@ -735,9 +745,11 @@ namespace BubblesClient
             Vector2 pixPosition = GetInitialPosition(m.Direction, m.Y, ClientPlane.PlaneWidth);
 
             ClientPlane plane = new ClientPlane(m.ObjectID, m.PlaneType);
-            plane.Velocity = new Vector2(velocity.X, velocity.Y) * velocityMod;
+            plane.Velocity = new Vector2(velocity.X, 0.0f) * velocityMod;
             plane.Position = PhysicsManager.PixelToWorld(pixPosition);
             plane.Direction = planeDirection;
+            plane.InitialY = m.Y;
+            plane.Time = m.Time;
             plane.Entity = physicsManager.CreatePlane(plane.Position);
             planes.Add(plane.ID, plane);
 
