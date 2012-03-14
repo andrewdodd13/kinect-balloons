@@ -12,8 +12,9 @@ namespace Balloons.Messaging.Model
     public class Plane
     {
         public string ID { get; private set; }
-        public float Time { get; private set; }
-        public PlaneType Type { get; private set; }
+        public float Time { get; set; }
+        public PlaneType Type { get; set; }
+
         public string Message
         {
             get

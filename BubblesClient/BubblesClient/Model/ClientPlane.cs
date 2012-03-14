@@ -18,12 +18,11 @@ namespace BubblesClient.Model
         /// </summary>
         public bool OffScreen;
 
-        public const float PlaneWidth = 380f;
-        public const float PlaneHeight = 200f;
+        public static Vector2 PlaneSize = new Vector2(380f, 200f);
+        public const float PlaneScale = 0.7f;
 
         public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
-        public double Time { get; set; }
 
         public float InitialY { get; set; }
         public Direction Direction { get; set; }

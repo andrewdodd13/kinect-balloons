@@ -76,7 +76,7 @@
             System.Drawing.Bitmap img;
             if (!planeCaptions.TryGetValue(plane.Type, out img))
             {
-                string template = "<p style=\"font-weight: bold;\">Did you know?</p><p>@@MSG@@</p>";
+                string template = "<p class=\"helpTitle\">Did you know?</p><p>@@MSG@@</p>";
                 string message = template.Replace("@@MSG@@", plane.Message);
                 img = HtmlRenderer.RenderCaption(message);
                 planeCaptions[plane.Type] = img;

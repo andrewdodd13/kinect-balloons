@@ -208,9 +208,8 @@ namespace BubblesClient.Physics
 
         public WorldEntity CreatePlane(Vector2 position)
         {
-            float planeWidth = ClientPlane.PlaneWidth / MeterInPixels;
-            float planeHeight = ClientPlane.PlaneHeight / MeterInPixels;
-            Body planeBody = BodyFactory.CreateRectangle(world, planeWidth, planeHeight, 1f, position);
+            Vector2 planeSize = ClientPlane.PlaneSize * ClientPlane.PlaneScale / MeterInPixels;
+            Body planeBody = BodyFactory.CreateRectangle(world, planeSize.X, planeSize.Y, 1f, position);
             WorldEntity entity = new WorldEntity(planeBody, WorldEntity.EntityType.Plane);
             entities.Add(planeBody, entity);
             return entity;

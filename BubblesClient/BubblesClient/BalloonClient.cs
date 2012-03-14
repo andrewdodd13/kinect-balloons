@@ -280,10 +280,11 @@ namespace BubblesClient
             {
                 // Move the plane
                 const float amplitudeY = 2.0f;
-                float deltaX = plane.Velocity.X * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float deltaT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float deltaX = plane.Velocity.X * deltaT;
                 float deltaY = (float)(Math.Cos(plane.Time * 3.5) * Math.Cos(plane.Time) * Math.Cos(plane.Time));
                 Vector2 newPos = plane.Position;
-                plane.Time += gameTime.ElapsedGameTime.TotalSeconds;
+                plane.Time += deltaT;
                 newPos.X += deltaX;
                 newPos.Y = ((plane.InitialY * screenDimensions.Y) / PhysicsManager.MeterInPixels) + (deltaY * amplitudeY);
                 plane.Position = newPos;
@@ -294,11 +295,12 @@ namespace BubblesClient
 
                 // Check if the plane has left the screen
                 Direction exitDir = Direction.Any;
-                if (plane.Position.X < (ClientPlane.PlaneWidth * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
+                Vector2 planeSize = ClientPlane.PlaneSize * ClientPlane.PlaneScale;
+                if (plane.Position.X < (planeSize.X * -Configuration.BalloonDeadzoneMultiplier) / PhysicsManager.MeterInPixels)
                 {
                     exitDir = Direction.Left;
                 }
-                else if (plane.Position.X > (ClientPlane.PlaneWidth * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
+                else if (plane.Position.X > (planeSize.X * Configuration.BalloonDeadzoneMultiplier + screenDimensions.X) / PhysicsManager.MeterInPixels)
                 {
                     exitDir = Direction.Right;
                 }
@@ -518,12 +520,12 @@ namespace BubblesClient
 
         private void DrawPlane(GameTime gameTime, ClientPlane plane)
         {
-            Vector2 planeSize = new Vector2(planeTexture.Width, ClientPlane.PlaneHeight);
+            Vector2 planeSize = ClientPlane.PlaneSize * ClientPlane.PlaneScale;
             Vector2 planePosition = PhysicsManager.WorldBodyToPixel(plane.Position, planeSize);
             SpriteEffects effects = (plane.Direction == Direction.Right) ?
                 SpriteEffects.None : SpriteEffects.FlipHorizontally;
             spriteBatch.Draw(planeTexture, planePosition, null, Color.White, 0.0f, Vector2.Zero,
-                1.0f, effects, 0.0f);
+                ClientPlane.PlaneScale, effects, 0.0f);
 
             if (plane.CaptionTexture == null && plane.Caption != null)
             {
@@ -542,7 +544,7 @@ namespace BubblesClient
                 {
                     captionPosition.X -= (plane.CaptionTexture.Width + margin);
                 }
-                captionPosition.Y += Math.Abs(plane.CaptionTexture.Height - planeSize.Y) * 0.5f;
+                captionPosition.Y += (planeSize.Y - plane.CaptionTexture.Height) * 0.5f;
                 spriteBatch.Draw(plane.CaptionTexture, captionPosition, Color.White);
             }
         }
@@ -739,7 +741,8 @@ namespace BubblesClient
                 break;
             }
 
-            Vector2 pixPosition = GetInitialPosition(m.Direction, m.Y, ClientPlane.PlaneWidth);
+            Vector2 pixPosition = GetInitialPosition(m.Direction, m.Y,
+                ClientPlane.PlaneSize.X * ClientPlane.PlaneScale);
 
             ClientPlane plane = new ClientPlane(m.ObjectID, m.PlaneType);
             plane.Velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
