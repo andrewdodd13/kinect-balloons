@@ -3,6 +3,8 @@ using BubblesClient.Input.Kinect;
 using BubblesClient.Input.Mouse;
 using BubblesClient.Network;
 using BubblesClient.Input;
+using System;
+using System.Diagnostics;
 
 namespace BubblesClient
 {
@@ -22,6 +24,7 @@ namespace BubblesClient
             }
             // If this path doesn't exist, the config file will be created with default values
             Configuration.Load(configPath);
+            AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             // Initialise the input controller
             IInputManager controller = null;
@@ -41,6 +44,16 @@ namespace BubblesClient
             using (BalloonClient game = new BalloonClient(screen, controller))
             {
                 game.Run();
+            }
+        }
+
+        private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.ExceptionObject as Exception;
+            if (ex != null)
+            {
+                Trace.WriteLine(String.Format("Unhandled exception: {0}", ex.Message));
+                Trace.WriteLine(ex.StackTrace);
             }
         }
     }

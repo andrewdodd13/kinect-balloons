@@ -206,6 +206,15 @@ namespace BubblesClient.Physics
             return entity;
         }
 
+        public WorldEntity CreatePlane(Vector2 position)
+        {
+            Vector2 planeSize = ClientPlane.PlaneSize * ClientPlane.PlaneScale / MeterInPixels;
+            Body planeBody = BodyFactory.CreateRectangle(world, planeSize.X, planeSize.Y, 1f, position);
+            WorldEntity entity = new WorldEntity(planeBody, WorldEntity.EntityType.Plane);
+            entities.Add(planeBody, entity);
+            return entity;
+        }
+
         #region "Hand handling"
         public void UpdateHandPositions(Hand[] hands)
         {

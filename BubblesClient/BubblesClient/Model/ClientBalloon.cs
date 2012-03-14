@@ -1,5 +1,6 @@
 ﻿using System;
 using Balloons.Messaging.Model;
+using BubblesClient.Physics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace BubblesClient.Model
@@ -29,6 +30,8 @@ namespace BubblesClient.Model
 
         public Texture2D Texture { get; set; }
         public BalloonContentCache BalloonContentCache { get; set; }
+
+        public WorldEntity Entity { get; set; }
 
         public bool Popped { get; set; }
 
