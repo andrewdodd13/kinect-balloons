@@ -565,13 +565,12 @@ namespace BubblesClient
         private void DrawPopAnimation(GameTime gameTime, PopAnimation popAnim)
         {
             Vector2 popSize = new Vector2(popAnim.PopTexture.Width, popAnim.PopTexture.Height);
-            if (Configuration.PopAnimationEnabled)
-            {
-                // Animate popped balloons: make the texture bigger/smaller over time through scale
-                float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
-                float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
-                popSize *= (balloonScale * Configuration.PopAnimationScale);
-            }
+            
+            // Animate popped balloons: make the texture bigger/smaller over time through scale
+            float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
+            float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
+            popSize *= (balloonScale * Configuration.PopAnimationScale);
+
             // Scale the texture rectangle at its center and not at its top-left corner
             // like Draw() does when you pass a scaling factor.
             Vector2 popCenter = popAnim.Pos - (popSize * 0.5f);
@@ -582,6 +581,11 @@ namespace BubblesClient
 
         private void DrawConfettiAnimation(GameTime gameTime, PopAnimation popAnim)
         {
+            if (!Configuration.PopAnimationEnabled)
+            {
+                return;
+            }
+
             float t = popAnim.ElapsedSincePopped / (Configuration.PopAnimationTime / 1000.0f);
             int frameIndex = (int)Math.Floor((t - Math.Truncate(t)) * confettiTextures.Count);
             Texture2D confettiTex = confettiTextures[frameIndex];
