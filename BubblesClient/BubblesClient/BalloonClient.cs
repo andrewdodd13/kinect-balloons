@@ -542,6 +542,7 @@ namespace BubblesClient
                 {
                     captionPosition.X -= (plane.CaptionTexture.Width + margin);
                 }
+                captionPosition.Y += Math.Abs(plane.CaptionTexture.Height - planeSize.Y) * 0.5f;
                 spriteBatch.Draw(plane.CaptionTexture, captionPosition, Color.White);
             }
         }
@@ -723,8 +724,6 @@ namespace BubblesClient
         {
             // Choose where to place the plane
             Direction planeDirection;
-            Vector2D velocity;
-            const float velocityMod = 0.3f;
             switch (m.Direction)
             {
             default:
@@ -733,19 +732,17 @@ namespace BubblesClient
             case Direction.Left:
                 // The plane appears on the left side of the screen, it is going right
                 planeDirection = Direction.Right;
-                velocity = Configuration.VelocityRight;
                 break;
             case Direction.Right:
                 // The plane appears on the right side of the screen, it is going left
                 planeDirection = Direction.Left;
-                velocity = Configuration.VelocityLeft;
                 break;
             }
 
             Vector2 pixPosition = GetInitialPosition(m.Direction, m.Y, ClientPlane.PlaneWidth);
 
             ClientPlane plane = new ClientPlane(m.ObjectID, m.PlaneType);
-            plane.Velocity = new Vector2(velocity.X, 0.0f) * velocityMod;
+            plane.Velocity = new Vector2(m.Velocity.X, m.Velocity.Y);
             plane.Position = PhysicsManager.PixelToWorld(pixPosition);
             plane.Direction = planeDirection;
             plane.InitialY = m.Y;

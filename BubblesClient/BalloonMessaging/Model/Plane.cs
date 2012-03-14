@@ -21,9 +21,9 @@ namespace Balloons.Messaging.Model
                 switch (Type)
                 {
                 case PlaneType.BurstBallons:
-                    return "<h3>Did you know?</h3><p>You can burst balloons by clapping your hands together.</p>";
+                    return "You can burst balloons by clapping your hands together.";
                 case PlaneType.PushBallons:
-                    return "<h3>Did you know?</h3><p>You can customise balloons by pushing them on top of the paint buckets.</p>";
+                    return "You can customise balloons by pushing them on top of the paint buckets.";
                 default:
                     return "&lt;Unknown message&gt;"; 
                 }
