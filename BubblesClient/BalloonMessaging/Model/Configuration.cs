@@ -102,7 +102,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Use HTML for rendering content boxes
         /// </summary>
-        public static bool UseHtmlRendering = false;
+        public static bool UseHtmlRendering = true;
         /// <summary>
         /// IP address of the server to connect to.
         /// </summary>

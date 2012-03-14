@@ -280,7 +280,7 @@ namespace BubblesClient
                 }
             }
 
-            removals.ForEach(x => RemoveBalloon(x, false));
+            removals.ForEach(x => RemoveBalloon(x, false, false));
 
             var planeRemovals = new List<ClientPlane>();
             foreach (ClientPlane plane in planes.Values)
@@ -581,7 +581,7 @@ namespace BubblesClient
 
         private void DrawConfettiAnimation(GameTime gameTime, PopAnimation popAnim)
         {
-            if (!Configuration.PopAnimationEnabled)
+            if (!Configuration.PopAnimationEnabled || !popAnim.PoppedByUser)
             {
                 return;
             }
@@ -646,7 +646,7 @@ namespace BubblesClient
         }
 
         #region "Balloon Popping"
-        private void PopBalloon(string balloonID, bool showContent = false)
+        private void PopBalloon(string balloonID, bool poppedByUser)
         {
             ClientBalloon balloon = balloons[balloonID];
             if (balloon == null)
@@ -655,30 +655,30 @@ namespace BubblesClient
             }
 
             // Display content only asked and if balloon has a caption
-            showContent &= balloon.ShouldDrawCaption();
-            balloon.Popped = true;
-            if (showContent)
+            if (poppedByUser && balloon.ShouldDrawCaption())
             {
                 contentBox.SetBalloon(balloon);
                 physicsManager.DisableHandCollisions();
             }
+            balloon.Popped = true;
 
-            RemoveBalloon(balloon);
+            RemoveBalloon(balloon, true, poppedByUser);
         }
 
         /// <summary>
         /// Removes (immediately) the given balloon from the physics world and screen.
         /// </summary>
         /// <param name="balloon">Balloon to remove. </param>
-        private void RemoveBalloon(ClientBalloon balloon, Boolean animate = true)
+        private void RemoveBalloon(ClientBalloon balloon, bool wasPopped, bool poppedByUser)
         {
-            if (animate)
+            if (wasPopped)
             {
                 // Create a new pop animation
                 PopAnimation anim = new PopAnimation(balloon);
                 anim.Pos = PhysicsManager.WorldToPixel(balloon.Entity.Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
                 anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
+                anim.PoppedByUser = poppedByUser;
                 popAnimations.Add(anim);
             }
 
@@ -812,7 +812,7 @@ namespace BubblesClient
         {
             if (balloons.ContainsKey(m.ObjectID))
             {
-                PopBalloon(m.ObjectID);
+                PopBalloon(m.ObjectID, false);
             }
 
             if (planes.ContainsKey(m.ObjectID))
