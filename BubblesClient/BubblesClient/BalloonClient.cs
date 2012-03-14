@@ -27,6 +27,7 @@ namespace BubblesClient
         // Balloon Textures
         private Dictionary<BalloonType, Dictionary<OverlayType, Texture2D>> balloonTextures;
         private Texture2D[] balloonPopTextures;
+        private List<Texture2D> confettiTextures;
 
         private Texture2D boxWhiteColour, boxBlackColour;
         private SpriteFont summaryFont;
@@ -200,6 +201,12 @@ namespace BubblesClient
             balloonPopTextures = new Texture2D[] {
                 Content.Load<Texture2D>("Images/BalloonPop")
             };
+
+            confettiTextures = new List<Texture2D>();
+            for (int i = 1; i <= 60; i++)
+            {
+                confettiTextures.Add(Content.Load<Texture2D>(String.Format("Images/Confetti/{0:d04}", i)));
+            }
 
             boxBlackColour = new Texture2D(GraphicsDevice, 1, 1);
             boxBlackColour.SetData(new[] { Color.Black });
@@ -444,6 +451,12 @@ namespace BubblesClient
                 contentBox.Draw(spriteBatch);
             }
 
+            // Draw all confetti animations (on top of the content)
+            foreach (PopAnimation popAnim in popAnimations)
+            {
+                DrawConfettiAnimation(gameTime, popAnim);
+            }
+
             // Draw all of the registered hands
             foreach (WorldEntity handBody in physicsManager.GetHandPositions())
             {
@@ -551,25 +564,32 @@ namespace BubblesClient
 
         private void DrawPopAnimation(GameTime gameTime, PopAnimation popAnim)
         {
-            Rectangle textureRect = new Rectangle((int)popAnim.Pos.X, (int)popAnim.Pos.Y,
-                                                popAnim.PopTexture.Width, popAnim.PopTexture.Height);
-            Color popColour = new Color(popAnim.PopColour.Red, popAnim.PopColour.Green, popAnim.PopColour.Blue, popAnim.PopColour.Alpha);
+            Vector2 popSize = new Vector2(popAnim.PopTexture.Width, popAnim.PopTexture.Height);
             if (Configuration.PopAnimationEnabled)
             {
                 // Animate popped balloons: make the texture bigger/smaller over time through scale
                 float alpha = Configuration.PopAnimationAlpha, beta = Configuration.PopAnimationBeta;
                 float balloonScale = 1.0f + alpha * (float)Math.Sin(beta * popAnim.ElapsedSincePopped);
-                balloonScale *= Configuration.PopAnimationScale;
-
-                // Scale the texture rectangle at its center and not at its top-left corner
-                // like Draw() does when you pass a scaling factor.
-                float newWidth = (textureRect.Width * balloonScale);
-                float newHeight = (textureRect.Height * balloonScale);
-                float newX = (textureRect.Center.X - newWidth * 0.5f);
-                float newY = (textureRect.Center.Y - newHeight * 0.5f);
-                textureRect = new Rectangle((int)newX, (int)newY, (int)newWidth, (int)newHeight);
+                popSize *= (balloonScale * Configuration.PopAnimationScale);
             }
-            spriteBatch.Draw(popAnim.PopTexture, textureRect, popColour);
+            // Scale the texture rectangle at its center and not at its top-left corner
+            // like Draw() does when you pass a scaling factor.
+            Vector2 popCenter = popAnim.Pos - (popSize * 0.5f);
+            Rectangle popRect = new Rectangle((int)popCenter.X, (int)popCenter.Y,
+                (int)popSize.X, (int)popSize.Y);
+            spriteBatch.Draw(popAnim.PopTexture, popRect, Color.White);
+        }
+
+        private void DrawConfettiAnimation(GameTime gameTime, PopAnimation popAnim)
+        {
+            float t = popAnim.ElapsedSincePopped / (Configuration.PopAnimationTime / 1000.0f);
+            int frameIndex = (int)Math.Floor((t - Math.Truncate(t)) * confettiTextures.Count);
+            Texture2D confettiTex = confettiTextures[frameIndex];
+            Vector2 confettiSize = new Vector2(confettiTex.Width, confettiTex.Height) * Configuration.PopAnimationScale;
+            Vector2 center = popAnim.Pos - (confettiSize * 0.5f);
+            Rectangle confettiRect = new Rectangle((int)center.X, (int)center.Y,
+                (int)confettiSize.X, (int)confettiSize.Y);
+            spriteBatch.Draw(confettiTex, confettiRect, Color.White);
         }
 
         private void DrawBucket(GameTime gameTime, Bucket bucket)
@@ -655,7 +675,6 @@ namespace BubblesClient
                 anim.Pos = PhysicsManager.WorldToPixel(balloon.Entity.Body.Position);
                 anim.TimePopped = currentTime.TotalGameTime;
                 anim.PopTexture = balloonPopTextures[rng.Next(0, balloonPopTextures.Length)];
-                anim.PopColour = new Colour(255, 255, 255, 255);
                 popAnimations.Add(anim);
             }
 
