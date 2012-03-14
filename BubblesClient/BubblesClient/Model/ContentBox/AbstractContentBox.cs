@@ -184,8 +184,15 @@
             bool imageUpdated = false;
             if (cacheEntry[CacheType.WebImage] == null)
             {
-                cacheEntry[CacheType.WebImage] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
-                imageUpdated = true;
+                try
+                {
+                    cacheEntry[CacheType.WebImage] = ImageGenerator.GenerateFromWeb(balloon.ImageUrl);
+                    imageUpdated = true;
+                }
+                catch (System.Net.WebException)
+                {
+                    // ignore errors (no internet connection?), the image will be downloaded later
+                }
             }
 
             if (imageUpdated || cacheEntry[CacheType.Content] == null)
