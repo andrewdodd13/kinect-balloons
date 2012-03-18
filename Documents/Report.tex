@@ -58,6 +58,7 @@
 \def\@cite#1#2{$^{\mbox{\scriptsize [#1\if@tempswa , #2\fi]}}$}
 
 \usepackage{pdfpages}
+\usepackage{listings}
 \usepackage{color}
 \usepackage{parskip}
 \setlength{\parindent}{0pt}
@@ -132,8 +133,17 @@
     \markboth{Appendix: #1}{}
 }
 
-% use TexGyre Schola for tables (clone of Century Schoolbook)
-\newcommand{\tablefont}[1]{{\fontfamily{qcs} \selectfont #1}}
+% Code listings
+
+\lstset{extendedchars=false}
+\lstset{breaklines=true, breakatwhitespace=true, keywordstyle=\color{blue}, commentstyle=\itshape, basicstyle=\ttfamily\small, tabsize=4,  showstringspaces=false}
+%\lstset{numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, %showstringspaces=false}
+
+\newcommand{\codelisting}[1]{
+  \singlespacing
+  \lstinputlisting{#1}
+  \onehalfspacing
+}
 
 % numbered equations
 \renewcommand\[{\begin{equation}}
@@ -196,6 +206,10 @@
 \clearpage{}
 \sectionauthor{Web Feed Design}{Christopher Wyllie}
 \input{Feed-Design.tex}
+
+\clearpage{}
+\sectionauthor{Content Submission}{Alexander Macrae}
+\input{Website-Design.tex}
 
 \clearpage{}
 \input{Conclusion.tex}
