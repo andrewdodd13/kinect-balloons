@@ -26,34 +26,69 @@ To speed up the development of the backend a PHP framework was decided upon. Cod
 The website consisted of three main pages, one for viewing content that had been submitted, one for logging in to the system and another for submitted content to the website. These three pages covered the requirements of the system and were done in a way that made the website easy to use. 
 
 \subsubsection{Header}
-All pages are given the same header. This kept the design consistent throughout the website which makes it easier for users to navigate around it and find what they want.
+All pages are given the same header (see figure \ref{Website-Header}). This kept the design consistent throughout the website which makes it easier for users to navigate around it and find what they want.
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Website-Header}
+\par\end{centering}
+
+\caption{Website Header}
+\label{Website-Header}
+\end{figure}
 
 It has the Heriot-Watt logo in the top left corner so users knew it is associated with the university. It then has the title of the website and a logged in status. To the right of that are the links to each part of the website. The header is made to be simple and clear. The links are easily identified by their different colour which mimics other typical hyperlink colours. The user can easily take in all this information very quickly.
 
 \subsubsection{Content Viewer}
-This page is the main page of the website and the starting point. Its aim is to show users what content is appearing on the balloons right now. It currently shows up to 10 items with all the information submitted such as the article URL, balloon colour and article title.
+This page (see figure \ref{ContentViewer}) is the main page of the website and the starting point. Its aim is to show users what content is appearing on the balloons right now. It currently shows up to 10 items with all the information submitted such as the article URL, balloon colour and article title.
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Website-ContentViewer}
+\par\end{centering}
+
+\caption{Content Viewer}
+\label{ContentViewer}
+\end{figure}
 
 At the top of the page is an easy to access submit article button which clearly indicates that users can use this to add to the list of articles down below. The table below that gives information on the articles submitted. Where applicable an image or colour is shown to better show what has been submitted.
 
-The system can be made to allow some users to be administrators. This is currently based on group ID when they are logged in. If they are of group users or staff then they have admin rights. Most students have a group ID of cs4 or some other representation of their course. If an admin user is logged in then they will be able to remove content they find offensive or not suitable. They can do this via an extra remove field in the table.
+The system can be made to allow some users to be administrators. This is currently based on group ID when they are logged in. If they are of group users or staff then they have admin rights. Most students have a group ID of cs4 or some other representation of their course. If an admin user is logged in then they will be able to remove content they find offensive or not suitable. They can do this via an extra remove field in the table (see figure \ref{RemoveContent}).
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Website-RemoveContent}
+\par\end{centering}
+
+\caption{Content Removal By Administrators}
+\label{RemoveContent}
+\end{figure}
 
 \subsubsection{Login Page}
-The login page enables the user to enter the submission process of the website. A user cannot access the article submission page without logging in. 
+The login page (see figure \ref{Login}) enables the user to enter the submission process of the website. A user cannot access the article submission page without logging in. 
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Website-Login}
+\par\end{centering}
+
+\caption{Login Page}
+\label{Login}
+\end{figure}
 
 The page is very simple. The user has to enter their username and their password. The username and password used are the ones for the MACS system. A user cannot use this website if they are not a member of the MACS network. 
 
 \subsubsection{Article Submission Page}
-The final page in the website is the one for submitting articles. This had to be simple to use and clear. It was therefore made to have large text entry points and clear labels.
+The final page in the website is the one for submitting articles (see figure \ref{ContentSubmission}). This had to be simple to use and clear. It was therefore made to have large text entry points and clear labels.
 
+\begin{figure}
+\begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Website-Submission}
+\par\end{centering}
+
+\caption{Content Submission}
+\label{ContentSubmission}
+\end{figure}
 
 The user is asked to submit a title, URL and Excerpt from their article. These can be copied and pasted from the article webpage itself. An image can then be uploaded that would represent the article. This could also come from the article but would have to be saved on the local machine first. Next the user enters their balloon colour using a user friendly colour selector and then puts in some alias for them. 
 
@@ -82,10 +117,10 @@ This gives the system all the information it needs to send information on news a
 The structure was based on CodeIgniter's structure. CodeIgniter has a strong Model, View, Controller set up so it would make code clearer and more modular. The overall layout of the website will now be looked at and then the main sections will be covered in depth. This will start with the folder structure of CodeIgniter (Only important folders shown). Note that this backend was also used for deploying the balloon content to screens, though that will be covered later.
 
 \begin{verbatim}application/
-	config/
-	controllers/
-	models/
-	views/
+    config/
+    controllers/
+    models/
+    views/
 included/
 uploads/\end{verbatim}
 
