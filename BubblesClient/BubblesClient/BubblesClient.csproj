@@ -125,6 +125,7 @@
     <Compile Include="Model\Buckets\ColourBucket.cs" />
     <Compile Include="Model\Buckets\DecorationBucket.cs" />
     <Compile Include="Model\ClientBalloon.cs" />
+    <Compile Include="Model\ClientPlane.cs" />
     <Compile Include="Model\ContentBox\HTMLContentBox.cs" />
     <Compile Include="Model\ContentBox\ManualContentBox.cs" />
     <Compile Include="Model\ContentBox\AbstractContentBox.cs" />

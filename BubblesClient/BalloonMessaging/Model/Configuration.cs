@@ -102,7 +102,7 @@ namespace Balloons.Messaging.Model
         /// <summary>
         /// Use HTML for rendering content boxes
         /// </summary>
-        public static bool UseHtmlRendering = false;
+        public static bool UseHtmlRendering = true;
         /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
@@ -168,14 +168,26 @@ namespace Balloons.Messaging.Model
         public static int MaxBalloonsPerScreen = 5;
         /// <summary>
         /// When a screen disconnects, its balloon randomly move to either the left or right edge of the screen.
-        /// This is the velocity given to a balloon which moves to the right side of the screen.
+        /// This is the velocity given to a balloon which moves to the left side of the screen.
         /// </summary>
-        public static Vector2D VelocityLeft = new Vector2D(-10.0f, 0.0f);
+        public static Vector2D BalloonVelocityLeft = new Vector2D(-10.0f, 0.0f);
         /// <summary>
         /// When a screen disconnects, its balloon randomly move to either the left or right edge of the screen.
-        /// This is the velocity given to a balloon which moves to the left side of the screen.
+        /// This is the velocity given to a balloon which moves to the right side of the screen.
         /// </summary
-        public static Vector2D VelocityRight = new Vector2D(10.0f, 0.0f);
+        public static Vector2D BalloonVelocityRight = new Vector2D(10.0f, 0.0f);
+        /// <summary>
+        /// This is the velocity given to a plane which moves to the left side of the screen.
+        /// </summary>
+        public static Vector2D PlaneVelocityLeft = new Vector2D(-2.0f, 0.0f);
+        /// <summary>
+        /// This is the velocity given to a plane which moves to the right side of the screen.
+        /// </summary
+        public static Vector2D PlaneVelocityRight = new Vector2D(2.0f, 0.0f);
+        /// <summary>
+        /// Initial Y value for a plane (normalised, so in [0.0;1.0]).
+        /// </summary>
+        public static float PlaneInitialY = 0.5f;
         #endregion
 
         #region Implementation
@@ -253,9 +265,11 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "FeedTimeout", FeedTimeout);
             StoreValue(settings, "MinBalloonsPerScreen", MinBalloonsPerScreen);
             StoreValue(settings, "MaxBalloonsPerScreen", MaxBalloonsPerScreen);
-
-            StoreValue(settings, "VelocityLeft", VelocityLeft);
-            StoreValue(settings, "VelocityRight", VelocityRight);
+            StoreValue(settings, "BalloonVelocityLeft", BalloonVelocityLeft);
+            StoreValue(settings, "BalloonVelocityRight", BalloonVelocityRight);
+            StoreValue(settings, "PlaneVelocityLeft", PlaneVelocityLeft);
+            StoreValue(settings, "PlaneVelocityRight", PlaneVelocityRight);
+            StoreValue(settings, "PlaneInitialY", PlaneInitialY);
 
             // write the settings to the configuration file, as JSON
             string jsonText = settings.ToString();
@@ -329,9 +343,11 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "FeedTimeout", ref FeedTimeout);
             LoadValue(settings, "MinBalloonsPerScreen", ref MinBalloonsPerScreen);
             LoadValue(settings, "MaxBalloonsPerScreen", ref MaxBalloonsPerScreen);
-
-            LoadValue(settings, "VelocityLeft", ref VelocityLeft);
-            LoadValue(settings, "VelocityRight", ref VelocityRight);
+            LoadValue(settings, "BalloonVelocityLeft", ref BalloonVelocityLeft);
+            LoadValue(settings, "BalloonVelocityRight", ref BalloonVelocityRight);
+            LoadValue(settings, "PlaneVelocityLeft", ref PlaneVelocityLeft);
+            LoadValue(settings, "PlaneVelocityRight", ref PlaneVelocityRight);
+            LoadValue(settings, "PlaneInitialY", ref PlaneInitialY);
         }
 
         private static bool LoadValue<T>(JObject settings, string key, ref T val)

@@ -12,7 +12,7 @@ namespace BubblesClient.Model
         public TimeSpan TimePopped { get; set; }
         public float ElapsedSincePopped { get; set; }
         public Texture2D PopTexture { get; set; }
-        public Colour PopColour { get; set; }
+        public bool PoppedByUser { get; set; }
 
         public PopAnimation(ClientBalloon balloon)
         {

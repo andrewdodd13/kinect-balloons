@@ -12,6 +12,7 @@ namespace Balloons.Messaging.Model
         // Messages sent by the server
         NewBalloon,
         BalloonContentUpdate,
+        NewPlane,
 
         // Messages sent by the client
         ChangeScreen,
@@ -19,7 +20,7 @@ namespace Balloons.Messaging.Model
         GetBalloonState,
 
         // Messages sent by both
-        PopBalloon,
+        PopObject,
         BalloonStateUpdate,
 
         // Internal messages
@@ -71,20 +72,20 @@ namespace Balloons.Messaging.Model
         private object m_sender;
     }
 
-    public class BalloonMessage : Message
+    public class ObjectMessage : Message
     {
-        public string BalloonID
+        public string ObjectID
         {
-            get { return this.m_balloonID; }
+            get { return this.m_objectID; }
         }
 
-        public BalloonMessage(MessageType type, string tag, string balloonID)
+        public ObjectMessage(MessageType type, string tag, string objectID)
             : base(type, tag)
         {
-            m_balloonID = balloonID;
+            m_objectID = objectID;
         }
 
-        private string m_balloonID;
+        private string m_objectID;
     }
 
     public class MessageEventArgs : EventArgs
@@ -104,7 +105,7 @@ namespace Balloons.Messaging.Model
     }
 
     #region Messages sent by the server
-    public class NewBalloonMessage : BalloonMessage
+    public class NewBalloonMessage : ObjectMessage
     {
         public const string Tag = "new-balloon";
 
@@ -136,7 +137,53 @@ namespace Balloons.Messaging.Model
         private float m_y;
     }
 
-    public class BalloonContentUpdateMessage : BalloonMessage
+    public class NewPlaneMessage : ObjectMessage
+    {
+        public const string Tag = "new-plane";
+
+        public Direction Direction
+        {
+            get { return this.m_direction; }
+        }
+
+        public PlaneType PlaneType
+        {
+            get { return this.m_planeType; }
+        }
+
+        public float Y
+        {
+            get { return this.m_y; }
+        }
+
+        public Vector2D Velocity
+        {
+            get { return this.m_velocity; }
+        }
+
+        public float Time
+        {
+            get { return this.m_time; }
+        }
+
+        public NewPlaneMessage(string planeID, PlaneType planeType, Direction direction, float y, Vector2D velocity, float time)
+            : base(MessageType.NewPlane, Tag, planeID)
+        {
+            m_direction = direction;
+            m_y = y;
+            m_velocity = velocity;
+            m_planeType = planeType;
+            m_time = time;
+        }
+
+        private Direction m_direction;
+        private PlaneType m_planeType;
+        private Vector2D m_velocity;
+        private float m_y;
+        private float m_time;
+    }
+
+    public class BalloonContentUpdateMessage : ObjectMessage
     {
         public const string Tag = "balloon-content-update";
 
@@ -202,7 +249,7 @@ namespace Balloons.Messaging.Model
     #endregion
 
     #region Messages sent by the client
-    public class ChangeScreenMessage : BalloonMessage
+    public class ChangeScreenMessage : ObjectMessage
     {
         public const string Tag = "change-screen";
 
@@ -221,20 +268,27 @@ namespace Balloons.Messaging.Model
             get { return this.m_velocity; }
         }
 
-        public ChangeScreenMessage(string balloonID, Direction direction, float y, Vector2D velocity)
+        public float Time
+        {
+            get { return this.m_time; }
+        }
+
+        public ChangeScreenMessage(string balloonID, Direction direction, float y, Vector2D velocity, float time = 0)
             : base(MessageType.ChangeScreen, Tag, balloonID)
         {
             m_direction = direction;
             m_y = y;
             m_velocity = velocity;
+            m_time = time;
         }
         
         private Direction m_direction;
         private Vector2D m_velocity;
         private float m_y;
+        private float m_time;
     }
 
-    public class GetBalloonContentMessage : BalloonMessage
+    public class GetBalloonContentMessage : ObjectMessage
     {
         public const string Tag = "get-balloon-content";
 
@@ -244,7 +298,7 @@ namespace Balloons.Messaging.Model
         }
     }
 
-    public class GetBalloonStateMessage : BalloonMessage
+    public class GetBalloonStateMessage : ObjectMessage
     {
         public const string Tag = "get-balloon-state";
 
@@ -256,17 +310,17 @@ namespace Balloons.Messaging.Model
     #endregion
 
     #region Messages sent by both
-    public class PopBalloonMessage : BalloonMessage
+    public class PopObjectMessage : ObjectMessage
     {
         public const string Tag = "pop-balloon";
 
-        public PopBalloonMessage(string balloonID)
-            : base(MessageType.PopBalloon, Tag, balloonID)
+        public PopObjectMessage(string balloonID)
+            : base(MessageType.PopObject, Tag, balloonID)
         {
         }
     }
 
-    public class BalloonStateUpdateMessage : BalloonMessage
+    public class BalloonStateUpdateMessage : ObjectMessage
     {
         public const string Tag = "balloon-state-update";
 
