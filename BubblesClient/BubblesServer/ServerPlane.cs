@@ -13,6 +13,15 @@ namespace Balloons.Server
             set { m_screen = value; }
         }
 
+        /// <summary>
+        /// Time the plane has left to live. Decreases every time the plane leaves a screen.
+        /// </summary>
+        public int Ttl
+        {
+            get;
+            set;
+        }
+
         public ServerPlane(string planeID, PlaneType type)
             : base(planeID, type)
         {

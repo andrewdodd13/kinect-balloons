@@ -21,6 +21,7 @@ namespace Balloons.Server
                                   ProtocolType.Tcp);
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
+            m_nextPlaneID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
             m_planes = new Dictionary<string, ServerPlane>();
@@ -146,10 +147,11 @@ namespace Balloons.Server
         private int m_port;
         private Socket m_socket;
         private CircularQueue<Message> m_queue;
-        private int m_nextScreenID;
         private List<Screen> m_screens;
+        private int m_nextScreenID;
         private Dictionary<string, ServerBalloon> m_bubbles;
         private Dictionary<string, ServerPlane> m_planes;
+        private int m_nextPlaneID;
         private FeedReader m_feed;
         
         private Random m_random;
@@ -229,27 +231,35 @@ namespace Balloons.Server
                 // if next or previous screen are equal to current screen
                 // it means that this was the last screen left
                 m_bubbles.Clear();
+                m_planes.Clear();
             } else {
                 foreach(ServerBalloon balloon in balloons)
                 {
                     // Choose randomly between left or right screen
-                    int random = m_random.Next(1);
+                    int random = m_random.Next(2);
                     Screen newScreen = null;
                     NewBalloonMessage nbm = null;
                     if(random == 0) {
                         newScreen = left;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Right,
-                                                    0.1f, Configuration.VelocityLeft);
+                                                    0.1f, Configuration.BalloonVelocityLeft);
                     } else {
                         newScreen = right;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Left,
-                                                    0.1f, Configuration.VelocityRight);
+                                                    0.1f, Configuration.BalloonVelocityRight);
                     }
                     balloon.Screen = newScreen;
                     if(newScreen != null)
                     {
                         newScreen.Connection.SendMessage(nbm);
                     }
+                }
+
+                // Remove any plane present in the screen
+                foreach (ServerPlane plane in m_planes.Values)
+                {
+                    // Use enqueue so that the map isn't changed during iteration
+                    EnqueueMessage(new PopObjectMessage(plane.ID));
                 }
             }
             m_screens.Remove(s);
@@ -283,9 +293,23 @@ namespace Balloons.Server
                 {
                     return true;
                 }
-                p.Screen = newScreen;
-                newScreen.Connection.SendMessage(new NewPlaneMessage(
-                    csm.ObjectID, p.Type, newDirection, csm.Y, csm.Velocity, csm.Time)); 
+                p.Ttl--;
+                
+                if (p.Ttl > 0)
+                {
+                    Trace.WriteLine(String.Format("Plane {0} changed screens and has now TTL={1}.", p.ID, p.Ttl));
+                    p.Screen = newScreen;
+                    newScreen.Connection.SendMessage(new NewPlaneMessage(
+                        csm.ObjectID, p.Type, newDirection, csm.Y, csm.Velocity, csm.Time));
+                }
+                else
+                {
+                    // the plane has no time left to live
+                    Trace.WriteLine(String.Format("Plane {0}'s time has come.", p.ID));
+                    PopObjectMessage pom = new PopObjectMessage(csm.ObjectID);
+                    pom.Sender = p.Screen;
+                    HandlePopObject(pom);
+                }
             }
             else
             {
@@ -329,7 +353,7 @@ namespace Balloons.Server
         {
             if (m_planes.ContainsKey(npm.ObjectID))
             {
-                // Balloon already present !
+                // Plane already present !
                 Trace.WriteLine(String.Format("Plane {0} already present!", npm.ObjectID));
                 return true;
             }
@@ -339,9 +363,8 @@ namespace Balloons.Server
                 return true;
             }
 
-            int numberOfType = 2;
-            PlaneType planetype = (PlaneType)m_random.Next(numberOfType);
-            ServerPlane plane = new ServerPlane(npm.ObjectID, planetype);
+            ServerPlane plane = new ServerPlane(npm.ObjectID, npm.PlaneType);
+            plane.Ttl = m_screens.Count + 1;
             m_planes[npm.ObjectID] = plane;
 
             // choose a random screen
@@ -350,6 +373,8 @@ namespace Balloons.Server
             // Notify screen with new plane message
             plane.Screen = m_screens[screen_idx];
             plane.Screen.Connection.SendMessage(npm);
+
+            Trace.WriteLine(String.Format("New plane {0} with TTL={1}.", npm.ObjectID, plane.Ttl));
 
             return true;
         }
@@ -447,7 +472,7 @@ namespace Balloons.Server
                 if(!fromServer.ContainsKey(i.ContentID)) {
                     // Add the new balloon to the server and send content and state
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
-                        0.2f, Configuration.VelocityLeft), fm.Sender);
+                        0.2f, Vector2D.Zero), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL, i.ImageURL), fm.Sender);
                     EnqueueMessage(new BalloonStateUpdateMessage(i.ContentID, 0,
@@ -455,6 +480,35 @@ namespace Balloons.Server
                     added++;
                 }
             }
+
+            // remove all existing planes
+            foreach (ServerPlane plane in m_planes.Values)
+            {
+                if (plane.Screen != null)
+                {
+                    plane.Screen.Connection.SendMessage(new PopObjectMessage(plane.ID));
+                }
+            }
+            m_planes.Clear();
+
+            // add a new plane
+            string planeID = String.Format("PLANE-{0}", m_nextPlaneID++);
+            PlaneType planeType = (PlaneType)m_random.Next((int)PlaneType.InvalidType);
+            Direction screenSide;
+            Vector2D velocity;
+            if (m_random.Next(2) == 0)
+            {
+                screenSide = Direction.Left;
+                velocity = Configuration.PlaneVelocityRight;
+            }
+            else
+            {
+                screenSide = Direction.Right;
+                velocity = Configuration.PlaneVelocityLeft;
+            }
+            EnqueueMessage(new PopObjectMessage(planeID));
+            EnqueueMessage(new NewPlaneMessage(planeID, planeType, screenSide, 
+                Configuration.PlaneInitialY, velocity, 0.0f));
 
             Trace.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
             return true;

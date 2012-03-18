@@ -33,35 +33,49 @@
         void MoveBalloonOffscreen(ClientBalloon balloon, Direction direction, float exitHeight, Vector2 velocity);
 
         /// <summary>
+        /// Notifies the Server that a plane has moved off screen. The 
+        /// implementation is responsible for ensuring that this event is not 
+        /// called twice for the same plane.
+        /// </summary>
+        /// <param name="plane">The plane to move</param>
+        /// <param name="direction">The side of the screen the plane is 
+        /// exiting via</param>
+        /// <param name="exitHeight">The normalised position on the screen the 
+        /// plane was at when it left the screen</param>
+        /// <param name="velocity">The velocity of the plane when it left the
+        /// screen</param>
+        /// <param name="time"> Current time for the plane's animation. </param>
+        void MovePlaneOffscreen(ClientPlane plane, Direction direction, float exitHeight, Vector2 velocity, float time);
+
+        /// <summary>
         /// Notifies the Server that a balloon has been popped by a user.
         /// </summary>
         /// <param name="balloon"></param>
         void NotifyBalloonPopped(ClientBalloon balloon);
 
         /// <summary>
-        /// Retrieves the details of a balloon from the Server.
+        /// Requests the balloon's content from the server.
         /// </summary>
         /// <param name="balloonID"></param>
-        /// <returns></returns>
-        Balloon GetBalloonDetails(string balloonID);
+        void RequestBalloonContent(string balloonID);
 
         /// <summary>
-        /// Notifies the Server that a balloon's details have changed 
-        /// (usually its decoration).
+        /// Requests the balloon's state from the server.
+        /// </summary>
+        /// <param name="balloonID"></param>
+        void RequestBalloonState(string balloonID);
+
+        /// <summary>
+        /// Notifies the Server that the state of a balloon (usually decoration) has been changed by a user.
         /// </summary>
         /// <param name="balloon"></param>
-        void UpdateBalloonDetails(Balloon balloon);
+        void UpdateBalloonState(Balloon balloon);
 
         /// <summary>
         /// Retrieves all the messages that the Network Manager has received
         /// from the Server since the last call to this function.
         /// </summary>
-        /// <param name="OnNewBalloon">New Balloon Handler</param>
-        /// <param name="OnPopBalloon">Pop Balloon Handler</param>
-        /// <param name="OnBalloonContentUpdate">Content Update Handler</param>
-        /// <param name="OnBalloonStateUpdate">State Update Handler</param>
-        /// <returns></returns>
-        void ProcessMessages(Action<NewBalloonMessage> OnNewBalloon, Action<PopObjectMessage> OnPopBalloon,
-            Action<BalloonContentUpdateMessage> OnBalloonContentUpdate, Action<BalloonStateUpdateMessage> OnBalloonStateUpdate);
+        /// <param name="handlers"> Message handlers. </param>
+        void ProcessMessages(Dictionary<MessageType, Action<Message>> handlers);
     }
 }

@@ -102,7 +102,7 @@ namespace Balloons.Serialization
         {
             NewPlaneMessage npm = (NewPlaneMessage)msg;
             writer.Write(npm.ObjectID);
-            writer.Write((int)npm.Type);
+            writer.Write((int)npm.PlaneType);
             writer.Write((int)npm.Direction);
             writer.Write(npm.Y);
             writer.Write(npm.Velocity.X);

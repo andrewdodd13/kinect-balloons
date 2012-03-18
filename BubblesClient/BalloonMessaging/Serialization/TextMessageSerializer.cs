@@ -82,7 +82,7 @@ namespace Balloons.Serialization
         {
             NewPlaneMessage npm = (NewPlaneMessage)m;
             args.Add(JValue.FromObject(npm.ObjectID));
-            args.Add(JValue.FromObject(npm.Type));
+            args.Add(JValue.FromObject(npm.PlaneType));
             args.Add(JValue.CreateString(Balloon.FormatDirection(npm.Direction)));
             args.Add(JValue.FromObject(npm.Y));
             args.Add(JValue.FromObject(npm.Velocity.X));
