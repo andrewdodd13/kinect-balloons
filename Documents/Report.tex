@@ -37,6 +37,9 @@
 \renewcommand{\cftsubsecfont}{\normalfont\sffamily}
 \renewcommand{\cftsubsecpagefont}{\normalfont\sffamily}
 
+\setlength{\cftsecnumwidth}{2.5em}
+\setlength{\cftsubsecnumwidth}{3.0em}
+
 \renewcommand{\cftloftitlefont}{\normalfont\sffamily\bfseries\Large}
 \renewcommand{\cftfigfont}{\normalfont\sffamily}
 \renewcommand{\cftfigpagefont}{\normalfont\sffamily}
@@ -70,6 +73,7 @@
 \fancyfoot[OL,ER]{\sffamily \thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{16pt}
 
 \newcommand\centerAlign[1]{%
   \raisebox{-\height}{#1}%
@@ -116,11 +120,7 @@
     \addtocounter{subsection}{1}
     \subsection*{\authortitle{\thesubsection\hspace*{1em}#1}{#2}}
 }
-\newcommand{\subsectionspeaker}[2]{
-    %\subsectionauthornotoc{#1}{External speaker: #2}
-    \subsection[#1]{\authortitle{#1}{External speaker: #2}}
-}
-\newcommand{\meetinginfo}[1]{\textit{\footnotesize #1}{\footnotesize \par}}
+
 \newcommand{\appendixauthor}[2]{
     \addtocounter{section}{1}
     \addcontentsline{toc}{section}{\Alph{section} \hspace{0.1mm} \authortoctitle{Appendix: #1}{#2}}

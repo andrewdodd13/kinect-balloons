@@ -15,6 +15,8 @@ The requirements are as follows:
 \item{Let an administrator be able to remove articles if they are found to be offensive or inadequate}
 \end{itemize}
 
+\clearpage{}
+
 \subsection{Design}
 It was very obvious from the beginning that trying to submit an article using the screens and the Kinect interface was going to present a problem. It was therefore decided that a website should be built for the user to perform this process. This would allow them more flexibility and the more familiar interface of the mouse and keyboard.
 
@@ -100,6 +102,7 @@ thereby saving more space in our database.
 
 The database schema was therefore as follows: 
 
+\singlespacing
 \begin{verbatim}ContentID	BIGINT UNSIGNED NOT NULL AUTO_INCREMENT
 Title		VARCHAR (255)
 SubmittedBy	VARCHAR (10)
@@ -110,12 +113,15 @@ BalloonColour	CHAR (6) DEFAULT FFFFFF
 ImageURL	VARCHAR (255)
 Votes		INT (11) DEFAULT 0
 GivenName	VBARCHAR (50)\end{verbatim}
+\onehalfspacing
 
 This gives the system all the information it needs to send information on news articles to the feed. The content ID is just a primary key to identify each row. The title, excerpt and URL are all information on the article to submit. The image is stored as a URL which points to a location on the systems web space. Information on the user is also stored. For reasons of privacy the user can specify which name they wish to be known by, however their real user ID is recorded too in the submitted by field.
 
 \subsection{Website Code Structure}
 The structure was based on CodeIgniter's structure. CodeIgniter has a strong Model, View, Controller set up so it would make code clearer and more modular. The overall layout of the website will now be looked at and then the main sections will be covered in depth. This will start with the folder structure of CodeIgniter (Only important folders shown). Note that this backend was also used for deploying the balloon content to screens, though that will be covered later.
 
+\newpage
+\singlespacing
 \begin{verbatim}application/
     config/
     controllers/
@@ -123,6 +129,7 @@ The structure was based on CodeIgniter's structure. CodeIgniter has a strong Mod
     views/
 included/
 uploads/\end{verbatim}
+\onehalfspacing
 
 These are the main directories that have been modified. There are several other directories but they just contain base CodeIgniter functionality which is not important here. The application folder contains all the PHP scripts required to create the website. This is where all the development is done. The included folder stores any CSS, JavaScript and additional pictures or material for design. Uploads is where the pictures are stored for use with the balloons. This allows the screen easy access to the pictures by getting them from this folder and saves space in the database.
 
@@ -130,6 +137,6 @@ Within the application folder are the files that are most important. The config 
 
 The controllers folder contains the entry point for different parts of the application. For example the login page is controlled by the login controller. For more information on the model view controller architecture see \url{http://en.wikipedia.org/wiki/Model\%E2\%80\%93view\%E2\%80\%93controller}. There are three controllers for the content submission part of this website. These are the welcome.php which handles the login page and the functionality of users logging in, content\_manager.php which handles the displaying and removing of content from the database and finally submit\_content.php which handles the submission form and submission of news articles.
 
-The models folder contains classes for interacting with the database and any other input/output that has to happen. There are just two models, one for users and one for content. The users model is for checking for valid users against MACS user database using the Linux getpwnam command. This encrypts the password the user provides and checks it against the encrypted form on the MACS network. The content model interacts with the database which stores content. It performs functions such as adding, getting and removing content from the database.
+The models folder contains classes for interacting with the database and any other I/O that has to happen. There are just two models, one for users and one for content. The users model is for checking for valid users against MACS user database using the Linux getpwnam command. This encrypts the password the user provides and checks it against the encrypted form on the MACS network. The content model interacts with the database which stores content. It performs functions such as adding, getting and removing content from the database.
 
 The views folder contains all the HTML pages that get sent to the user. Each of these pages is called by a controller so there are three views. One for logging in, one for displaying content and finally one for letting users submit content. To create the header there is an includes folder. The includes folder contains a template, header and footer. The template is a view that loads the header, main page and footer onto one page. The header and footer are just HTML pages that contain that start and end of the web page. None of the main pages therefore have the HTML tags or HEAD tags. 
