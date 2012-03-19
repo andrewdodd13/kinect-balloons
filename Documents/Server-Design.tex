@@ -51,10 +51,176 @@ and push them away when users might be interacting with them.
 \clearpage{}
 \subsection{Design}
 
+As the server is a self-contained part of the project, we have decided to 
+develop it as a separate program. This allowed us to have clear interfaces 
+between the server and other parts of the project and made it easier for
+multiple people to work on different parts of the project at the same time.
+Most of the communication happens between the client and the server, which 
+meant that writing the server in the same language than the client (C\#) let us 
+share much code between the two and let the client team focus on client issues 
+and not network issues.
+
+The server communicates with the feed through the standard HTTP protocol 
+(using JSON to format feed data) and with the Balloon Client through a custom 
+protocol that is used over TCP/IP sockets. The former choice was decided by the 
+Web team and motivated by ease of use and reuse of existing libraries. As far 
+as we are aware there is no existing protocol that lets coordinating content
+balloons over different screens, therefore we had to create our own. Using 
+sockets instead of leveraging higher-level communication frameworks was chosen 
+to make debugging easier by writing explicit code at the expense of writing 
+more code.
+
 \subsubsection{Messaging}
 
-\subsubsection{Persistance}
+There is in general two ways to communicate between two applications: messaging 
+and Remote Procedure Call. We have chosen the former as we have some experience 
+with it. We also believe it is easier to design a networked application when 
+requests and responses are represented and passed around explicitly (e.g. as 
+messages). In particular, the messaging approach makes it easier (and obvious) 
+in which thread a message is processed. This is especially important in the 
+client where updating and drawing the game must be done in a special thread.
+
+With a messaging approach, the interface between client and server is defined by 
+a set of messages that can be sent by one or the other or both (see figures 
+\ref{ServerMessages}, \ref{ClientMessages} and \vref{CommonMessages}).
+
+\begin{table}
+\begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
+\hline 
+Name & Parameters & Description\tabularnewline
+\hline 
+NewBalloon
+& Balloon ID 
+\newline Direction
+\newline Position (Y)
+\newline Velocity (X, Y)
+& A new balloon should appear on the screen at the given screen height (Y position),
+with the given direction and on the side of the screen given by the direction.
+\tabularnewline
+\hline 
+NewPlane
+& Plane ID 
+\newline Plane type
+\newline Direction
+\newline Position (Y)
+\newline Velocity (X, Y)
+\newline Time
+& A new plane should appear on the screen at the given screen height (Y position),
+with the given direction, on the side of the screen given by the direction, with
+a message given by its type and with the specified initial animation time.
+\tabularnewline
+\hline 
+BalloonContentUpdate
+& Balloon ID 
+\newline Balloon type
+\newline Label
+\newline Content
+\newline URL
+\newline Image URL
+& Indicates that the content of the specified balloon (caption label, content
+text to display when the balloon is popped, URL to the article, URL to the image) 
+has been changed. 
+\tabularnewline
+\hline 
+\end{tabular}
+
+\caption{Messages sent by the server}
+
+\label{ServerMessages}
+\end{table}
+
+\begin{table}
+\begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
+\hline 
+Name & Parameters & Description\tabularnewline
+\hline 
+ChangeScreen
+& Balloon ID 
+\newline Direction
+\newline Position (Y)
+\newline Velocity (X, Y)
+\newline Time
+& The given balloon or plane moved off the screen at the given screen height (Y position),
+with the given direction and on the side of the screen given by the direction. For planes,
+the time value is the current animation time.
+\tabularnewline
+\hline 
+GetBalloonContent
+& Balloon ID
+& Request that the content of the specified balloon be sent to the client.
+\tabularnewline
+\hline 
+GetBalloonState
+& Balloon ID
+& Request that the state of the specified balloon be sent to the client.
+\tabularnewline
+\hline 
+\end{tabular}
+
+\caption{Messages sent by the client}
+
+\label{ClientMessages}
+\end{table}
+
+\begin{table}
+\begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
+\hline 
+Name & Parameters & Description\tabularnewline
+\hline 
+PopObject
+& Balloon ID or plane ID
+& When sent by the client, indicates that the user popped the specified balloon.
+When sent by the server, indicates that the specified balloon or plane has been 
+removed from the screen (after updating the feed).
+\tabularnewline
+\hline 
+BalloonStateUpdate
+& Balloon ID
+\newline Overlay type
+\newline Background colour
+\newline Number of votes
+& Indicates that the state of the given balloon (overlay texture, background colour
+and number of votes) has been changed. This can be sent by the server when the 
+number of votes changes or by the client when the user changes a balloon's 
+decoration with paint buckets.
+\tabularnewline
+\hline 
+\end{tabular}
+
+\caption{Messages sent by both client and server}
+
+\label{CommonMessages}
+\end{table}
+
 
 \subsubsection{Threading}
 
+[Multiple sockets, async I/O, message handling, synchronised queues]
+
+\subsubsection{Persistance}
+
+By persistance, we mean saving the balloon data manipulated by the server between 
+executions. Persisting balloon data means that when shutting down the 
+server and then starting it again this data would be preserved. Since it 
+originates from the feed and can be re-queried at will, we have chosen not to
+have any persistance for balloon data. However, some data is persisted across 
+execution as we will see in the next section about configuration.
+
+Even though we have made this choice, this does not mean persistance could not 
+be implemented for this project in the future. The serialisation and message 
+classes we wrote to support communication between client and server could be 
+reused fairly easily to this end (e.g. serialising messages to a buffer and 
+then writing this buffer to a file).
+
 \subsection{Configuration}
+
+This part of the application was at the beginning only intended to be used by 
+the server but was later extended to the client as well. It puts together many 
+variables that change the behaviour of the application (e.g. how many balloons 
+to show on each screen, which URL to query the feed from, how often it  
+should be queried, etc). The value of these variables can be written to or read 
+from a file by the application. We have chosen the JSON format for such files, 
+which is easily manipulated with a text editor. When the server (or client) is 
+started and this file does not exist, a file containing default values for the 
+variables is created.
+
