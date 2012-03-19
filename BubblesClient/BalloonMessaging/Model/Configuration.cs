@@ -55,6 +55,11 @@ namespace Balloons.Messaging.Model
         /// Whether to log or not the messages sent and received from the network.
         /// </summary>
         public static bool LogNetworkMessages = false;
+        /// <summary>
+        /// How big the dead zone is relative to the size of a balloon. Behaviour 
+        /// is undefined if this is less than or equal to 1.0f.
+        /// </summary>
+        public static float BalloonDeadzoneMultiplier = 1.1f;
         #endregion
 
         #region Client settings
@@ -75,6 +80,30 @@ namespace Balloons.Messaging.Model
         /// </summary>
         public static int MessageDisplayTime = 30 * 1000;      // TODO TimeSpan?
         /// <summary>
+        /// How long (in ms) the balloon pop animation should be shown.
+        /// </summary>
+        public static int PopAnimationTime = 2500;
+        /// <summary>
+        /// Whether the balloon pop animation is enabled or disabled (in that case the pop texture is static).
+        /// </summary>
+        public static bool PopAnimationEnabled = true;
+        /// <summary>
+        /// Alpha parameter of the balloon pop animation. Controls how much smaller/bigger the texture becomes.
+        /// </summary>
+        public static float PopAnimationAlpha = 0.3f;
+        /// <summary>
+        /// Beta parameter of the balloon pop animation. Controls how fast the size of the texture changes.
+        /// </summary>
+        public static float PopAnimationBeta = 5.0f;
+        /// <summary>
+        /// Scale parameter of the balloon pop animation.
+        /// </summary>
+        public static float PopAnimationScale = 2.0f;
+        /// <summary>
+        /// Use HTML for rendering content boxes
+        /// </summary>
+        public static bool UseHtmlRendering = true;
+        /// <summary>
         /// IP address of the server to connect to.
         /// </summary>
         public static IPAddress RemoteIPAddress = IPAddress.Loopback;
@@ -90,7 +119,7 @@ namespace Balloons.Messaging.Model
         /// The minimum speed a hand must be moving to be valid to clap
         /// Units are meters/sec
         /// </summary>
-        public static float KinectMovementThreshold = 10;
+        public static float KinectMovementThreshold = 2;
         /// <summary>
         /// The minimum range a hand must be from a balloon before it is valid to burt it
         /// Units are meters
@@ -101,7 +130,15 @@ namespace Balloons.Messaging.Model
         /// Also used as tolerance angle for if hands are moving towards each other
         /// Unit is cos(angle) [Range 0 to 1]
         /// </summary>
-        public static double KinectMinAttackAngle = 0.5;
+        public static double KinectMinAttackAngle = 0.4;
+        /// <summary>
+        /// The multiplier applied to kinect sensor input in the x axis
+        /// </summary>
+        public static float KinectXSensitivity = 1.5f;
+        /// <summary>
+        /// The multiplier applied to kinect sensor input in the y axis
+        /// </summary>
+        public static float KinectYSensitivity = 2.0f;
         #endregion
 
         #region Server settings
@@ -131,14 +168,26 @@ namespace Balloons.Messaging.Model
         public static int MaxBalloonsPerScreen = 5;
         /// <summary>
         /// When a screen disconnects, its balloon randomly move to either the left or right edge of the screen.
-        /// This is the velocity given to a balloon which moves to the right side of the screen.
+        /// This is the velocity given to a balloon which moves to the left side of the screen.
         /// </summary>
-        public static Vector2D VelocityLeft = new Vector2D(-10.0f, 0.0f);
+        public static Vector2D BalloonVelocityLeft = new Vector2D(-10.0f, 0.0f);
         /// <summary>
         /// When a screen disconnects, its balloon randomly move to either the left or right edge of the screen.
-        /// This is the velocity given to a balloon which moves to the left side of the screen.
+        /// This is the velocity given to a balloon which moves to the right side of the screen.
         /// </summary
-        public static Vector2D VelocityRight = new Vector2D(10.0f, 0.0f);
+        public static Vector2D BalloonVelocityRight = new Vector2D(10.0f, 0.0f);
+        /// <summary>
+        /// This is the velocity given to a plane which moves to the left side of the screen.
+        /// </summary>
+        public static Vector2D PlaneVelocityLeft = new Vector2D(-2.0f, 0.0f);
+        /// <summary>
+        /// This is the velocity given to a plane which moves to the right side of the screen.
+        /// </summary
+        public static Vector2D PlaneVelocityRight = new Vector2D(2.0f, 0.0f);
+        /// <summary>
+        /// Initial Y value for a plane (normalised, so in [0.0;1.0]).
+        /// </summary>
+        public static float PlaneInitialY = 0.5f;
         #endregion
 
         #region Implementation
@@ -186,6 +235,7 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "LogFilePath", LogFilePath);
             StoreValue(settings, "SerializerType", SerializerType);
             StoreValue(settings, "LogNetworkMessages", LogNetworkMessages);
+            StoreValue(settings, "BalloonDeadzoneMultiplier", BalloonDeadzoneMultiplier);
 
             // client settings
             StoreValue(settings, "InputType", InputType);
@@ -193,12 +243,20 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "ScreenWidth", ScreenWidth);
             StoreValue(settings, "ScreenHeight", ScreenHeight);
             StoreValue(settings, "MessageDisplayTime", MessageDisplayTime);
+            StoreValue(settings, "PopAnimationTime", PopAnimationTime);
+            StoreValue(settings, "PopAnimationEnabled", PopAnimationEnabled);
+            StoreValue(settings, "PopAnimationAlpha", PopAnimationAlpha);
+            StoreValue(settings, "PopAnimationBeta", PopAnimationBeta);
+            StoreValue(settings, "PopAnimationScale", PopAnimationScale);
+            StoreValue(settings, "UseHtmlRendering", UseHtmlRendering);
             StoreValue(settings, "RemoteIPAddress", RemoteIPAddress);
             StoreValue(settings, "RemotePort", RemotePort);
             StoreValue(settings, "EnableHighFive", EnableHighFive);
             StoreValue(settings, "KinectMovementThreshold", KinectMovementThreshold);
             StoreValue(settings, "KinectMaxHandRange", KinectMaxHandRange);
             StoreValue(settings, "KinectMinAttackAngle", KinectMinAttackAngle);
+            StoreValue(settings, "KinectXSensitivity", KinectXSensitivity);
+            StoreValue(settings, "KinectYSensitivity", KinectYSensitivity);
 
             // server settings
             StoreValue(settings, "LocalIPAddress", LocalIPAddress);
@@ -207,9 +265,11 @@ namespace Balloons.Messaging.Model
             StoreValue(settings, "FeedTimeout", FeedTimeout);
             StoreValue(settings, "MinBalloonsPerScreen", MinBalloonsPerScreen);
             StoreValue(settings, "MaxBalloonsPerScreen", MaxBalloonsPerScreen);
-
-            StoreValue(settings, "VelocityLeft", VelocityLeft);
-            StoreValue(settings, "VelocityRight", VelocityRight);
+            StoreValue(settings, "BalloonVelocityLeft", BalloonVelocityLeft);
+            StoreValue(settings, "BalloonVelocityRight", BalloonVelocityRight);
+            StoreValue(settings, "PlaneVelocityLeft", PlaneVelocityLeft);
+            StoreValue(settings, "PlaneVelocityRight", PlaneVelocityRight);
+            StoreValue(settings, "PlaneInitialY", PlaneInitialY);
 
             // write the settings to the configuration file, as JSON
             string jsonText = settings.ToString();
@@ -253,6 +313,7 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "LogFilePath", ref LogFilePath);
             LoadValue(settings, "SerializerType", ref SerializerType);
             LoadValue(settings, "LogNetworkMessages", ref LogNetworkMessages);
+            LoadValue(settings, "BalloonDeadzoneMultiplier", ref BalloonDeadzoneMultiplier);
 
             // client settings
             LoadValue(settings, "InputType", ref InputType);
@@ -260,12 +321,20 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "ScreenWidth", ref ScreenWidth);
             LoadValue(settings, "ScreenHeight", ref ScreenHeight);
             LoadValue(settings, "MessageDisplayTime", ref MessageDisplayTime);
+            LoadValue(settings, "PopAnimationTime", ref PopAnimationTime);
+            LoadValue(settings, "PopAnimationEnabled", ref PopAnimationEnabled);
+            LoadValue(settings, "PopAnimationAlpha", ref PopAnimationAlpha);
+            LoadValue(settings, "PopAnimationBeta", ref PopAnimationBeta);
+            LoadValue(settings, "PopAnimationScale", ref PopAnimationScale);
+            LoadValue(settings, "UseHtmlRendering", ref UseHtmlRendering);
             LoadValue(settings, "RemoteIPAddress", ref RemoteIPAddress);
             LoadValue(settings, "RemotePort", ref RemotePort);
             LoadValue(settings, "EnableHighFive", ref EnableHighFive);
             LoadValue(settings, "KinectMovementThreshold", ref KinectMovementThreshold);
             LoadValue(settings, "KinectMaxHandRange", ref KinectMaxHandRange);
             LoadValue(settings, "KinectMinAttackAngle", ref KinectMinAttackAngle);
+            LoadValue(settings, "KinectXSensitivity", ref KinectXSensitivity);
+            LoadValue(settings, "KinectYSensitivity", ref KinectYSensitivity);
 
             // server settings
             LoadValue(settings, "LocalIPAddress", ref LocalIPAddress);
@@ -274,9 +343,11 @@ namespace Balloons.Messaging.Model
             LoadValue(settings, "FeedTimeout", ref FeedTimeout);
             LoadValue(settings, "MinBalloonsPerScreen", ref MinBalloonsPerScreen);
             LoadValue(settings, "MaxBalloonsPerScreen", ref MaxBalloonsPerScreen);
-
-            LoadValue(settings, "VelocityLeft", ref VelocityLeft);
-            LoadValue(settings, "VelocityRight", ref VelocityRight);
+            LoadValue(settings, "BalloonVelocityLeft", ref BalloonVelocityLeft);
+            LoadValue(settings, "BalloonVelocityRight", ref BalloonVelocityRight);
+            LoadValue(settings, "PlaneVelocityLeft", ref PlaneVelocityLeft);
+            LoadValue(settings, "PlaneVelocityRight", ref PlaneVelocityRight);
+            LoadValue(settings, "PlaneInitialY", ref PlaneInitialY);
         }
 
         private static bool LoadValue<T>(JObject settings, string key, ref T val)

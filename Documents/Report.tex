@@ -1,0 +1,231 @@
+\documentclass[12pt,twoside,english,hyphens]{article}
+\usepackage{charter}
+\usepackage{helvet}
+\usepackage[scaled=0.9]{beramono}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper]{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\setcounter{tocdepth}{2}
+\usepackage{babel}
+\usepackage{array}
+\usepackage{varioref}
+\usepackage{float}
+\usepackage{url}
+\usepackage{amstext}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{longtable}
+\onehalfspacing
+\usepackage[unicode=true,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=false,
+ breaklinks=false,pdfborder={0 0 0},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{pdftitle={Design \& Code Group Project --- Report},
+ pdfauthor={Dodd, Hill, Macrae, Oswald, Reily, Roblin, Saulais, Truesdale and Wyllie}}
+ 
+\makeatletter
+
+\renewcommand{\sfdefault}{FranklinGothic}
+
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\normalfont\sffamily\bfseries\huge}
+\setlength{\cftaftertoctitleskip}{1.0cm}
+\renewcommand{\cftsecfont}{\normalfont\sffamily\bfseries\large}
+\renewcommand{\cftsecpagefont}{\normalfont\sffamily\bfseries\large}
+\renewcommand{\cftsubsecfont}{\normalfont\sffamily}
+\renewcommand{\cftsubsecpagefont}{\normalfont\sffamily}
+
+\setlength{\cftsecnumwidth}{2.5em}
+\setlength{\cftsubsecnumwidth}{3.0em}
+
+\renewcommand{\cftloftitlefont}{\normalfont\sffamily\bfseries\Large}
+\renewcommand{\cftfigfont}{\normalfont\sffamily}
+\renewcommand{\cftfigpagefont}{\normalfont\sffamily}
+\renewcommand{\cftlottitlefont}{\normalfont\sffamily\bfseries\Large}
+\renewcommand{\cfttabfont}{\normalfont\sffamily}
+\renewcommand{\cfttabpagefont}{\normalfont\sffamily}
+
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries\sffamily}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\sffamily}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\bfseries\sffamily}{\thesubsubsection}{1em}{}
+\titleformat*{\paragraph}{\normalfont\bfseries\sffamily}
+
+\titlespacing*{\section} {0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titlespacing*{\subsection} {0pt}{1.0ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\titlespacing*{\subsubsection}{0pt}{1.0ex plus 1ex minus .2ex}{0.0ex plus .2ex}
+
+%% superscript for citations
+\def\@cite#1#2{$^{\mbox{\scriptsize [#1\if@tempswa , #2\fi]}}$}
+
+\usepackage{pdfpages}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{parskip}
+\setlength{\parindent}{0pt}
+\fancyhead{}
+\fancyhead[OL,EL]{\sffamily \leftmark}
+\fancyfoot{}
+\fancyfoot[EL]{\sffamily Design \& Code Group Project --- Report}
+\fancyfoot[OR]{\sffamily Dodd, Hill, Macrae, Oswald, Reily, Roblin, Saulais, Truesdale and Wyllie}
+\fancyfoot[OL,ER]{\sffamily \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{16pt}
+
+\newcommand\centerAlign[1]{%
+  \raisebox{-\height}{#1}%
+}
+\newcommand\bottomAlign[1]{%
+  \raisebox{-0.5\height}{#1}%
+}
+
+%% Initial page numbering
+\pagenumbering{roman}
+
+\newcommand{\sectiontitle}[0]{}
+\newcommand{\subsectiontitle}[0]{}
+\renewcommand{\sectionmark}[1]{
+    \markboth{#1}{}
+    \renewcommand{\sectiontitle}{#1}
+}
+\renewcommand{\subsectionmark}[1]{
+    \renewcommand{\subsectiontitle}{#1}
+}
+
+\newcommand{\authortitle}[2]{#1\hfill{}\textmd{\textit{\textrm{\small #2}}}}
+\newcommand{\authorheadertitle}[2]{#1\hfill{}#2}
+\newcommand{\authortoctitle}[2]{#1\hspace*{0.5em}\textmd{\textit{\textrm{\small (#2)}}}}
+
+\newcommand{\sectionauthor}[2]{
+    \section[\authortoctitle{#1}{#2}]{#1}%{\authortitle{#1}{#2}}
+    \markboth{\authorheadertitle{#1}{#2}}{}
+}
+\newcommand{\subsectionauthor}[2]{
+    \subsection[\authortoctitle{#1}{#2}]{#1}%{\authortitle{#1}{#2}}
+    \markboth{\authorheadertitle{\sectiontitle \ --- #1}{#2}}{}
+}
+\newcommand{\subsubsectionauthor}[2]{
+    \subsubsection[#1]{#1}%{\authortitle{#1}{#2}}}
+    \markboth{\authorheadertitle{\sectiontitle \ --- \subsectiontitle}{#2}}{}
+}
+
+\newcommand{\sectionauthornotoc}[2]{
+    \section*{#1}
+    \markboth{\authorheadertitle{#1}{#2}}{}
+}
+\newcommand{\subsectionauthornotoc}[2]{
+    \addtocounter{subsection}{1}
+    \subsection*{\authortitle{\thesubsection\hspace*{1em}#1}{#2}}
+}
+
+\newcommand{\appendixauthor}[2]{
+    \addtocounter{section}{1}
+    \addcontentsline{toc}{section}{\Alph{section} \hspace{0.1mm} \authortoctitle{Appendix: #1}{#2}}
+    \markboth{\authorheadertitle{Appendix: #1}{#2}}{}
+}
+
+\newcommand{\appendixsection}[1]{
+    \addtocounter{section}{1}
+    \addcontentsline{toc}{section}{\Alph{section} \hspace{0.1mm} Appendix: #1}
+    \markboth{Appendix: #1}{}
+}
+
+% Code listings
+
+\lstset{extendedchars=false}
+\lstset{breaklines=true, breakatwhitespace=true, keywordstyle=\color{blue}, commentstyle=\itshape, basicstyle=\ttfamily\small, tabsize=4,  showstringspaces=false}
+%\lstset{numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, %showstringspaces=false}
+
+\newcommand{\codelisting}[1]{
+  \singlespacing
+  \lstinputlisting{#1}
+  \onehalfspacing
+}
+
+% numbered equations
+\renewcommand\[{\begin{equation}}
+\renewcommand\]{\end{equation}}
+
+\newcommand{\tm}{\textsuperscript{TM}}
+
+\@ifundefined{showcaptionsetup}{}{%
+ \PassOptionsToPackage{caption=false}{subfig}}
+\usepackage{subfig}
+\makeatother
+
+\begin{document}
+\includepdf{FrontPage.pdf}
+
+\tocloftpagestyle{fancy}
+
+\tableofcontents{}
+
+\clearpage{}
+
+\listoffigures
+\listoftables
+\clearpage{}
+
+\pagenumbering{arabic}
+
+\input{Introduction.tex}
+
+\clearpage{}
+\sectionauthor{Specifications}{Lauren Hill \& John Truesdale}
+\input{Specifications.tex}
+
+\clearpage{}
+\sectionauthor{Research}{Ryan Oswald}
+%\input{Research.tex}
+
+\clearpage{}
+\sectionauthor{Project Structure}{Lauren Hill \& John Truesdale}
+\input{Project-Structure.tex}
+
+\clearpage{}
+\sectionauthor{Design}{Lauren Hill \& John Truesdale}
+\input{Design.tex}
+
+\clearpage{}
+\sectionauthor{System Architecture}{Andrew Dodd}
+\input{System-Architecture.tex}
+
+\clearpage{}
+\sectionauthor{Client Design}{Andrew Dodd}
+\input{Client-Design.tex}
+
+\clearpage{}
+\sectionauthor{Kinect Input \& Gestures}{William Reily}
+\input{Kinect-Input-Gestures.tex}
+
+\clearpage{}
+\sectionauthor{Server Design}{Brieuc Roblin \& Pierre-Andr\'{e} Saulais}
+%\input{Server-Design.tex}
+
+\clearpage{}
+\sectionauthor{Web Feed Design}{Christopher Wyllie}
+\input{Feed-Design.tex}
+
+\clearpage{}
+\sectionauthor{Content Submission}{Alexander Macrae}
+\input{Website-Design.tex}
+
+\clearpage{}
+\input{Conclusion.tex}
+
+\clearpage{}
+\appendix
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{flushright}
+\textsf{\textbf{\huge Appendices}}\vspace*{\fill}
+\par\end{flushright}
+\vspace*{\fill}
+\pagebreak{}
+
+\section{Appendix: Configuration File}
+
+\end{document}

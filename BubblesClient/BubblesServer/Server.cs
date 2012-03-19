@@ -21,8 +21,10 @@ namespace Balloons.Server
                                   ProtocolType.Tcp);
             m_queue = new CircularQueue<Message>(64);
             m_nextScreenID = 0;
+            m_nextPlaneID = 0;
             m_screens = new List<Screen>();
             m_bubbles = new Dictionary<string, ServerBalloon>();
+            m_planes = new Dictionary<string, ServerPlane>();
             m_feed = new FeedReader(this, Configuration.FeedURL, Configuration.FeedTimeout);
             m_feed.Start();
             
@@ -114,6 +116,16 @@ namespace Balloons.Server
             }
             return null;
         }
+
+        internal ServerPlane GetPlane(string planeID)
+        {
+            ServerPlane p;
+            if (m_planes.TryGetValue(planeID, out p))
+            {
+                return p;
+            }
+            return null;
+        }
         
         private Screen GetScreen(int screenID) {
             foreach(Screen v in m_screens) {
@@ -135,9 +147,11 @@ namespace Balloons.Server
         private int m_port;
         private Socket m_socket;
         private CircularQueue<Message> m_queue;
-        private int m_nextScreenID;
         private List<Screen> m_screens;
+        private int m_nextScreenID;
         private Dictionary<string, ServerBalloon> m_bubbles;
+        private Dictionary<string, ServerPlane> m_planes;
+        private int m_nextPlaneID;
         private FeedReader m_feed;
         
         private Random m_random;
@@ -164,8 +178,10 @@ namespace Balloons.Server
                 return HandleChangeScreen((ChangeScreenMessage)msg);
             case MessageType.NewBalloon:
                 return HandleNewBalloon((NewBalloonMessage)msg);
-            case MessageType.PopBalloon:
-                return HandlePopBalloon((PopBalloonMessage)msg);
+            case MessageType.NewPlane:
+                return HandleNewPlane((NewPlaneMessage)msg);
+            case MessageType.PopObject:
+                return HandlePopObject((PopObjectMessage)msg);
             case MessageType.GetBalloonContent:
                 return HandleGetBalloonContent((GetBalloonContentMessage)msg);
             case MessageType.GetBalloonState:
@@ -207,7 +223,7 @@ namespace Balloons.Server
             Trace.WriteLine(String.Format("Screen disconnected: {0}", s.ID));
 
             // Gets screen's balloons
-            var balloons = s.Balloons;
+            var balloons = BallonsOnScreen(s.ID);
             // Gets left and right screens
             Screen left = GetPreviousScreen(s);
             Screen right = GetNextScreen(s);
@@ -215,28 +231,35 @@ namespace Balloons.Server
                 // if next or previous screen are equal to current screen
                 // it means that this was the last screen left
                 m_bubbles.Clear();
+                m_planes.Clear();
             } else {
-                foreach(ServerBalloon balloon in balloons.Values)
+                foreach(ServerBalloon balloon in balloons)
                 {
                     // Choose randomly between left or right screen
-                    int random = m_random.Next(1);
+                    int random = m_random.Next(2);
                     Screen newScreen = null;
                     NewBalloonMessage nbm = null;
                     if(random == 0) {
                         newScreen = left;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Right,
-                                                    0.1f, Configuration.VelocityLeft);
+                                                    0.1f, Configuration.BalloonVelocityLeft);
                     } else {
                         newScreen = right;
                         nbm = new NewBalloonMessage(balloon.ID, Direction.Left,
-                                                    0.1f, Configuration.VelocityRight);
+                                                    0.1f, Configuration.BalloonVelocityRight);
                     }
                     balloon.Screen = newScreen;
                     if(newScreen != null)
                     {
-                        newScreen.Balloons.Add(nbm.BalloonID, balloon);
                         newScreen.Connection.SendMessage(nbm);
                     }
+                }
+
+                // Remove any plane present in the screen
+                foreach (ServerPlane plane in m_planes.Values)
+                {
+                    // Use enqueue so that the map isn't changed during iteration
+                    EnqueueMessage(new PopObjectMessage(plane.ID));
                 }
             }
             m_screens.Remove(s);
@@ -246,41 +269,67 @@ namespace Balloons.Server
         private bool HandleChangeScreen(ChangeScreenMessage csm)
         {
             Screen oldScreen = (Screen)csm.Sender;
-            if(oldScreen != null)
-            {
-                oldScreen.Balloons.Remove(csm.BalloonID);
-            }
             Screen newScreen = ChooseNewScreen(oldScreen, csm.Direction);
-            ServerBalloon balloon = GetBalloon(csm.BalloonID);
-            if(balloon == null)
+
+            if (newScreen == null)
             {
-                // balloon was removed and client wasn't notified yet
                 return true;
             }
-            balloon.Screen = newScreen;
+
             Direction newDirection = csm.Direction;
-            if(csm.Direction == Direction.Left)
+            if (csm.Direction == Direction.Left)
             {
                 newDirection = Direction.Right;
             }
-            else if(csm.Direction == Direction.Right)
+            else if (csm.Direction == Direction.Right)
             {
                 newDirection = Direction.Left;
             }
-            if(newScreen != null)
+
+            if (IsPlane(csm.ObjectID))
             {
-                newScreen.Balloons.Add(csm.BalloonID, balloon);
+                ServerPlane p = GetPlane(csm.ObjectID);
+                if (p == null)
+                {
+                    return true;
+                }
+                p.Ttl--;
+                
+                if (p.Ttl > 0)
+                {
+                    Trace.WriteLine(String.Format("Plane {0} changed screens and has now TTL={1}.", p.ID, p.Ttl));
+                    p.Screen = newScreen;
+                    newScreen.Connection.SendMessage(new NewPlaneMessage(
+                        csm.ObjectID, p.Type, newDirection, csm.Y, csm.Velocity, csm.Time));
+                }
+                else
+                {
+                    // the plane has no time left to live
+                    Trace.WriteLine(String.Format("Plane {0}'s time has come.", p.ID));
+                    PopObjectMessage pom = new PopObjectMessage(csm.ObjectID);
+                    pom.Sender = p.Screen;
+                    HandlePopObject(pom);
+                }
+            }
+            else
+            {
+                ServerBalloon b = GetBalloon(csm.ObjectID);
+                if (b == null)
+                {
+                    return true;
+                }
+                b.Screen = newScreen;
                 newScreen.Connection.SendMessage(new NewBalloonMessage(
-                    csm.BalloonID, newDirection, csm.Y, csm.Velocity));    
+                    csm.ObjectID, newDirection, csm.Y, csm.Velocity)); 
             }
             return true;
         }
         
         private bool HandleNewBalloon(NewBalloonMessage nbm)
         {
-            if(m_bubbles.ContainsKey(nbm.BalloonID)) {
+            if(m_bubbles.ContainsKey(nbm.ObjectID)) {
                 // Balloon already present !
-                Trace.WriteLine(String.Format("Balloon {0} already present!", nbm.BalloonID));
+                Trace.WriteLine(String.Format("Balloon {0} already present!", nbm.ObjectID));
                 return true;
             }
             if(m_screens.Count == 0) {
@@ -288,39 +337,51 @@ namespace Balloons.Server
                 return true;
             }
    
-            ServerBalloon balloon = new ServerBalloon(nbm.BalloonID);
-            m_bubbles[nbm.BalloonID] = balloon;
-            if(m_screens.Count > 0 )
+            ServerBalloon balloon = new ServerBalloon(nbm.ObjectID);
+            m_bubbles[nbm.ObjectID] = balloon;
+            // choose a random screen
+            int screen_idx = m_random.Next(m_screens.Count);
+
+            // Notify screen with new ballon message
+            balloon.Screen = m_screens[screen_idx];
+            balloon.Screen.Connection.SendMessage(nbm);
+
+            return true;
+        }
+
+        private bool HandleNewPlane(NewPlaneMessage npm)
+        {
+            if (m_planes.ContainsKey(npm.ObjectID))
             {
-                // choose a random screen
-                int screen_idx = m_random.Next(m_screens.Count);
-                Screen screen = null;
-                if((0 <= screen_idx) || (screen_idx < m_screens.Count))
-                {
-                    screen = m_screens[screen_idx];
-                }
-                if(screen == null)
-                {
-                    Trace.WriteLine(String.Format(
-                        "Warning: random screen ID out of bounds: {0} ({1} screens)",
-                        screen_idx, m_screens.Count));
-                    return true;
-                }
-                balloon.Screen = screen;
-                screen.Balloons.Add(nbm.BalloonID, balloon);
-                screen.Connection.SendMessage(nbm);
+                // Plane already present !
+                Trace.WriteLine(String.Format("Plane {0} already present!", npm.ObjectID));
+                return true;
             }
-            else
+            if (m_screens.Count == 0)
             {
-                balloon.Screen = null;
+                // No screen to display balloon -- sad
+                return true;
             }
+
+            ServerPlane plane = new ServerPlane(npm.ObjectID, npm.PlaneType);
+            plane.Ttl = m_screens.Count + 1;
+            m_planes[npm.ObjectID] = plane;
+
+            // choose a random screen
+            int screen_idx = m_random.Next(m_screens.Count);
+
+            // Notify screen with new plane message
+            plane.Screen = m_screens[screen_idx];
+            plane.Screen.Connection.SendMessage(npm);
+
+            Trace.WriteLine(String.Format("New plane {0} with TTL={1}.", npm.ObjectID, plane.Ttl));
 
             return true;
         }
         
         private bool HandleGetBalloonContent(GetBalloonContentMessage gbcm)
         {
-            ServerBalloon balloon = GetBalloon(gbcm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbcm.ObjectID);
             Screen screen = gbcm.Sender as Screen;
             if((balloon != null) && (screen != null))
             {
@@ -331,7 +392,7 @@ namespace Balloons.Server
 
         private bool HandleGetBalloonState(GetBalloonStateMessage gbdm)
         {
-            ServerBalloon balloon = GetBalloon(gbdm.BalloonID);
+            ServerBalloon balloon = GetBalloon(gbdm.ObjectID);
             Screen screen = gbdm.Sender as Screen;
             if((balloon != null) && (screen != null))
             {
@@ -342,24 +403,23 @@ namespace Balloons.Server
 
         private bool HandleBalloonContentUpdate(BalloonContentUpdateMessage bcm)
         {
-            bcm.UpdateContent(GetBalloon(bcm.BalloonID));
+            bcm.UpdateContent(GetBalloon(bcm.ObjectID));
             return true;
         }
 
         private bool HandleBalloonStateUpdate(BalloonStateUpdateMessage bdm)
         {
-            bdm.UpdateState(GetBalloon(bdm.BalloonID));
+            bdm.UpdateState(GetBalloon(bdm.ObjectID));
             return true;
         }
 
-        private bool HandlePopBalloon(PopBalloonMessage pbm)
+        private bool HandlePopObject(PopObjectMessage pbm)
         {
-            if(m_bubbles.ContainsKey(pbm.BalloonID))
+            if(m_bubbles.ContainsKey(pbm.ObjectID))
             {
-                ServerBalloon b = GetBalloon(pbm.BalloonID);
+                ServerBalloon b = GetBalloon(pbm.ObjectID);
                 if((b != null) && (b.Screen != null))
                 {
-                    b.Screen.Balloons.Remove(pbm.BalloonID);
                     if (!(pbm.Sender is Screen))
                     {
                         b.Screen.Connection.SendMessage(pbm);
@@ -372,7 +432,19 @@ namespace Balloons.Server
                         }
                     }
                 }
-                m_bubbles.Remove(pbm.BalloonID);
+                m_bubbles.Remove(pbm.ObjectID);
+            }
+            else if (m_planes.ContainsKey(pbm.ObjectID))
+            {
+                ServerPlane p = GetPlane(pbm.ObjectID);
+                if ((p != null) && (p.Screen != null))
+                {
+                    if (!(pbm.Sender is Screen))
+                    {
+                        p.Screen.Connection.SendMessage(pbm);
+                    }
+                }
+                m_planes.Remove(pbm.ObjectID);
             }
             return true;
         }
@@ -385,13 +457,12 @@ namespace Balloons.Server
             Dictionary<string, ServerBalloon> fromServer = m_bubbles;
             int old = fromServer.Count, popped = 0, added = 0;
 
-            foreach(KeyValuePair<string, ServerBalloon> i in fromServer)
+            foreach(ServerBalloon b in fromServer.Values)
             {
-                ServerBalloon b = i.Value;
                 // Check if the bubble need to be keept, or deleted
                 if(fromFeed.Find(c => c.ContentID == b.ID) == null) {
                     // Pop the balloon in the server not present in the feed
-                    EnqueueMessage(new PopBalloonMessage(b.ID), fm.Sender);
+                    EnqueueMessage(new PopObjectMessage(b.ID), fm.Sender);
                     popped++;
                 }
             }
@@ -401,7 +472,7 @@ namespace Balloons.Server
                 if(!fromServer.ContainsKey(i.ContentID)) {
                     // Add the new balloon to the server and send content and state
                     EnqueueMessage(new NewBalloonMessage(i.ContentID, Direction.Any,
-                        0.2f, Configuration.VelocityLeft), fm.Sender);
+                        0.2f, Vector2D.Zero), fm.Sender);
                     EnqueueMessage(new BalloonContentUpdateMessage(i.ContentID,
                         (BalloonType)i.Type, i.Title, i.Excerpt, i.URL, i.ImageURL), fm.Sender);
                     EnqueueMessage(new BalloonStateUpdateMessage(i.ContentID, 0,
@@ -409,6 +480,35 @@ namespace Balloons.Server
                     added++;
                 }
             }
+
+            // remove all existing planes
+            foreach (ServerPlane plane in m_planes.Values)
+            {
+                if (plane.Screen != null)
+                {
+                    plane.Screen.Connection.SendMessage(new PopObjectMessage(plane.ID));
+                }
+            }
+            m_planes.Clear();
+
+            // add a new plane
+            string planeID = String.Format("PLANE-{0}", m_nextPlaneID++);
+            PlaneType planeType = (PlaneType)m_random.Next((int)PlaneType.InvalidType);
+            Direction screenSide;
+            Vector2D velocity;
+            if (m_random.Next(2) == 0)
+            {
+                screenSide = Direction.Left;
+                velocity = Configuration.PlaneVelocityRight;
+            }
+            else
+            {
+                screenSide = Direction.Right;
+                velocity = Configuration.PlaneVelocityLeft;
+            }
+            EnqueueMessage(new PopObjectMessage(planeID));
+            EnqueueMessage(new NewPlaneMessage(planeID, planeType, screenSide, 
+                Configuration.PlaneInitialY, velocity, 0.0f));
 
             Trace.WriteLine(String.Format("Server had {0} balloons, popped {1}, added {2}", old, popped, added));
             return true;
@@ -426,6 +526,20 @@ namespace Balloons.Server
             {
                 Trace.WriteLine(String.Format("Error with accept: {0}", e));
             }
+        }
+
+        private List<ServerBalloon> BallonsOnScreen(int screenID)
+        {
+            Screen s = GetScreen(screenID);
+            List<ServerBalloon> ballons = new List<ServerBalloon>();
+            foreach (ServerBalloon b in m_bubbles.Values)
+            {
+                if (b.Screen == s)
+                {
+                    ballons.Add(b);
+                }
+            }
+            return ballons;
         }
 
         private Screen GetNextScreen(Screen s) {
@@ -464,6 +578,11 @@ namespace Balloons.Server
             } else {
                 return null;
             }
+        }
+
+        private bool IsPlane(string id)
+        {
+            return m_planes.ContainsKey(id);
         }
         #endregion
 	}

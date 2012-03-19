@@ -25,19 +25,22 @@ namespace Balloons.Serialization
             m_encoding = Encoding.UTF8;
             m_parsers = new Dictionary<string, MessageParser>();
             m_parsers.Add(NewBalloonMessage.Tag, ParseNewBalloon);
+            m_parsers.Add(NewPlaneMessage.Tag, ParseNewPlane);
             m_parsers.Add(ChangeScreenMessage.Tag, ParseChangeScreen);
             m_parsers.Add(BalloonContentUpdateMessage.Tag, ParseBalloonContentUpdate);
             m_parsers.Add(BalloonStateUpdateMessage.Tag, ParseBalloonStateUpdate);
-            m_parsers.Add(PopBalloonMessage.Tag, ParseBalloon);
-            m_parsers.Add(GetBalloonContentMessage.Tag, ParseBalloon);
-            m_parsers.Add(GetBalloonStateMessage.Tag, ParseBalloon);
+            m_parsers.Add(PopObjectMessage.Tag, ParseObject);
+            m_parsers.Add(GetBalloonContentMessage.Tag, ParseObject);
+            m_parsers.Add(GetBalloonStateMessage.Tag, ParseObject);
+            
 
             m_formatters = new Dictionary<string, MessageFormatter>();
             m_formatters.Add(NewBalloonMessage.Tag, FormatNewBalloon);
+            m_formatters.Add(NewPlaneMessage.Tag, FormatNewPlane);
             m_formatters.Add(ChangeScreenMessage.Tag, FormatChangeScreen);
             m_formatters.Add(BalloonContentUpdateMessage.Tag, FormatBalloonContentUpdate);
             m_formatters.Add(BalloonStateUpdateMessage.Tag, FormatBalloonStateUpdate);
-            m_formatters.Add(PopBalloonMessage.Tag, FormatBalloon);
+            m_formatters.Add(PopObjectMessage.Tag, FormatBalloon);
             m_formatters.Add(GetBalloonContentMessage.Tag, FormatBalloon);
             m_formatters.Add(GetBalloonStateMessage.Tag, FormatBalloon);
         }
@@ -68,27 +71,40 @@ namespace Balloons.Serialization
         private void FormatNewBalloon(JArray args, Message m)
         {
             NewBalloonMessage nbm = (NewBalloonMessage)m;
-            args.Add(JValue.FromObject(nbm.BalloonID));
+            args.Add(JValue.FromObject(nbm.ObjectID));
             args.Add(JValue.CreateString(Balloon.FormatDirection(nbm.Direction)));
             args.Add(JValue.FromObject(nbm.Y));
             args.Add(JValue.FromObject(nbm.Velocity.X));
             args.Add(JValue.FromObject(nbm.Velocity.Y));
         }
 
+        private void FormatNewPlane(JArray args, Message m)
+        {
+            NewPlaneMessage npm = (NewPlaneMessage)m;
+            args.Add(JValue.FromObject(npm.ObjectID));
+            args.Add(JValue.FromObject(npm.PlaneType));
+            args.Add(JValue.CreateString(Balloon.FormatDirection(npm.Direction)));
+            args.Add(JValue.FromObject(npm.Y));
+            args.Add(JValue.FromObject(npm.Velocity.X));
+            args.Add(JValue.FromObject(npm.Velocity.Y));
+            args.Add(JValue.FromObject(npm.Time));
+        }
+
         private void FormatChangeScreen(JArray args, Message m)
         {
             ChangeScreenMessage csm = (ChangeScreenMessage)m;
-            args.Add(JValue.FromObject(csm.BalloonID));
+            args.Add(JValue.FromObject(csm.ObjectID));
             args.Add(JValue.CreateString(Balloon.FormatDirection(csm.Direction)));
             args.Add(JValue.FromObject(csm.Y));
             args.Add(JValue.FromObject(csm.Velocity.X));
             args.Add(JValue.FromObject(csm.Velocity.Y));
+            args.Add(JValue.FromObject(csm.Time));
         }
 
         private void FormatBalloonStateUpdate(JArray args, Message m)
         {
             BalloonStateUpdateMessage bdm = (BalloonStateUpdateMessage)m;
-            args.Add(JValue.FromObject(bdm.BalloonID));
+            args.Add(JValue.FromObject(bdm.ObjectID));
             args.Add(JValue.FromObject((int)bdm.OverlayType));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Red));
             args.Add(JValue.FromObject(bdm.BackgroundColor.Green));
@@ -100,7 +116,7 @@ namespace Balloons.Serialization
         private void FormatBalloonContentUpdate(JArray args, Message m)
         {
             BalloonContentUpdateMessage bcm = (BalloonContentUpdateMessage)m;
-            args.Add(JValue.FromObject(bcm.BalloonID));
+            args.Add(JValue.FromObject(bcm.ObjectID));
             args.Add(JValue.FromObject((int)bcm.BalloonType));
             args.Add(JValue.CreateString(bcm.Label));
             args.Add(JValue.CreateString(bcm.Content));
@@ -110,8 +126,8 @@ namespace Balloons.Serialization
 
         private void FormatBalloon(JArray args, Message m)
         {
-            BalloonMessage bm = (BalloonMessage)m;
-            args.Add(JValue.FromObject(bm.BalloonID));
+            ObjectMessage bm = (ObjectMessage)m;
+            args.Add(JValue.FromObject(bm.ObjectID));
         }
 
         public Message Deserialize(CircularBuffer buffer)
@@ -167,13 +183,25 @@ namespace Balloons.Serialization
             return new NewBalloonMessage(balloonID, direction, y, velocity);
         }
 
+        private Message ParseNewPlane(JArray args)
+        {
+            string balloonID = args[1].ToObject<string>();
+            PlaneType type = (PlaneType)args[2].ToObject<int>();
+            Direction direction = Balloon.ParseDirection(args[3].ToObject<string>());
+            float y = args[4].ToObject<float>();
+            Vector2D velocity = new Vector2D(args[5].ToObject<float>(), args[6].ToObject<float>());
+            float time = args[7].ToObject<float>();
+            return new NewPlaneMessage(balloonID, type, direction, y, velocity, time);
+        }
+
         private Message ParseChangeScreen(JArray args)
         {
             string balloonID = args[1].ToObject<string>();
             Direction direction = Balloon.ParseDirection(args[2].ToObject<string>());
             float y = args[3].ToObject<float>();
             Vector2D velocity = new Vector2D(args[4].ToObject<float>(), args[5].ToObject<float>());
-            return new ChangeScreenMessage(balloonID, direction, y, velocity);
+            float time = args[6].ToObject<float>();
+            return new ChangeScreenMessage(balloonID, direction, y, velocity, time);
         }
 
         private Message ParseBalloonStateUpdate(JArray args)
@@ -200,14 +228,14 @@ namespace Balloons.Serialization
             return new BalloonContentUpdateMessage(balloonID, balloonType, label, content, url, imageUrl);
         }
 
-        private Message ParseBalloon(JArray args)
+        private Message ParseObject(JArray args)
         {
             string tag = args[0].ToObject<string>();
             string balloonID = args[1].ToObject<string>();
             switch(tag)
             {
-            case PopBalloonMessage.Tag:
-                return new PopBalloonMessage(balloonID);
+            case PopObjectMessage.Tag:
+                return new PopObjectMessage(balloonID);
             case GetBalloonContentMessage.Tag:
                 return new GetBalloonContentMessage(balloonID);
             case GetBalloonStateMessage.Tag:

@@ -3,9 +3,12 @@ using FarseerPhysics.Dynamics.Joints;
 
 namespace BubblesClient.Physics
 {
+    /// <summary>
+    /// WorldEntity represents an object as it exists in the physics world.
+    /// </summary>
     public class WorldEntity
     {
-        public enum EntityType { Balloon, Bucket, Hand, Landscape };
+        public enum EntityType { Balloon, Plane, Bucket, Hand, Landscape };
 
         public Body Body { get; private set; }
         public Joint Joint { get; private set; }
