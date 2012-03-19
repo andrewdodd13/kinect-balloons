@@ -1,1 +1,60 @@
-In this section we describe what the Balloon Server does and how it fits in the project. 
+In this section we describe what the Balloon Server does and how it fits in the
+project. 
+
+\subsection{Specifications}
+
+The goal of the Balloon Server is to make users believe that, no matter how
+many screens are used for display, there is only one Balloon application. One
+way to achieve this is to make the screens look 'connected'. That is, after
+pushing a balloon through the left edge of a screen, the balloon should
+reappear at the right edge of another screen. Another way is to enforce that a
+balloon is shown only one screen at any given time.
+
+We want users to believe that the balloon that appeared in one screen is the
+same balloon that disappeared in the other screen. Since the appearance of
+balloons is customisable (the colour and texture can be changed by the user),
+believing they are the same is easier if customisations are kept when
+transferring the balloon from one screen to another. In addition, it is more
+believable if balloons keep their speed and direction when moving across 
+screens.
+
+The server is responsible for notifying the client when balloons should appear
+on its screen and how (e.g. what type of balloon, caption text, content
+to show when popping the balloon). The server does not create the data needed to
+display balloons itself. This task is the responsibility of the Web Feed. In
+order to have balloons to provide to the client, the server has to regularily
+retrieve the information needed to create these balloons from the feed.
+
+Something to keep in mind is that the content of this feed changes with time
+(i.e. new items are added from the Twitter aggregator and user-submitted 
+content) but we want to keep the number of balloons on each screen at a
+reasonable level. This is why the server has to decide which balloons should be
+kept and which should be discarded when new items are retrieved from the feed.
+We have decided to discard all balloons without a corresponding feed item.
+
+An additional requirement is that the number of screens connected to the server
+is not fixed and can change over the lifetime of the server execution. This
+means that connecting and disconnecting screens from the server can be done at
+any time and will not halt or impair the processing of balloons. For example, 
+when a screen is added the server requests more items from the feed. These new
+items are used to create new balloons to populate the new, empty screen. When 
+disconnecting a screen, its balloons are transferred to the remaining screens.
+
+Late in the project, we decided to introduce on-screen 'tips' to help new users
+interact with our application. This was materialised as a screen carrying a label
+showing the tip text behind it. The server is responsible for deciding when 
+such planes are shown, transferring them between screens and deciding when they
+have to disappear. Indeed we felt that always having a plane on a screen could
+be annoying for the users, especially since planes can collide with balloons 
+and push them away when users might be interacting with them.
+
+\clearpage{}
+\subsection{Design}
+
+\subsubsection{Messaging}
+
+\subsubsection{Persistance}
+
+\subsubsection{Threading}
+
+\subsection{Configuration}
