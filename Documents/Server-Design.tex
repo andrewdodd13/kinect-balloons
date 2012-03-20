@@ -8,7 +8,7 @@ many screens are used for display, there is only one Balloon application. One
 way to achieve this is to make the screens look 'connected'. That is, after
 pushing a balloon through the left edge of a screen, the balloon should
 reappear at the right edge of another screen. Another way is to enforce that a
-balloon is shown only one screen at any given time.
+balloon is shown only on one screen at any given time.
 
 We want users to believe that the balloon that appeared in one screen is the
 same balloon that disappeared in the other screen. Since the appearance of
@@ -41,8 +41,8 @@ items are used to create new balloons to populate the new, empty screen. When
 disconnecting a screen, its balloons are transferred to the remaining screens.
 
 Late in the project, we decided to introduce on-screen 'tips' to help new users
-interact with our application. This was materialised as a screen carrying a label
-showing the tip text behind it. The server is responsible for deciding when 
+interact with our application. This was materialised as a plane carrying a label
+showing the tip banner behind it. The server is responsible for deciding when 
 such planes are shown, transferring them between screens and deciding when they
 have to disappear. Indeed we felt that always having a plane on a screen could
 be annoying for the users, especially since planes can collide with balloons 
@@ -90,7 +90,7 @@ screens).
 \begin{table}
 \begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
 \hline 
-Name & Parameters & Description\tabularnewline
+Message Name & Parameters & Description\tabularnewline
 \hline 
 NewBalloon
 & Balloon ID 
@@ -135,7 +135,7 @@ has been changed.
 \begin{table}
 \begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
 \hline 
-Name & Parameters & Description\tabularnewline
+Message Name & Parameters & Description\tabularnewline
 \hline 
 ChangeScreen
 & Balloon ID 
@@ -168,7 +168,7 @@ GetBalloonState
 \begin{table}
 \begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
 \hline 
-Name & Parameters & Description\tabularnewline
+Message Name & Parameters & Description\tabularnewline
 \hline 
 PopObject
 & Balloon ID or plane ID
@@ -236,7 +236,8 @@ course of this project when we ran into some of these issues.
 
 The final architecture (see figure \vref{Messaging-Arch}) tries to minimise the
 use of threads. In particular, in both client and server, as much processing as
-possible is done in a single thread. However, messages received over the network
+possible is done in a single thread ('Main thread' for the server, 'GUI thread'
+for the client). However, messages received over the network
 can arrive in any thread (this is because we are using asynchronous I/O). To 
 keep all processing on the main thread, these messages are placed in a thread-safe
 message queue and then removed in order by the main thread when it is ready. 
@@ -255,7 +256,7 @@ reappear on another screen after moving out of one screen) which we wanted to
 avoid. With this approach, the feed reader thread is blocked when updating the
 feed while the main thread can continue processing. When the update is done, the
 new feed items are placed in the message queue and processed by the main thread.
-Similarly, in the client long-running operations such as downloading images and 
+Similarly in the client, long-running operations such as downloading images and 
 rendering HTML pages are done on a background thread and the result is used in 
 the GUI thread.
 
