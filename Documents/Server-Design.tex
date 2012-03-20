@@ -78,11 +78,14 @@ with it. We also believe it is easier to design a networked application when
 requests and responses are represented and passed around explicitly (e.g. as 
 messages). In particular, the messaging approach makes it easier (and obvious) 
 in which thread a message is processed. This is especially important in the 
-client where updating and drawing the game must be done in a special thread.
+client where drawing the game must be done in a special thread.
 
 With a messaging approach, the interface between client and server is defined by 
 a set of messages that can be sent by one or the other or both (see figures 
-\ref{ServerMessages}, \ref{ClientMessages} and \vref{CommonMessages}).
+\ref{ServerMessages}, \ref{ClientMessages} and \vref{CommonMessages}). The most
+important messages are NewBalloon/PopObject (they control balloons appearing/
+disappearing on the screen) and ChangeScreen (controls balloons moving between
+screens).
 
 \begin{table}
 \begin{tabular}{|>{\raggedright}p{4.3cm}|>{\raggedright}p{2.8cm}|>{\raggedright}p{8.7cm}|}
@@ -192,21 +195,72 @@ decoration with paint buckets.
 \label{CommonMessages}
 \end{table}
 
+One important aspect of this communication is that it is asynchronous. This 
+means that messages are sent as a kind of notification to the recipient. The 
+sender does not wait for a 'return receipt' from the recipient before resuming 
+its activity. Indeed in general it does not need to know when the message has
+arrived. The only exception comes with the GetBalloonContent/GetBalloonState 
+messages which are answered by BalloonContentUpdte/BalloonStateUpdate messages.
+Howerver, the latter messages can be also sent spontaneously (e.g. when the user 
+changes a balloon's decoration using the paint buckets). Messages are handled 
+the same no matter if they are spontaneous or a response from another message.
+
+Sockets can only send and receive bytes. This is why there must be a way to
+transform message objects from and to bytes, in order to transmit them over the
+networks between the screens and server. This process is called serialisation. 
+During this project we have implemented two serialisation formats. The first is
+a text-based format based on JSON and was used for the first prototypes of our 
+project. Text-based formats are usually very flexible and easy to debug; on
+the other hand they are quite slow to manipulate. This is why a second, binary
+serialiser was written after the first prototypes were sucessful.
+
 
 \subsubsection{Architecture}
 
+The main reason from shying away from communication frameworks and libraries was
+to be able to easily change the architecture (in particular, threading) of the 
+server if the need arose. Possible issues that come with a bad threading design 
+include non-intuitive behavior; subtle, difficult-to-reproduce bugs and low 
+performance. This is why it was important to have a good architecture to avoid 
+these issues as much as possible. We had to change it multiple times during the 
+course of this project when we ran into some of these issues.
+
 \begin{figure}
 \begin{centering}
-\includegraphics[scale=1.0]{Diagrams/messaging}
+\includegraphics[scale=0.95]{Diagrams/messaging}
 \par\end{centering}
 
-\caption{Messaging Architecture}
+\caption{Messaging and Threading Architecture}
 \label{Messaging-Arch}
 \end{figure}
 
-[Multiple sockets, async I/O, message handling, synchronised queues]
+The final architecture (see figure \vref{Messaging-Arch}) tries to minimise the
+use of threads. In particular, in both client and server, as much processing as
+possible is done in a single thread. However, messages received over the network
+can arrive in any thread (this is because we are using asynchronous I/O). To 
+keep all processing on the main thread, these messages are placed in a thread-safe
+message queue and then removed in order by the main thread when it is ready. 
 
-\subsubsection{Persistance}
+This design pattern (thread with a message/event loop) is used throughout the
+application. In the client, the GUI thread has a message queue which it empties
+during the 'Update' phase. In the server, both the main thread and feed reader 
+thread have a message queue; they communicate by placing messages in each other's
+queue. This approach limits the need for synchronisation between threads and 
+thus avoids associated pitfalls.
+
+The reason we have a separate thread for the feed reader is that pulling the 
+feed can take a long time (several seconds). If this was done on the main 
+thread, during this time the server would be blocked (e.g. balloons would not 
+reappear on another screen after moving out of one screen) which we wanted to 
+avoid. With this approach, the feed reader thread is blocked when updating the
+feed while the main thread can continue processing. When the update is done, the
+new feed items are placed in the message queue and processed by the main thread.
+Similarly, in the client long-running operations such as downloading images and 
+rendering HTML pages are done on a background thread and the result is used in 
+the GUI thread.
+
+\clearpage{}
+\subsection{Persistance}
 
 By persistance, we mean saving the balloon data manipulated by the server between 
 executions. Persisting balloon data means that when shutting down the 

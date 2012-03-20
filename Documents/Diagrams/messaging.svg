@@ -9,7 +9,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="471.5"
+   width="631.5"
    height="792.125"
    id="svg2"
    version="1.1"
@@ -437,6 +437,62 @@
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
          transform="matrix(-0.4,0,0,-0.4,-4,0)" />
     </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mstart-54"
+       style="overflow:visible">
+      <path
+         id="path4910-09"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6137-4-21"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6139-5-56"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mstart-24"
+       style="overflow:visible">
+      <path
+         id="path4910-6"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6137-4-8"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6139-5-52"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -446,8 +502,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.94316065"
-     inkscape:cx="368.99695"
-     inkscape:cy="516.36089"
+     inkscape:cx="329.23702"
+     inkscape:cy="7.4338054"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -461,7 +517,8 @@
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0">
+     fit-margin-bottom="0"
+     inkscape:snap-grids="false">
     <inkscape:grid
        type="xygrid"
        id="grid3091"
@@ -503,7 +560,7 @@
     <rect
        style="fill:#e0e0c0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="rect2985"
-       width="470"
+       width="630"
        height="350"
        x="100"
        y="22.362183" />
@@ -616,7 +673,7 @@
        inkscape:connector-curvature="0" />
     <g
        id="g4452"
-       transform="translate(-219.60469,70)">
+       transform="translate(110.11642,70)">
       <rect
          y="32.362183"
          x="350"
@@ -643,7 +700,7 @@
     </g>
     <g
        id="g4446"
-       transform="translate(0,70)">
+       transform="translate(-330,59.999997)">
       <rect
          y="32.362183"
          x="460"
@@ -678,114 +735,106 @@
        d="m 456.55583,132.36218 -22.55583,0"
        id="path4608-0-1-8"
        inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#e0e0c0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-9"
+       width="220"
+       height="350"
+       x="100"
+       y="462.36218"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:22px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std Semi-Bold"
+       x="209.60245"
+       y="760.36218"
+       id="text3755-3"
+       sodipodi:linespacing="120%"><tspan
+         sodipodi:role="line"
+         id="tspan4564"
+         x="209.60245"
+         y="760.36218">Balloon Client</tspan><tspan
+         sodipodi:role="line"
+         id="tspan4566"
+         x="209.60245"
+         y="786.76221">(Screen 1)</tspan></text>
     <g
-       id="g5129"
+       id="g5084"
        transform="translate(0,-70)">
       <rect
          ry="0"
-         y="532.36218"
-         x="100"
-         height="350"
-         width="220"
-         id="rect2985-9"
-         style="fill:#e0e0c0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+         y="562.36218"
+         x="130"
+         height="60"
+         width="160"
+         id="rect3788-5-4-9-2-0"
+         style="fill:#80c0e0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
       <text
          sodipodi:linespacing="120%"
-         id="text3755-3"
-         y="830.36218"
-         x="209.60245"
-         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std Semi-Bold"
+         id="text3755-6-6-7-6-4-9"
+         y="587.73621"
+         x="210.23456"
+         style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
          xml:space="preserve"><tspan
-           y="830.36218"
-           x="209.60245"
-           id="tspan4564"
-           sodipodi:role="line">Balloon Client</tspan><tspan
-           y="856.76221"
-           x="209.60245"
-           id="tspan4566"
-           sodipodi:role="line">(Screen 1)</tspan></text>
-      <g
-         id="g5084">
-        <rect
-           style="fill:#80c0e0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-           id="rect3788-5-4-9-2-0"
-           width="160"
-           height="60"
-           x="130"
-           y="562.36218"
-           ry="0" />
-        <text
-           xml:space="preserve"
-           style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-           x="210.23456"
            y="587.73621"
-           id="text3755-6-6-7-6-4-9"
-           sodipodi:linespacing="120%"><tspan
-             sodipodi:role="line"
-             id="tspan4708"
-             x="210.23456"
-             y="587.73621">Screen</tspan><tspan
-             sodipodi:role="line"
-             id="tspan4710"
-             x="210.23456"
-             y="609.33618">Connection</tspan></text>
-      </g>
-      <g
-         transform="translate(0,-60)"
-         id="g4748">
-        <rect
-           style="fill:#e08080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.37886095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-           id="rect3788-5-4-9-1-5-4"
-           width="160"
-           height="50"
-           x="130"
-           y="712.36218" />
-        <text
-           xml:space="preserve"
-           style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-           x="209.69456"
-           y="741.89819"
-           id="text3755-6-4-6-5-2-1"
-           sodipodi:linespacing="120%"><tspan
-             y="741.89819"
-             x="209.69456"
-             sodipodi:role="line"
-             id="tspan3126-8">Message Queue</tspan></text>
-      </g>
-      <path
-         inkscape:connector-curvature="0"
-         id="path4608-4"
-         d="m 210.70847,626.42928 0,22.55583"
-         style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)" />
-      <g
-         id="g4903">
-        <rect
-           ry="20"
-           style="fill:#80e080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-           id="rect3788-9-4-3"
-           width="160"
-           height="60"
-           x="130"
-           y="732.36218"
-           rx="20" />
-        <text
-           xml:space="preserve"
-           style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-           x="209.88356"
-           y="768.44617"
-           id="text3755-6-4-1-6"
-           sodipodi:linespacing="120%"><tspan
-             sodipodi:role="line"
-             id="tspan4076-3"
-             x="209.88356"
-             y="768.44617">Main Thread</tspan></text>
-      </g>
-      <path
-         inkscape:connector-curvature="0"
-         id="path4608-4-9"
-         d="m 210.70847,706.42928 0,22.55583"
-         style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)" />
+           x="210.23456"
+           id="tspan4708"
+           sodipodi:role="line">Screen</tspan><tspan
+           y="609.33618"
+           x="210.23456"
+           id="tspan4710"
+           sodipodi:role="line">Connection</tspan></text>
     </g>
+    <g
+       id="g4748"
+       transform="translate(0,-130)">
+      <rect
+         y="712.36218"
+         x="130"
+         height="50"
+         width="160"
+         id="rect3788-5-4-9-1-5-4"
+         style="fill:#e08080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.37886095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <text
+         sodipodi:linespacing="120%"
+         id="text3755-6-4-6-5-2-1"
+         y="741.89819"
+         x="209.69456"
+         style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+         xml:space="preserve"><tspan
+           id="tspan3126-8"
+           sodipodi:role="line"
+           x="209.69456"
+           y="741.89819">Message Queue</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
+       d="m 210.70847,556.42928 0,22.55583"
+       id="path4608-4"
+       inkscape:connector-curvature="0" />
+    <rect
+       ry="20"
+       style="fill:#80e080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3788-9-4-3"
+       width="160"
+       height="60"
+       x="130"
+       y="662.36218"
+       rx="20" />
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+       x="209.83856"
+       y="698.44617"
+       id="text3755-6-4-1-6"
+       sodipodi:linespacing="120%"><tspan
+         sodipodi:role="line"
+         id="tspan5978">GUI Thread</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
+       d="m 210.70847,636.42928 0,22.55583"
+       id="path4608-4-9"
+       inkscape:connector-curvature="0" />
     <g
        id="g5246">
       <rect
@@ -817,125 +866,149 @@
        id="path5915"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
+    <rect
+       style="fill:#e0e0c0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-9-6"
+       width="219.76544"
+       height="350.62598"
+       x="350"
+       y="462.36218"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:22px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std Semi-Bold"
+       x="459.36789"
+       y="760.98816"
+       id="text3755-3-9"
+       sodipodi:linespacing="120%"><tspan
+         sodipodi:role="line"
+         id="tspan5090"
+         x="459.36789"
+         y="760.98816">Balloon Client</tspan><tspan
+         sodipodi:role="line"
+         id="tspan5092"
+         x="459.36789"
+         y="787.38818">(Screen n)</tspan></text>
     <g
-       id="g5170"
-       transform="translate(-170.23456,0.625977)">
-      <g
-         transform="translate(170.23456,-70.625977)"
-         id="g5150">
-        <rect
-           style="fill:#e0e0c0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-           id="rect2985-9-6"
-           width="220"
-           height="350"
-           x="349.76544"
-           y="532.98816"
-           ry="0" />
-        <text
-           xml:space="preserve"
-           style="font-size:22px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std Semi-Bold"
-           x="459.36789"
-           y="830.98816"
-           id="text3755-3-9"
-           sodipodi:linespacing="120%"><tspan
-             sodipodi:role="line"
-             id="tspan5090"
-             x="459.36789"
-             y="830.98816">Balloon Client</tspan><tspan
-             sodipodi:role="line"
-             id="tspan5092"
-             x="459.36789"
-             y="857.38818">(Screen n)</tspan></text>
-        <g
-           id="g4748-5"
-           transform="translate(249.76544,-59.37402)">
-          <rect
-             y="712.36218"
-             x="130"
-             height="50"
-             width="160"
-             id="rect3788-5-4-9-1-5-4-6"
-             style="fill:#e08080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.37886095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-          <text
-             sodipodi:linespacing="120%"
-             id="text3755-6-4-6-5-2-1-3"
-             y="741.89819"
-             x="209.69456"
-             style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-             xml:space="preserve"><tspan
-               id="tspan3126-8-7"
-               sodipodi:role="line"
-               x="209.69456"
-               y="741.89819">Message Queue</tspan></text>
-        </g>
-        <g
-           transform="translate(249.76544,0.6259792)"
-           id="g4903-2">
-          <rect
-             rx="20"
-             y="732.36218"
-             x="130"
-             height="60"
-             width="160"
-             id="rect3788-9-4-3-1"
-             style="fill:#80e080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-             ry="20" />
-          <text
-             sodipodi:linespacing="120%"
-             id="text3755-6-4-1-6-2"
-             y="768.44617"
-             x="209.88356"
-             style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-             xml:space="preserve"><tspan
-               y="768.44617"
-               x="209.88356"
-               id="tspan4076-3-9"
-               sodipodi:role="line">Main Thread</tspan></text>
-        </g>
-        <path
-           style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
-           d="m 460.47391,707.05526 0,22.55583"
-           id="path4608-4-9-8"
-           inkscape:connector-curvature="0" />
-        <g
-           id="g5078"
-           transform="translate(-20.234558,0.6259766)">
-          <rect
-             ry="0"
-             y="562.36218"
-             x="400"
-             height="60"
-             width="160"
-             id="rect3788-5-4-9-2-0-0"
-             style="fill:#80c0e0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-          <text
-             sodipodi:linespacing="120%"
-             id="text3755-6-6-7-6-4-9-2"
-             y="587.73621"
-             x="480.23456"
-             style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
-             xml:space="preserve"><tspan
-               y="587.73621"
-               x="480.23456"
-               id="tspan4708-6"
-               sodipodi:role="line">Screen</tspan><tspan
-               y="609.33618"
-               x="480.23456"
-               id="tspan4710-2"
-               sodipodi:role="line">Connection</tspan></text>
-        </g>
-      </g>
-      <path
-         inkscape:connector-curvature="0"
-         id="path4608-4-3"
-         d="m 630,556.36218 0,22.55583"
-         style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)" />
+       id="g4748-5"
+       transform="translate(249.76544,-129.37402)">
+      <rect
+         y="712.36218"
+         x="130"
+         height="50"
+         width="160"
+         id="rect3788-5-4-9-1-5-4-6"
+         style="fill:#e08080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.37886095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <text
+         sodipodi:linespacing="120%"
+         id="text3755-6-4-6-5-2-1-3"
+         y="741.89819"
+         x="209.69456"
+         style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+         xml:space="preserve"><tspan
+           id="tspan3126-8-7"
+           sodipodi:role="line"
+           x="209.69456"
+           y="741.89819">Message Queue</tspan></text>
     </g>
+    <rect
+       ry="20"
+       style="fill:#80e080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3788-9-4-3-1"
+       width="160"
+       height="60"
+       x="379.76544"
+       y="662.98816"
+       rx="20" />
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+       x="459.64899"
+       y="699.07214"
+       id="text3755-6-4-1-6-2"
+       sodipodi:linespacing="120%"><tspan
+         sodipodi:role="line"
+         id="tspan5976">GUI Thread</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
+       d="m 460.47391,637.05526 0,22.55583"
+       id="path4608-4-9-8"
+       inkscape:connector-curvature="0" />
+    <g
+       id="g5078"
+       transform="translate(-20.234558,-69.374023)">
+      <rect
+         ry="0"
+         y="562.36218"
+         x="400"
+         height="60"
+         width="160"
+         id="rect3788-5-4-9-2-0-0"
+         style="fill:#80c0e0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="120%"
+         id="text3755-6-6-7-6-4-9-2"
+         y="587.73621"
+         x="480.23456"
+         style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+         xml:space="preserve"><tspan
+           y="587.73621"
+           x="480.23456"
+           id="tspan4708-6"
+           sodipodi:role="line">Screen</tspan><tspan
+           y="609.33618"
+           x="480.23456"
+           id="tspan4710-2"
+           sodipodi:role="line">Connection</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
+       d="m 459.76544,556.98816 0,22.55583"
+       id="path4608-4-3"
+       inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1.74299037;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#Arrow1Mend-1)"
        d="m 460,344.36218 0,148"
        id="path5915-7"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
+    <g
+       id="g5349">
+      <rect
+         rx="20"
+         y="192.36218"
+         x="570"
+         height="59.999996"
+         width="129.99998"
+         id="rect3788-9-4-3-1-5"
+         style="fill:#80e080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.25605083px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         ry="20" />
+      <text
+         sodipodi:linespacing="120%"
+         id="text3755-6-4-1-6-2-5"
+         y="217.64618"
+         x="634.24683"
+         style="font-size:18px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:120.00000477%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:ITC Franklin Gothic Std;-inkscape-font-specification:ITC Franklin Gothic Std"
+         xml:space="preserve"><tspan
+           y="217.64618"
+           x="634.24683"
+           id="tspan5345"
+           sodipodi:role="line">Feed Reader</tspan><tspan
+           y="239.24619"
+           x="634.24683"
+           id="tspan5347"
+           sodipodi:role="line">Thread</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:url(#marker6137-4)"
+       d="m 566.55583,222.36218 -22.55583,0"
+       id="path4608-0-1-8-7"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow1Mstart);marker-end:none"
+       d="m 640,192.36218 0,-60 -100,0"
+       id="path4608-0-1-8-7-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccc" />
   </g>
 </svg>
