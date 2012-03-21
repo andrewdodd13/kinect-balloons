@@ -43,10 +43,17 @@ against the story in the database and the user is redirected to the URL of the
 content.
 
 \subsubsection{News Feed}
-The News Feed component is responsible for choosing some content for the 
-front-end; ratios for the different content-types are defined in the feed 
-whilst the number of items to fetch is determined by the caller. When 
-requested, it generates a JSON object which is consumed by the Balloons Server.
+The News Feed component is responsible for choosing some content for the
+front-end; when requested, it generates a JSON object which is consumed
+by the Balloons Server.
+
+Ratios which determine the percentage of each content-type sent to the server
+are defined in the feed. This ensures that there is always some user-content
+displayed on screen. The server section of this document contains more details
+on the workings of this feature.
+
+The number of items actually fetched is determined by the server.
+
 
 \subsubsection{Balloon Server}
 The Balloon Server is responsible for coordinating all the balloons on the 
