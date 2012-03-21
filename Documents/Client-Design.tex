@@ -37,6 +37,10 @@ contains information pertaining to the balloon's dimensions and also a cache of
 any textures which have been generated for that balloon (its image or QR code, 
 for example). 
 
+\subsubsection{Client Plane}
+The client plane model represents a plane as it appears on the screen, as well
+as the banner that it carries along with it.
+
 \subsubsection{Content Box}
 The content box model is used to define the logic for drawing a content box to
 the screen. Two content box implementations are available: one which uses raw
@@ -317,7 +321,7 @@ text description.
 
 The Kinect input system was now governed by the physics engine. Whilst this 
 allowed for collision detection, the user input lag added caused the client 
-some distress as it ran very slowly on the target hardware. Furthermore, the
+some issues as it ran very slowly on the target hardware. Furthermore, the
 client had issues reaching the top of the screen on the target hardware.
 
 Finally, the networking features of the system were added in this build. These
