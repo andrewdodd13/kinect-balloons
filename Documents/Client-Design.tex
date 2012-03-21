@@ -19,7 +19,9 @@ parts, i.e. these components are loosely coupled.
 
 The other main part of the Client system is the model objects --- these represent
 some of the main objects in the game. They are not true model objects in the
-MVC pattern --- some of the models actually contain drawing logic.
+MVC pattern --- some of the models actually contain drawing logic. This allows
+the drawing methods to be moved out of the main graphics system and makes the
+system more coherent.
 
 \subsection{Models}
 \subsubsection{Bucket}
