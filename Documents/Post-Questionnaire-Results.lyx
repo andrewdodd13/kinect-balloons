@@ -80,7 +80,27 @@
 \begin_body
 
 \begin_layout Standard
-Total number of participants: 72.
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+part*{Post-Questionnaire Results
+\backslash
+hfill 
+\backslash
+textmd{
+\backslash
+textrm{
+\backslash
+small Total number of participants: 72}}}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection*
@@ -111,7 +131,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 1.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -140,9 +160,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -153,7 +173,7 @@ status collapsed
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -174,7 +194,7 @@ Number
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -218,7 +238,7 @@ Yes
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -239,7 +259,7 @@ Yes
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -255,7 +275,7 @@ Yes
 \uwave off
 \noun off
 \color none
-98.60%
+98.6%
 \end_layout
 
 \end_inset
@@ -283,7 +303,7 @@ No
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -304,7 +324,7 @@ No
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="right" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -320,7 +340,7 @@ No
 \uwave off
 \noun off
 \color none
-1.40%
+1.4%
 \end_layout
 
 \end_inset
@@ -338,7 +358,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 1.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -383,7 +403,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 1a.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -408,9 +428,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -523,7 +543,7 @@ Yes
 \uwave off
 \noun off
 \color none
-93.00%
+93.0%
 \end_layout
 
 \end_inset
@@ -588,7 +608,7 @@ No
 \uwave off
 \noun off
 \color none
-7.00%
+7.0%
 \end_layout
 
 \end_inset
@@ -606,7 +626,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 1a.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -654,7 +674,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 2.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -679,9 +699,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -794,7 +814,7 @@ Yes
 \uwave off
 \noun off
 \color none
-84.70%
+84.7%
 \end_layout
 
 \end_inset
@@ -859,7 +879,7 @@ No
 \uwave off
 \noun off
 \color none
-15.30%
+15.3%
 \end_layout
 
 \end_inset
@@ -877,7 +897,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 2.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -918,7 +938,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 3.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -943,9 +963,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -1058,7 +1078,7 @@ Yes
 \uwave off
 \noun off
 \color none
-87.50%
+87.5%
 \end_layout
 
 \end_inset
@@ -1123,7 +1143,7 @@ No
 \uwave off
 \noun off
 \color none
-12.50%
+12.5%
 \end_layout
 
 \end_inset
@@ -1141,7 +1161,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 3.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -1189,7 +1209,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 3a.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -1214,9 +1234,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -1329,7 +1349,7 @@ Yes
 \uwave off
 \noun off
 \color none
-77.80%
+77.8%
 \end_layout
 
 \end_inset
@@ -1394,7 +1414,7 @@ No
 \uwave off
 \noun off
 \color none
-22.20%
+22.2%
 \end_layout
 
 \end_inset
@@ -1412,7 +1432,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 3a.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -1453,7 +1473,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 4.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -1478,9 +1498,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -1593,7 +1613,7 @@ Yes
 \uwave off
 \noun off
 \color none
-93.10%
+93.1%
 \end_layout
 
 \end_inset
@@ -1658,7 +1678,7 @@ No
 \uwave off
 \noun off
 \color none
-6.90%
+6.9%
 \end_layout
 
 \end_inset
@@ -1676,7 +1696,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 4.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -1724,7 +1744,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 5.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -1749,9 +1769,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -1864,7 +1884,7 @@ Yes
 \uwave off
 \noun off
 \color none
-16.70%
+16.7%
 \end_layout
 
 \end_inset
@@ -1929,7 +1949,7 @@ No
 \uwave off
 \noun off
 \color none
-83.30%
+83.3%
 \end_layout
 
 \end_inset
@@ -1947,7 +1967,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 5.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -1988,7 +2008,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 6.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -2013,9 +2033,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -2128,7 +2148,7 @@ Yes
 \uwave off
 \noun off
 \color none
-23.60%
+23.6%
 \end_layout
 
 \end_inset
@@ -2193,7 +2213,7 @@ No
 \uwave off
 \noun off
 \color none
-76.40%
+76.4%
 \end_layout
 
 \end_inset
@@ -2211,7 +2231,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 6.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -2259,7 +2279,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 7.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -2284,9 +2304,9 @@ status collapsed
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -2399,7 +2419,7 @@ Yes
 \uwave off
 \noun off
 \color none
-81.90%
+81.9%
 \end_layout
 
 \end_inset
@@ -2464,7 +2484,7 @@ No
 \uwave off
 \noun off
 \color none
-18.10%
+18.1%
 \end_layout
 
 \end_inset
@@ -2482,7 +2502,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 7.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
@@ -2523,7 +2543,7 @@ status collapsed
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 8.
- Results [Chart]
+ Results
 \end_layout
 
 \end_inset
@@ -2541,16 +2561,16 @@ Post-Questionnaire Question 8.
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -2663,7 +2683,7 @@ Yes
 \uwave off
 \noun off
 \color none
-70.80%
+70.8%
 \end_layout
 
 \end_inset
@@ -2728,7 +2748,7 @@ No
 \uwave off
 \noun off
 \color none
-29.20%
+29.2%
 \end_layout
 
 \end_inset
@@ -2746,7 +2766,7 @@ No
 
 \begin_layout Plain Layout
 Post-Questionnaire Question 8.
- Results [Table]
+ Results
 \end_layout
 
 \end_inset
