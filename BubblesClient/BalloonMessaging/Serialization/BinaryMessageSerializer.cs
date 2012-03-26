@@ -118,6 +118,7 @@ namespace Balloons.Serialization
             writer.Write(csm.Y);
             writer.Write(csm.Velocity.X);
             writer.Write(csm.Velocity.Y);
+            writer.Write(csm.Time);
         }
 
         private void SerializeBalloonStateUpdate(BinaryWriter writer, Message msg)
@@ -216,7 +217,8 @@ namespace Balloons.Serialization
             float y = reader.ReadSingle();
             float velocityX = reader.ReadSingle();
             float velocityY = reader.ReadSingle();
-            return new ChangeScreenMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY));
+            float time = reader.ReadSingle();
+            return new ChangeScreenMessage(balloonID, direction, y, new Vector2D(velocityX, velocityY), time);
         }
 
         private Message DecodeBalloonStateUpdate(BinaryReader reader, MessageType type)

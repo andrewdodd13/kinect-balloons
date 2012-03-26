@@ -37,6 +37,9 @@
 \renewcommand{\cftsubsecfont}{\normalfont\sffamily}
 \renewcommand{\cftsubsecpagefont}{\normalfont\sffamily}
 
+\setlength{\cftsecnumwidth}{2.5em}
+\setlength{\cftsubsecnumwidth}{3.0em}
+
 \renewcommand{\cftloftitlefont}{\normalfont\sffamily\bfseries\Large}
 \renewcommand{\cftfigfont}{\normalfont\sffamily}
 \renewcommand{\cftfigpagefont}{\normalfont\sffamily}
@@ -58,6 +61,7 @@
 \def\@cite#1#2{$^{\mbox{\scriptsize [#1\if@tempswa , #2\fi]}}$}
 
 \usepackage{pdfpages}
+\usepackage{listings}
 \usepackage{color}
 \usepackage{parskip}
 \setlength{\parindent}{0pt}
@@ -69,6 +73,7 @@
 \fancyfoot[OL,ER]{\sffamily \thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{16pt}
 
 \newcommand\centerAlign[1]{%
   \raisebox{-\height}{#1}%
@@ -115,11 +120,7 @@
     \addtocounter{subsection}{1}
     \subsection*{\authortitle{\thesubsection\hspace*{1em}#1}{#2}}
 }
-\newcommand{\subsectionspeaker}[2]{
-    %\subsectionauthornotoc{#1}{External speaker: #2}
-    \subsection[#1]{\authortitle{#1}{External speaker: #2}}
-}
-\newcommand{\meetinginfo}[1]{\textit{\footnotesize #1}{\footnotesize \par}}
+
 \newcommand{\appendixauthor}[2]{
     \addtocounter{section}{1}
     \addcontentsline{toc}{section}{\Alph{section} \hspace{0.1mm} \authortoctitle{Appendix: #1}{#2}}
@@ -132,8 +133,17 @@
     \markboth{Appendix: #1}{}
 }
 
-% use TexGyre Schola for tables (clone of Century Schoolbook)
-\newcommand{\tablefont}[1]{{\fontfamily{qcs} \selectfont #1}}
+% Code listings
+
+\lstset{extendedchars=false}
+\lstset{breaklines=true, breakatwhitespace=true, keywordstyle=\color{blue}, commentstyle=\itshape, basicstyle=\ttfamily\small, tabsize=4,  showstringspaces=false}
+%\lstset{numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, %showstringspaces=false}
+
+\newcommand{\codelisting}[1]{
+  \singlespacing
+  \lstinputlisting{#1}
+  \onehalfspacing
+}
 
 % numbered equations
 \renewcommand\[{\begin{equation}}
@@ -153,6 +163,8 @@
 
 \tableofcontents{}
 
+\clearpage{}
+
 \listoffigures
 \listoftables
 \clearpage{}
@@ -168,6 +180,10 @@
 \clearpage{}
 \sectionauthor{Research}{Ryan Oswald}
 %\input{Research.tex}
+
+\clearpage{}
+\sectionauthor{Evaluation}{Ryan Oswald}
+\input{Evaluation.tex}
 
 \clearpage{}
 \sectionauthor{Project Structure}{Lauren Hill \& John Truesdale}
@@ -191,11 +207,19 @@
 
 \clearpage{}
 \sectionauthor{Server Design}{Brieuc Roblin \& Pierre-Andr\'{e} Saulais}
-%\input{Server-Design.tex}
+\input{Server-Design.tex}
 
 \clearpage{}
 \sectionauthor{Web Feed Design}{Christopher Wyllie}
 \input{Feed-Design.tex}
+
+\clearpage{}
+\sectionauthor{Content Submission}{Alexander Macrae}
+\input{Website-Design.tex}
+
+\clearpage{}
+\section{Reflection}
+%\input{Reflection.tex}
 
 \clearpage{}
 \input{Conclusion.tex}
@@ -210,6 +234,20 @@
 \vspace*{\fill}
 \pagebreak{}
 
-\section{Appendix: Configuration File}
+%\section{Appendix: Configuration File}
+\appendixauthor{Observation Sheet}{Ryan Oswald}
+\includepdf[pages=1-,pagecommand={}]{Observation-Sheet.pdf}
+
+\appendixauthor{Pre-Questionnaire}{Ryan Oswald}
+\includepdf[pages=1-,pagecommand={}]{Pre-Questionnaire.pdf}
+
+\appendixauthor{Post-Questionnaire}{Ryan Oswald}
+\includepdf[pages=1-,pagecommand={}]{Post-Questionnaire.pdf}
+
+\appendixauthor{Pre-Questionnaire Results}{Ryan Oswald}
+\includepdf[pages=1-,pagecommand={}]{Pre-Questionnaire-Results.pdf}
+
+\appendixauthor{Post-Questionnaire Results}{Ryan Oswald}
+\includepdf[pages=1-,pagecommand={}]{Post-Questionnaire-Results.pdf}
 
 \end{document}
