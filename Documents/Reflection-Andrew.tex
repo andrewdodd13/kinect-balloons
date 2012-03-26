@@ -1,0 +1,60 @@
+For my part of the project, I mainly worked on the client application's design
+and application code. I was also in general charge of maintaining the the Git
+repository and making sure the coders met their deadlines. Throughout the
+project I cannot think of an instance where any part of the project was
+delivered late; there were some issues with a broken prototype one week but
+this was more to do with a lack of structure within the group at that point in
+time. After we rectified this issue, there were no major hiccups with the
+development process in general.
+
+In terms of our development process, using Git proved to be very effective, even
+though a few members of the group initially had difficulty using it. It allowed
+me as a reviewer to clearly see which changes had been performed by whom and
+also allowed us to revert broken changes or choose a \"frozen\" build for 
+demostration purposes. Managing several discrete branches proved to be slightly
+annoying but fortunately I was the only one in the group who really had to deal
+with this.
+
+Our choice of XNA and C\# was the correct one, in my opinion. Using C\# made
+using the official Kinect SDK very easy as many of the samples were written in
+it and it is one of Microsoft's recommended languages to use for it. The use of
+XNA drastically reduced our development time as it provides a lot of features
+for managing static resources (images) and drawing to the screen. It also
+defines quite a rigid structure for simple games which removes some of the pain
+of doing that manually.
+
+One library that I was not entire keen on was the Farseer Physics library. This
+library calculates the positions of the physical bodies (balloons, etc.) very
+realistically, however it is this realism that makes it slightly clunky to use.
+This is especially problematic when combined with the hands from the Kinect -
+the user appeared to experience a feeling of input lag. This is caused by the
+physics system moving the hands to their position gradually. We tried turning
+the sensitivity way up but this didn't really improve the situation much; 
+perhaps an alternative method could have improved this further.
+
+With client itself, I feel the design is very clean. As much as is possible, we
+have tried to split the system into distinct components; with each component
+being coded to an interface allowing it to be easily swapped with a different
+implementation. This should make it extremely easy for another team to pick up
+the project and understand how all the components interact with each other. It
+also made it easier for multiple people to work concurrently on the client code,
+although there were never more than two people working on the client in 
+practise.
+
+Furthermore, the code is fairly well documented - the interfaces in particular
+- although some of the implementations could do with a bit more commenting. 
+This, however, shouldn't present a problem because the implementation should be
+doing exactly what is specified on the interface.
+
+The design of the client is partly dictated by the messaging model of the
+entire system. Whilst I would have opted for a third-party remote-procedure-call
+(RPC) model for network communications, the two coders on the networking team
+chose to write their own implementation. Whilst this worked very well for our
+team, I feel it may present a barrier to another group trying to continue work
+on the system as they may have to learn how this part of the system behaves.
+
+Overall, I think that the client system is an excellent product to have reached
+for this project. It appears to have been well received by users and is a well-
+designed piece of software. Many of the issues users raised during testing were
+fixed before the final product was handed in, but even these were relatively
+minor in the scope of the entire project.
