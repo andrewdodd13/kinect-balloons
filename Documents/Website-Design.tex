@@ -112,7 +112,7 @@ TimeCreated	TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 BalloonColour	CHAR (6) DEFAULT FFFFFF
 ImageURL	VARCHAR (255)
 Votes		INT (11) DEFAULT 0
-GivenName	VBARCHAR (50)\end{verbatim}
+GivenName	VARCHAR (50)\end{verbatim}
 \onehalfspacing
 
 This gives the system all the information it needs to send information on news articles to the feed. The content ID is just a primary key to identify each row. The title, excerpt and URL are all information on the article to submit. The image is stored as a URL which points to a location on the systems web space. Information on the user is also stored. For reasons of privacy the user can specify which name they wish to be known by, however their real user ID is recorded too in the submitted by field.

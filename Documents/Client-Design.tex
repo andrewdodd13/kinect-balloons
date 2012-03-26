@@ -269,14 +269,14 @@ Update performs the game logic. The following steps are performed:
 
 Draw & Game Time &
 Draw performs the actual drawing of the game world. It is not supposed to 
-perform any logic tasks. Items drawn first will be hidden "behind" items drawn
+perform any logic tasks. Items drawn first will be hidden ``behind'' items drawn
 later. The following steps are performed:
 \begin{itemize}
 	\item{Clear the screen and initialise the Sprite Batch}
 	\item{Draw the background}
 	\item{Draw the balloon captions}
 	\item{Draw the balloons}
-	\item{Draw the "pop" animations}
+	\item{Draw the ``pop'' animations}
 	\item{Draw the buckets}
 	\item{Draw the content box (if it is supposed to be visible)}
 	\item{Draw the user's hands}
@@ -325,12 +325,12 @@ prototype.
 \end{figure}
 The second demo prototype was much more advanced than the first. Many of the UI
 concepts were implemented including balloons along with buckets to provide the 
-"painting" functionality. The mock graphics used in the first prototype were 
+``painting'' functionality. The mock graphics used in the first prototype were 
 replaced by nicer images. The balloons were already tied into the physics 
 however the rules were tweaked to make them much more realistic. The ability to
-view the content of a balloon was also added by putting in a "pop balloon" 
+view the content of a balloon was also added by putting in a ``pop balloon'' 
 action in the Input interface, which when called, caused a content box to open
-with the desired content. Balloons were also given a small "tag" with a short
+with the desired content. Balloons were also given a small ``tag'' with a short
 text description.
 
 The Kinect input system was now governed by the physics engine. Whilst this 
@@ -399,7 +399,7 @@ to use. We added a black border to it, reduced the activation time from 2.5s to
 \item{Paint buckets were too close together; they were spaced out slightly 
 further.}
 \item{The physical floor was raised slightly whilst moving the buckets down. 
-This prevents balloons from being "stuck" under the floor.}
+This prevents balloons from being ``stuck'' under the floor.}
 \item{Animations were added after a period of inactivity which inform the user
 of actions they can take to interact with the system.}
 \end{itemize}

@@ -14,7 +14,7 @@ In order to facilitate the rapid and robust development necessary, the following
 
 \begin{itemize}
 	\item Code Igniter PHP Framework
-	\item JQuery Mobile toolkit
+	\item jQuery Mobile toolkit
 	\item tmhOAuth PHP Twitter library
 \end{itemize}
 
@@ -24,7 +24,7 @@ Choice of each library was based on ease of use, and how much value they can add
 
 \subsubsection{Content Feed}
 
-The balloon application relies upon content delivered by a web-accessible 'feed'. This feed is designed to aggregate various information sources, and provide a single authoritative reference for content to be displayed.
+The balloon application relies upon content delivered by a web-accessible `feed'. This feed is designed to aggregate various information sources, and provide a single authoritative reference for content to be displayed.
 
 Currently the feed provides information from the following sources:
 
@@ -48,7 +48,7 @@ It is possible for users to vote on this content type, with the number of votes 
 This content type will be selected with the most recent submissions first, up to the limit requested.
 
 \subsubsection{Top-rated User Generated Content}
-If an item submitted by a user receives lots of positive votes, it will assume the pseudo content type of 'top-rated'. Top-rated content will always feature in the feed, and be chosen at random from all top-rated items.
+If an item submitted by a user receives lots of positive votes, it will assume the pseudo content type of `top-rated'. Top-rated content will always feature in the feed, and be chosen at random from all top-rated items.
 
 This content type is distinct from the most recent items, and items selected for this type will not be considered for the most recent item selection.
 
@@ -92,7 +92,7 @@ When a user scans the QR code for user generated content items, they will be pre
 
 The \texttt{Content} controller defined in \texttt{application/controllers/content.php} manipulates the \texttt{Content\_model} to facilitate this voting.
 
-\texttt{Content::visit} will look up the content item by ID and present the voting interface to the user. This interface is built using the JQuery Mobile toolkit\footnote{http://jquerymobile.com}. This toolkit allowed a cross-platform interface with standard components to be constructed with ease.
+\texttt{Content::visit} will look up the content item by ID and present the voting interface to the user. This interface is built using the jQuery Mobile toolkit\footnote{http://jquerymobile.com}. This toolkit allowed a cross-platform interface with standard components to be constructed with ease.
 
 On the voting page, the user is presented with three links. One link takes them to the content, and the other two links correspond to the \texttt{Content::up} and \texttt{Content::down} methods which cost a vote and then redirect to the content link.
 
@@ -127,7 +127,7 @@ This would allow the code in the \texttt{Api} controller to be simplified, and i
 It would be possible to use the content proxy as mentioned to gather statistics on usage. By gathering information on what types of content users tend to visit, the feed's content ratios could be adjusted, or even evolve dynamically for given times of day dependent on previous usage patterns.
 
 \subsubsection{Mobile Content Submission UI}
-Balloons could be introduced to the feed that would link to a mobile optimised content submission portal. This interface could be built with the JQuery Mobile toolkit and integrate with the existing controller and model setups.
+Balloons could be introduced to the feed that would link to a mobile optimised content submission portal. This interface could be built with the jQuery Mobile toolkit and integrate with the existing controller and model setups.
 
 \subsubsection{Saving of Customised Balloons}
 It would be possible for the clients to provide a link to the web where a user could save an image of their customised balloon.
