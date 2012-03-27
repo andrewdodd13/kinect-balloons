@@ -24,10 +24,21 @@
  {hyperref}
 \hypersetup{pdftitle={Design \& Code Group Project --- Report},
  pdfauthor={Dodd, Hill, Macrae, Oswald, Reily, Roblin, Saulais, Truesdale and Wyllie}}
- 
-\makeatletter
 
-\renewcommand{\sfdefault}{FranklinGothic}
+\usepackage{ifxetex}
+\ifxetex
+    \usepackage{fontspec}
+    \usepackage{xunicode}
+    \usepackage{xltxtra}
+    \defaultfontfeatures{Mapping=tex-text}
+    \setsansfont{ITC Franklin Gothic Std}
+    \setromanfont{Charis SIL}
+    \setmonofont{Consolas}
+\else
+    \renewcommand{\sfdefault}{FranklinGothic}
+\fi
+
+\makeatletter
 
 \usepackage{tocloft}
 \renewcommand{\cfttoctitlefont}{\normalfont\sffamily\bfseries\huge}
