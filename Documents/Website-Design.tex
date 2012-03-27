@@ -15,8 +15,6 @@ The requirements are as follows:
 \item{Let an administrator be able to remove articles if they are found to be offensive or inadequate}
 \end{itemize}
 
-\clearpage{}
-
 \subsection{Design}
 It was very obvious from the beginning that trying to submit an article using the screens and the Kinect interface was going to present a problem. It was therefore decided that a website should be built for the user to perform this process. This would allow them more flexibility and the more familiar interface of the mouse and keyboard.
 
@@ -28,7 +26,7 @@ To speed up the development of the backend a PHP framework was decided upon. Cod
 The website consisted of three main pages, one for viewing content that had been submitted, one for logging in to the system and another for submitted content to the website. These three pages covered the requirements of the system and were done in a way that made the website easy to use. 
 
 \subsubsection{Header}
-All pages are given the same header (see figure \ref{Website-Header}). This kept the design consistent throughout the website which makes it easier for users to navigate around it and find what they want.
+All pages are given the same header (figure \ref{Website-Header}). This kept the design consistent throughout the website which makes it easier for users to navigate around it and find what they want.
 
 \begin{figure}
 \begin{centering}
@@ -112,7 +110,7 @@ TimeCreated	TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 BalloonColour	CHAR (6) DEFAULT FFFFFF
 ImageURL	VARCHAR (255)
 Votes		INT (11) DEFAULT 0
-GivenName	VBARCHAR (50)\end{verbatim}
+GivenName	VARCHAR (50)\end{verbatim}
 \onehalfspacing
 
 This gives the system all the information it needs to send information on news articles to the feed. The content ID is just a primary key to identify each row. The title, excerpt and URL are all information on the article to submit. The image is stored as a URL which points to a location on the systems web space. Information on the user is also stored. For reasons of privacy the user can specify which name they wish to be known by, however their real user ID is recorded too in the submitted by field.
@@ -120,7 +118,6 @@ This gives the system all the information it needs to send information on news a
 \subsection{Website Code Structure}
 The structure was based on CodeIgniter's structure. CodeIgniter has a strong Model, View, Controller set up so it would make code clearer and more modular. The overall layout of the website will now be looked at and then the main sections will be covered in depth. This will start with the folder structure of CodeIgniter (Only important folders shown). Note that this backend was also used for deploying the balloon content to screens, though that will be covered later.
 
-\newpage
 \singlespacing
 \begin{verbatim}application/
     config/

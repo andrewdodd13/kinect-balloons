@@ -24,10 +24,25 @@
  {hyperref}
 \hypersetup{pdftitle={Design \& Code Group Project --- Report},
  pdfauthor={Dodd, Hill, Macrae, Oswald, Reily, Roblin, Saulais, Truesdale and Wyllie}}
- 
-\makeatletter
 
-\renewcommand{\sfdefault}{FranklinGothic}
+\usepackage{ifxetex}
+\ifxetex
+    \usepackage{fontspec}
+    \usepackage{xunicode}
+    \usepackage{unicode-math}
+    \usepackage{amsmath}
+    \usepackage{xltxtra}    
+    \defaultfontfeatures{Mapping=tex-text}
+    \setsansfont{ITC Franklin Gothic Std}
+    \setromanfont{Charis SIL}
+    \setmonofont{Consolas}
+    \setmathfont{Charis SIL}
+    %\setmathfont{Cambria Math}
+\else
+    \renewcommand{\sfdefault}{FranklinGothic}
+\fi
+
+\makeatletter
 
 \usepackage{tocloft}
 \renewcommand{\cfttoctitlefont}{\normalfont\sffamily\bfseries\huge}
@@ -182,10 +197,6 @@
 %\input{Research.tex}
 
 \clearpage{}
-\sectionauthor{Evaluation}{Ryan Oswald}
-\input{Evaluation.tex}
-
-\clearpage{}
 \sectionauthor{Project Structure}{Lauren Hill \& John Truesdale}
 \input{Project-Structure.tex}
 
@@ -196,6 +207,7 @@
 \clearpage{}
 \sectionauthor{System Architecture}{Andrew Dodd}
 \input{System-Architecture.tex}
+\addtocontents{toc}{\protect\newpage}
 
 \clearpage{}
 \sectionauthor{Client Design}{Andrew Dodd}
@@ -218,7 +230,15 @@
 \input{Website-Design.tex}
 
 \clearpage{}
+\sectionauthor{Evaluation}{Ryan Oswald}
+\input{Evaluation.tex}
+
+\addtocontents{toc}{\protect\newpage}
+
+\clearpage{}
 \section{Reflection}
+\subsection{Andrew Dodd}
+\input{Reflection-Andrew.tex}
 %\input{Reflection.tex}
 
 \clearpage{}
@@ -234,11 +254,11 @@
 \vspace*{\fill}
 \pagebreak{}
 
-%\section{Appendix: Configuration File}
 \appendixauthor{Observation Sheet}{Ryan Oswald}
 \includepdf[pages=1-,pagecommand={}]{Observation-Sheet.pdf}
 
 \appendixauthor{Pre-Questionnaire}{Ryan Oswald}
+\label{EvalPreQ}
 \includepdf[pages=1-,pagecommand={}]{Pre-Questionnaire.pdf}
 
 \appendixauthor{Post-Questionnaire}{Ryan Oswald}
