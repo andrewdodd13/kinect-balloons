@@ -29,11 +29,15 @@
 \ifxetex
     \usepackage{fontspec}
     \usepackage{xunicode}
-    \usepackage{xltxtra}
+    \usepackage{unicode-math}
+    \usepackage{amsmath}
+    \usepackage{xltxtra}    
     \defaultfontfeatures{Mapping=tex-text}
     \setsansfont{ITC Franklin Gothic Std}
     \setromanfont{Charis SIL}
     \setmonofont{Consolas}
+    \setmathfont{Charis SIL}
+    %\setmathfont{Cambria Math}
 \else
     \renewcommand{\sfdefault}{FranklinGothic}
 \fi

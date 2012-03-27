@@ -52,10 +52,12 @@ appealing.
 The Network Subsystem implements the INetworkManager interface and is 
 responsible for managing communication between the Client and Server. The 
 default implementation relies on the ScreenConnection class from the Messaging
-library, details of which can be found elsewhere. 
+library, details of which can be found elsewhere. No game logic should be put in
+this subsystem which is only responsible for letting the Client send and receive 
+messages.
 
 \begin{table}[H]
-\begin{tabular}{|p{4.8cm}|p{3.8cm}|p{7cm}|}
+\begin{tabular}{|p{4.4cm}|p{3.8cm}|p{7.4cm}|}
 \hline
 \multicolumn{3}{|c|}{INetworkManager} \\ \hline
 Connect & & Connects the Network Manager to the Server. \\ \hline
@@ -63,27 +65,29 @@ Connect & & Connects the Network Manager to the Server. \\ \hline
 MoveBalloonOffscreen & Balloon,\newline Direction,\newline Exit Position,\newline Velocity &
 Sends a message to the Server telling it the given balloon has moved off 
 screen. The direction is the side the balloon exited, the position a number 
-between 0 and 1 of the height of the balloon, and velocity the velocity of the
+in $[0;1]$ of the height of the balloon, and velocity the velocity of the
 balloon as it left. \\ \hline
+
+MovePlaneOffscreen & Plane,\newline Direction,\newline Exit Position,\newline Velocity,\newline Time &
+Sends a message to the Server telling it the given plane has moved off 
+screen. The direction is the side the plane exited, the position a number 
+in $[0;1]$ of the height of the plane. Velocity and time are the velocity and
+animation time of the plane as it left. \\ \hline
 
 NotifyBalloonPopped & Balloon & 
 Sends a message to the Server telling it the given balloon has been popped by
 the user. \\ \hline
 
-GetBalloonDetails & Balloon ID &
-Retrieves the details of the given balloon from its ID. \\ \hline
+GetBalloonState, \newline GetBalloonDecoration & Balloon ID &
+Retrieves the current state/decoration of the given balloon from its ID. \\ \hline
 
-UpdateBalloonDetails & Balloon & 
-Processes messages from the Server and will be called once per Update loop.
-The four parameters are Actions which are called when the relevant message is
-received from the Server. \\ \hline
+UpdateBalloonState & Balloon & 
+Notifies the server that the state of the given balloon as changed. \\ \hline
 
-ProcessMessages & On New Balloon,\newline On Pop Balloon,
-\newline On Content Update,\newline On State 
-Update &
+ProcessMessages & Message Handlers &
 Processes messages from the Server and will be called once per Update loop. 
-The four parameters are Actions which are called when the relevant message is
-received from the Server. \\ \hline
+The parameter is a list of Actions which are called when a message with the 
+relevant type is received from the Server. \\ \hline
 \end{tabular}
 
 \caption{\emph{INetworkManager} reference}
@@ -232,7 +236,7 @@ in the Update method and drawing logic in the Draw method (see table
 ties together all the other components.
 
 \begin{table}
-\begin{tabular}{|p{3cm}|p{3.6cm}|p{9cm}|}
+\begin{tabular}{|p{2.6cm}|p{3.6cm}|p{9.4cm}|}
 \hline
 \multicolumn{3}{|c|}{BalloonClient} \\ \hline
 \emph{Constructor} & Network Manager, Input Manager & 
@@ -254,29 +258,31 @@ formula to determine the gap between them. Finally, it asks the Network Manager
 to connect to the server. \\ \hline
 
 Update & Game Time &
-Update performs the game logic. The following steps are performed:
+Update performs the game logic. \newline The following steps are performed:
 \begin{itemize}
 	\item{Process Network Events}
 	\item{Process Input}
 	\item{Process Physics (and Apply Wind)}
-	\item{Move any balloons to other screens which have moved off the edge of the screen}
+	\item{Move any balloons/planes to other screens which have moved off the edge of the screen}
 	\item{Update any running animations}
-	\item{Update the content box (if it is visible)}
+	\item{Update the content box (if visible)}
 \end{itemize}
 \\ \hline
 
 Draw & Game Time &
 Draw performs the actual drawing of the game world. It is not supposed to 
 perform any logic tasks. Items drawn first will be hidden ``behind'' items drawn
-later. The following steps are performed:
+later. \newline The following steps are performed:
 \begin{itemize}
-	\item{Clear the screen and initialise the Sprite Batch}
+	\item{Clear the screen, initialise the Sprite Batch}
 	\item{Draw the background}
 	\item{Draw the balloon captions}
 	\item{Draw the balloons}
+	\item{Draw the planes}
 	\item{Draw the ``pop'' animations}
 	\item{Draw the buckets}
-	\item{Draw the content box (if it is supposed to be visible)}
+	\item{Draw the content box (if visible)}
+	\item{Draw the ``confetti'' animations}
 	\item{Draw the user's hands}
 	\item{Flush the Sprite Batch}
 \end{itemize}
