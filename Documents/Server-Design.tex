@@ -26,16 +26,16 @@ order to have balloons to provide to the client, the server has to regularly
 retrieve the information needed to create these balloons from the feed.
 
 Something to keep in mind is that the content of this feed changes with time
-(i.e. new items are added from the Twitter aggregator and user-submitted 
-content) but we want to keep the number of balloons on each screen at a
+(new items are added from the Twitter aggregator and user-submitted 
+content) but we want to keep the number of balloons on a screen at a
 reasonable level. This is why the server has to decide which balloons should be
 kept and which should be discarded when new items are retrieved from the feed.
-We have decided to discard all balloons without a corresponding feed item.
+We have decided to discard all balloons without a matching feed item.
 
 An additional requirement is that the number of screens connected to the server
-is not fixed and can change over the lifetime of the server execution. This
-means that connecting and disconnecting screens from the server can be done at
-any time and will not halt or impair the processing of balloons. For example, 
+is not fixed and can change over the lifetime of the server execution. 
+Connecting and disconnecting screens from the server can be done at
+any time and does not interfere with the processing of balloons. For example, 
 when a screen is added the server requests more items from the feed. These new
 items are used to create new balloons to populate the new, empty screen. When 
 disconnecting a screen, its balloons are transferred to the remaining screens.
