@@ -426,27 +426,29 @@ Utrecht students.
 The Client system makes use of several third-party components to reduce the 
 amount of development required:
 
-\begin{itemize}
-\item{Microsoft XNA Game Studio 4.0}
-
+\paragraph{Microsoft XNA Game Studio 4.0}
 An environment for quickly creating games which provides several library 
 functions such as loading content and drawing to the screen. 
-\item{Microsoft Kinect SDK 1.0}
 
+\paragraph{Microsoft Kinect SDK 1.0}
 The official SDK providing the ability to interact with the Kinect hardware. 
-\item{Farseer Physics 3.3}
 
+\paragraph{Farseer Physics 3.3}
 A physics library derived from Box2D, a very popular physics library on which
 many iPhone and Android games are based. It is used to provide collision 
 detection and object interaction between balloons and gives a realistic feel to
 balloon movement.
-\item{Terra Informatica HTMLayout}
 
+\paragraph{Terra Informatica HTMLayout}
 A lightweight HTML renderer used to render the labels and content boxes of 
 balloons. This allowed us to provide much richer content than the built-in text
-rendering abilities of XNA.
-\item{ThoughtWorks QRCode}
+rendering abilities of XNA. This is a native C++ library which required us to 
+write bindings to use it from C\# code.
 
+\paragraph{ThoughtWorks QRCode}
 A QRCode generation library, used to convert content URLs into a format which 
 can be quickly recognised by a user's device.
-\end{itemize}
+
+\paragraph{Newtonsoft JSON 4.5}
+A library that can parse and produce JSON content. This is used to interface 
+with the Web Feed, for configuration files and as a text serialiser for debugging.
