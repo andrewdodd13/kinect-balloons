@@ -66,7 +66,7 @@ protocol that is used over TCP/IP sockets. The former choice was decided by the
 Web team and motivated by ease of use and reuse of existing libraries. As far 
 as we are aware there is no existing protocol that lets coordinating content
 balloons over different screens, therefore we had to create our own. Using 
-sockets instead of leveraging higher-level communication frameworks was chosen 
+sockets instead of higher-level communication frameworks was chosen 
 to make debugging easier by writing explicit code at the expense of writing 
 more code.
 
@@ -239,7 +239,7 @@ use of threads. In particular, in both client and server, as much processing as
 possible is done in a single thread (`Main thread' for the server, `GUI thread'
 for the client). However, messages received over the network
 can arrive in any thread (this is because we are using asynchronous I/O). To 
-keep all processing on the main thread, these messages are placed in a thread-safe
+keep all processing on the main thread, messages are placed in a thread-safe
 message queue and then removed in order by the main thread when it is ready. 
 
 This design pattern (thread with a message/event loop) is used throughout the
