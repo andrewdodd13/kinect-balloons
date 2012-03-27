@@ -205,6 +205,29 @@ Howerver, the latter messages can be also sent spontaneously (e.g. when the user
 changes a balloon's decoration using the paint buckets). Messages are handled 
 the same no matter if they are spontaneous or a response from another message.
 
+\begin{table}[h]
+\begin{tabular}{|p{4.4cm}|p{3.6cm}|p{7.6cm}|}
+\hline
+\multicolumn{3}{|c|}{ScreenConnection} \\ \hline
+\emph{Constructor} & Message Queue & Creates a new connection object with no established connection. 
+Received messages will be added to the queue. \\ \hline
+
+\emph{Constructor} & Message Queue, \newline Socket & Creates a new connection 
+object with an established socket connection. Received messages will be added to the queue. \\ \hline
+
+Connect & IP Address, \newline Port & Try to establish a socket connection to the Server at the given address and port. \\ \hline
+
+StartReceivingMessages & & Start receiving messages from an established connection. \\ \hline
+
+SendMessages & Message & Sends a message on an established connection. \\ \hline
+
+\end{tabular}
+
+\caption{\emph{ScreenConnection} reference}
+
+\label{ScreenConnRef}
+\end{table}
+
 Sockets can only send and receive bytes. This is why there must be a way to
 transform message objects from and to bytes, in order to transmit them over the
 networks between the screens and server. This process is called serialisation. 
@@ -260,7 +283,6 @@ Similarly in the client, long-running operations such as downloading images and
 rendering HTML pages are done on a background thread and the result is used in 
 the GUI thread.
 
-\clearpage{}
 \subsection{Persistence}
 
 By persistence, we mean saving the balloon data manipulated by the server between 
