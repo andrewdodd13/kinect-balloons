@@ -100,7 +100,7 @@
              id="rect2999" /></flowRegion><flowPara
            id="flowPara3015">Report</flowPara></flowRoot>    </g>
     <image
-       sodipodi:absref="/home/xya/Projects/hwkinect/Documents/Diagrams/HeriotWatt_logo.jpg"
+       sodipodi:absref="/home/xya/Projets/hwkinect/Documents/Diagrams/HeriotWatt_logo.jpg"
        xlink:href="Diagrams/HeriotWatt_logo.jpg"
        y="70.866119"
        x="70.866142"
@@ -139,15 +139,7 @@
          id="flowPara3045">Brieuc Roblin</flowPara><flowPara
          id="flowPara3047">Pierre-André Saulais</flowPara><flowPara
          id="flowPara3049">John Truesdale</flowPara><flowPara
-         id="flowPara3051">Chris Wyllie</flowPara></flowRoot>    <image
-       sodipodi:absref="/home/xya/Projects/hwkinect/Documents/Diagrams/Kinect.png"
-       xlink:href="Diagrams/Kinect.png"
-       y="911.70856"
-       id="image3638"
-       x="496.08228"
-       width="177.22223"
-       height="73.333336" />
-    <flowRoot
+         id="flowPara3051">Chris Wyllie</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot3660"
        style="font-size:12px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:150%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Palatino LT Std;-inkscape-font-specification:Palatino LT Std Italic"
@@ -159,5 +151,13 @@
            x="76.729233"
            y="884.28864"
            style="font-size:12px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:150%;writing-mode:lr;text-anchor:start;font-family:Palatino LT Std;-inkscape-font-specification:Palatino LT Std Italic" /></flowRegion><flowPara
-         id="flowPara3014">Third draft – Friday 23, 2012</flowPara></flowRoot>  </g>
+         id="flowPara3014">Final revision – March 30, 2012</flowPara></flowRoot>    <image
+       x="496.08228"
+       id="image3638-8"
+       y="946.91974"
+       xlink:href="/home/xya/Projects/hwkinect/Documents/Diagrams/Kinect2.png"
+       sodipodi:absref="/home/xya/Projects/hwkinect/Documents/Diagrams/Kinect.png"
+       width="179.27708"
+       height="38.122139" />
+  </g>
 </svg>
