@@ -3,6 +3,7 @@
 // Twitter blue :-)
 define('TWITTER_BALLOON_COLOR', '9AE4E8');
 
+// Keys set up for the Macs_Aggregator account & twitter app
 define('TWITTER_CONSUMER_KEY', 'AlK5OoSA7VnCPaX3Tq4w');
 define('TWITTER_CONSUMER_SECRET', 'Jpul1N0XNmD2kPTwqW2x6zknZBIEufO0JGSHkkfHN4');
 define('TWITTER_USER_TOKEN', '220056690-R3z1idJtvJdO7BWORtKCu9IZhAB2sEwgYEViT1pA');
@@ -22,7 +23,7 @@ final class FeedContentTypes {
     // Balloons with <= this many votes won't show up at all
     const VOTES_TO_DIE = -3;
 
-    // 15 minutes in seconds
+    // Time in seconds
     const BLANK_BALLOON_LIFETIME = 60;
 
     // If there isn't enough of some content
