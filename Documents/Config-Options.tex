@@ -1,0 +1,155 @@
+The application loads values from a configuration file at start-up, and a default file is created if not file is found.
+The valid options in the configuration file are show below.
+
+\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
+
+\hline
+\multicolumn{3}{|c|}{Common (shared) values}\tabularnewline
+\hline
+
+Value name & Default value & Comments \tabularnewline
+\hline
+
+LogToConsole & true & comment
+\tabularnewline\hline
+
+LogToFile & false & comment
+\tabularnewline\hline
+
+LogFilePath & null & comment
+\tabularnewline\hline
+
+InputType & Mouse & comment
+\tabularnewline\hline
+
+SerializerType & Binary & comment
+\tabularnewline\hline
+
+LogNetworkMessages & false & comment
+\tabularnewline\hline
+
+BalloonDeadzoneMultiplier & 1.1 & comment
+\tabularnewline\hline
+
+
+\end{tabular}
+\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
+
+\hline
+\multicolumn{3}{|c|}{Client specific values}\tabularnewline
+\hline
+
+Value name & Default value & Comments \tabularnewline
+\hline
+
+FullScreen & false & comment
+\tabularnewline\hline
+
+ScreenWidth & 1366 & comment
+\tabularnewline\hline
+
+ScreenHeight & 768 & comment
+\tabularnewline\hline
+
+MessageDisplayTime & 30000 & comment
+\tabularnewline\hline
+
+PopAnimationTime & 2500 & comment
+\tabularnewline\hline
+
+PopAnimationEnabled & true & comment
+\tabularnewline\hline
+
+PopAnimationAlpha & 0.3 & comment
+\tabularnewline\hline
+
+PopAnimationBeta & 5.0 & comment
+\tabularnewline\hline
+
+PopAnimationScale & 2.0 & comment
+\tabularnewline\hline
+
+UseHtmlRendering & true & comment
+\tabularnewline\hline
+
+RemoteIPAddress & localhost & comment
+\tabularnewline\hline
+
+RemotePort & 4000 & comment
+\tabularnewline\hline
+
+EnableHighFive & false & High five allows two users to pop a balloon by each using a hand to create a clap (i.e. a high five). We decided to disable this because it's actually very hard to do!
+\tabularnewline\hline
+
+KinectMovementThreshold & 2.0 & This is how fast both hands need to be moving for a clap to be triggered. It uses the velocity from the physics object attached to the hands, so the value is in metres/second.
+\tabularnewline\hline
+
+KinectMaxHandRange & 2.0 & This is how far the second hand can be from a balloon to trigger a clap, when the first hand collides with the balloon. Measured in internal metres.
+\tabularnewline\hline
+
+KinectMinAttackAngle & 0.4 & This value ranges from -1 to 1 and is the cosine of the difference in angle allowed between hands and the balloon for triggering a clap. A value of 1 indicates the hand moves move directly at the balloon, 0 allows the hand to be moving parallel to the balloon (90 degrees) and -1 allows the hand to be moving directly away from the balloon.
+\tabularnewline\hline
+
+KinectXSensitivity & 1.5 & This is the horizontal multiplier for the Kinect input. Should be adjusted for each environment to maximize usability.
+\tabularnewline\hline
+
+KinectYSensitivity & 2.0 & This is the vertical multiplier for the Kinect input. Should be adjusted for each environment to maximize usability. Generally this should be bigger than the horizontal multiplier.
+\tabularnewline\hline
+
+
+\end{tabular}
+\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
+
+\hline
+\multicolumn{3}{|c|}{Server specific values}\tabularnewline
+\hline
+
+Value name & Default value & Comments \tabularnewline
+\hline
+
+LocalIPAddress & 0.0.0.0 & comment
+\tabularnewline\hline
+
+LocalPort & 4000 & comment
+\tabularnewline\hline
+
+FeedURL & 'http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/{0}' & comment
+\tabularnewline\hline
+
+FeedTimeout & 60000 & comment
+\tabularnewline\hline
+
+MinBalloonsPerScreen & 1 & comment
+\tabularnewline\hline
+
+MaxBalloonsPerScreen & 5 & comment
+\tabularnewline\hline
+
+BalloonVelocityLeftX & -10.0 & comment
+\tabularnewline\hline
+
+BalloonVelocityLeftY & 0.0 & comment
+\tabularnewline\hline
+
+BalloonVelocityRightX & 10.0 & comment
+\tabularnewline\hline
+
+BalloonVelocityRightY & 0.0 & comment
+\tabularnewline\hline
+
+PlaneVelocityLeftX & -2.0 & comment
+\tabularnewline\hline
+
+PlaneVelocityLeftY & 0.0 & comment
+\tabularnewline\hline
+
+PlaneVelocityRightX & 2.0 & comment
+\tabularnewline\hline
+
+PlaneVelocityRightY & 0.0 & comment
+\tabularnewline\hline
+
+PlaneInitialY & 0.5 & comment
+\tabularnewline\hline
+
+\end{tabular}
