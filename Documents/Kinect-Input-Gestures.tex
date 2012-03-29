@@ -86,7 +86,7 @@ We found through testing that setting the tolerances to be very generous (high a
 
 Both of these methods use a reactive approach, only checking the conditions at the moment of impact between the hand and the balloon, however the Kinect sensor can add extra jitter and inaccuracies to the data (as noted in Kinect section).
 If a jitter occurs just at the moment of impact, which it frequently does, it will not register a clap as the hands are not moving quite towards each other/the balloon in that frame.
-This is mainly why setting low tolerances for the conditions helped.
+This is mainly why setting generous tolerances on the conditions helped.
 
 A better method would be to continuously track the hands and detect when a clap is happening, as this reduces the influence of random jitter in the data stream.
 Alternatively, if we calculated the velocity of the hand objects ourselves as a normalised sum of the \textit{n} previous frames, this would help reduce noise in the data.
