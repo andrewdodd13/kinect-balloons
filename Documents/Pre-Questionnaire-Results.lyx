@@ -325,7 +325,7 @@ Pre-Questionnaire Question 2.
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -730,7 +730,7 @@ Percentage
 \uwave off
 \noun off
 \color none
-60
+60+
 \end_layout
 
 \end_inset

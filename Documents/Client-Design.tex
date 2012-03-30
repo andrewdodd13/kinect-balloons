@@ -48,15 +48,16 @@ content. The HTML renderer was a feature added mid-way through development but
 is now the default model as it is easier to customize and looks much more
 appealing. 
 
-\clearpage{}
 \subsection{Network Subsystem}
 The Network Subsystem implements the INetworkManager interface and is 
 responsible for managing communication between the Client and Server. The 
 default implementation relies on the ScreenConnection class from the Messaging
-library, details of which can be found elsewhere. 
+library, details of which can be found in table \vref{ScreenConnRef}. No game 
+logic should be put in this subsystem which is only responsible for letting the 
+Client send and receive messages.
 
 \begin{table}[H]
-\begin{tabular}{|p{4.8cm}|p{3.8cm}|p{7cm}|}
+\begin{tabular}{|p{4.4cm}|p{3.8cm}|p{7.4cm}|}
 \hline
 \multicolumn{3}{|c|}{INetworkManager} \\ \hline
 Connect & & Connects the Network Manager to the Server. \\ \hline
@@ -64,27 +65,29 @@ Connect & & Connects the Network Manager to the Server. \\ \hline
 MoveBalloonOffscreen & Balloon,\newline Direction,\newline Exit Position,\newline Velocity &
 Sends a message to the Server telling it the given balloon has moved off 
 screen. The direction is the side the balloon exited, the position a number 
-between 0 and 1 of the height of the balloon, and velocity the velocity of the
+in $[0;1]$ of the height of the balloon, and velocity the velocity of the
 balloon as it left. \\ \hline
+
+MovePlaneOffscreen & Plane,\newline Direction,\newline Exit Position,\newline Velocity,\newline Time &
+Sends a message to the Server telling it the given plane has moved off 
+screen. The direction is the side the plane exited, the position a number 
+in $[0;1]$ of the height of the plane. Velocity and time are the velocity and
+animation time of the plane as it left. \\ \hline
 
 NotifyBalloonPopped & Balloon & 
 Sends a message to the Server telling it the given balloon has been popped by
 the user. \\ \hline
 
-GetBalloonDetails & Balloon ID &
-Retrieves the details of the given balloon from its ID. \\ \hline
+GetBalloonState, \newline GetBalloonDecoration & Balloon ID &
+Retrieves the current state/decoration of the given balloon from its ID. \\ \hline
 
-UpdateBalloonDetails & Balloon & 
-Processes messages from the Server and will be called once per Update loop.
-The four parameters are Actions which are called when the relevant message is
-received from the Server. \\ \hline
+UpdateBalloonState & Balloon & 
+Notifies the server that the state of the given balloon as changed. \\ \hline
 
-ProcessMessages & On New Balloon,\newline On Pop Balloon,
-\newline On Content Update,\newline On State 
-Update &
+ProcessMessages & Message Handlers &
 Processes messages from the Server and will be called once per Update loop. 
-The four parameters are Actions which are called when the relevant message is
-received from the Server. \\ \hline
+The parameter is a list of Actions which are called when a message with the 
+relevant type is received from the Server. \\ \hline
 \end{tabular}
 
 \caption{\emph{INetworkManager} reference}
@@ -233,7 +236,7 @@ in the Update method and drawing logic in the Draw method (see table
 ties together all the other components.
 
 \begin{table}
-\begin{tabular}{|p{3cm}|p{3.6cm}|p{9cm}|}
+\begin{tabular}{|p{2.6cm}|p{3.6cm}|p{9.4cm}|}
 \hline
 \multicolumn{3}{|c|}{BalloonClient} \\ \hline
 \emph{Constructor} & Network Manager, Input Manager & 
@@ -255,29 +258,31 @@ formula to determine the gap between them. Finally, it asks the Network Manager
 to connect to the server. \\ \hline
 
 Update & Game Time &
-Update performs the game logic. The following steps are performed:
+Update performs the game logic. \newline The following steps are performed:
 \begin{itemize}
 	\item{Process Network Events}
 	\item{Process Input}
 	\item{Process Physics (and Apply Wind)}
-	\item{Move any balloons to other screens which have moved off the edge of the screen}
+	\item{Move any balloons/planes to other screens which have moved off the edge of the screen}
 	\item{Update any running animations}
-	\item{Update the content box (if it is visible)}
+	\item{Update the content box (if visible)}
 \end{itemize}
 \\ \hline
 
 Draw & Game Time &
 Draw performs the actual drawing of the game world. It is not supposed to 
-perform any logic tasks. Items drawn first will be hidden "behind" items drawn
-later. The following steps are performed:
+perform any logic tasks. Items drawn first will be hidden ``behind'' items drawn
+later. \newline The following steps are performed:
 \begin{itemize}
-	\item{Clear the screen and initialise the Sprite Batch}
+	\item{Clear the screen, initialise the Sprite Batch}
 	\item{Draw the background}
 	\item{Draw the balloon captions}
 	\item{Draw the balloons}
-	\item{Draw the "pop" animations}
+	\item{Draw the planes}
+	\item{Draw the ``pop'' animations}
 	\item{Draw the buckets}
-	\item{Draw the content box (if it is supposed to be visible)}
+	\item{Draw the content box (if visible)}
+	\item{Draw the ``confetti'' animations}
 	\item{Draw the user's hands}
 	\item{Flush the Sprite Batch}
 \end{itemize}
@@ -314,6 +319,7 @@ the user interface which the user was also pleased with; however that prototype
 was discarded as it was easier to implement the design on top of the input
 prototype.
 
+\clearpage{}
 \subsubsection{Client Demo 2 - 14th February}
 \begin{figure}[h]
 \begin{centering}
@@ -321,16 +327,17 @@ prototype.
 \par\end{centering}
 
 \caption{Prototype in Week 5}
+\label{ScreenWeek5}
 \end{figure}
-The second demo prototype was much more advanced than the first. Many of the UI
-concepts were implemented including balloons along with buckets to provide the 
-"painting" functionality. The mock graphics used in the first prototype were 
-replaced by nicer images. The balloons were already tied into the physics 
-however the rules were tweaked to make them much more realistic. The ability to
-view the content of a balloon was also added by putting in a "pop balloon" 
-action in the Input interface, which when called, caused a content box to open
-with the desired content. Balloons were also given a small "tag" with a short
-text description.
+The second demo prototype was much more advanced than the first (see figure 
+\ref{ScreenWeek5}). Many of the UI concepts were implemented 
+including balloons along with buckets to provide the ``painting'' functionality. 
+The mock graphics used in the first prototype were replaced by nicer images. 
+The balloons were already tied into the physics however the rules were tweaked to 
+make them much more realistic. The ability to view the content of a balloon was 
+also added by putting in a ``pop balloon'' action in the Input interface, which 
+when called, caused a content box to open with the desired content. Balloons were 
+also given a small ``tag'' with a short text description.
 
 The Kinect input system was now governed by the physics engine. Whilst this 
 allowed for collision detection, the user input lag added caused the client 
@@ -339,9 +346,10 @@ client had issues reaching the top of the screen on the target hardware.
 
 Finally, the networking features of the system were added in this build. These
 allowed balloons to be generated by the Server and pushed down to the Client 
-system. Balloons could be pushed between screens although some bugs in the 
+system. Balloons could be pushed between screens, however bugs in the 
 server made this difficult to demonstrate.
 
+\clearpage{}
 \subsubsection{Client Demo 3 - 21st February}
 \begin{figure}[h]
 \begin{centering}
@@ -350,7 +358,7 @@ server made this difficult to demonstrate.
 
 \caption{Prototype in Week 6 Using XNA Labels}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[p]
 \begin{centering}
 \includegraphics[width=\textwidth]{Diagrams/Client-Log-W6-HTML.jpg}
 \par\end{centering}
@@ -381,6 +389,7 @@ During the user evaluation some fixes were applied to prevent concurrency
 issues in the HTML renderer when rendering images; other than this the Client 
 system's build was unchanged from the previous week.
 
+\clearpage{}
 \subsubsection{User Evaluation Iteration - 13th March}
 \begin{figure}[h]
 \begin{centering}
@@ -388,6 +397,7 @@ system's build was unchanged from the previous week.
 \par\end{centering}
 
 \caption{Final Product}
+\label{ScreenFinal}
 \end{figure}
 From the results of the user evaluation we implemented several fixes to do with
 usability --- these included:
@@ -398,10 +408,23 @@ to use. We added a black border to it, reduced the activation time from 2.5s to
 \item{Paint buckets were too close together; they were spaced out slightly 
 further.}
 \item{The physical floor was raised slightly whilst moving the buckets down. 
-This prevents balloons from being "stuck" under the floor.}
+This prevents balloons from being ``stuck'' under the floor.}
 \item{Animations were added after a period of inactivity which inform the user
 of actions they can take to interact with the system.}
 \end{itemize}
+
+Results from user evaluation indicated that several users did not discover 
+features like popping balloons or customising balloons on their own. We believed 
+that showing on-screen tips from time to time would let users know about 
+less-obvious features. 
+
+We chose to introduce this in the form of a plane carrying 
+a `tip banner' behind it (see figure \ref{ScreenFinal}). Like balloons, such 
+planes can move from one screen to another and are physical objects (i.e. they 
+will push balloons around). However unlike balloons, planes can not be pushed 
+around or interacted with in any way. This feature was implemented after
+the March 13 demo and therefore first shown on the March 16 demo to the visiting 
+Utrecht students.
 
 \clearpage{}
 
@@ -409,27 +432,29 @@ of actions they can take to interact with the system.}
 The Client system makes use of several third-party components to reduce the 
 amount of development required:
 
-\begin{itemize}
-\item{Microsoft XNA Game Studio 4.0}
-
+\paragraph{Microsoft XNA Game Studio 4.0}
 An environment for quickly creating games which provides several library 
 functions such as loading content and drawing to the screen. 
-\item{Microsoft Kinect SDK 1.0}
 
+\paragraph{Microsoft Kinect SDK 1.0}
 The official SDK providing the ability to interact with the Kinect hardware. 
-\item{Farseer Physics 3.3}
 
+\paragraph{Farseer Physics 3.3}
 A physics library derived from Box2D, a very popular physics library on which
 many iPhone and Android games are based. It is used to provide collision 
 detection and object interaction between balloons and gives a realistic feel to
 balloon movement.
-\item{Terra Informatica HTMLayout}
 
+\paragraph{Terra Informatica HTMLayout}
 A lightweight HTML renderer used to render the labels and content boxes of 
 balloons. This allowed us to provide much richer content than the built-in text
-rendering abilities of XNA.
-\item{ThoughtWorks QRCode}
+rendering abilities of XNA. This is a native C++ library which required us to 
+write bindings to use it from C\# code.
 
+\paragraph{ThoughtWorks QRCode}
 A QRCode generation library, used to convert content URLs into a format which 
 can be quickly recognised by a user's device.
-\end{itemize}
+
+\paragraph{Newtonsoft JSON 4.5}
+A library that can parse and produce JSON content. This is used to interface 
+with the Web Feed, for configuration files and as a text serialiser for debugging.

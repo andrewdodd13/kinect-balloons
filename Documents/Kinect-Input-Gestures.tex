@@ -1,16 +1,38 @@
-\subsection{Kinect Input}
-The Kinect SDK allows us to register for different types of data to get from the device. These are: colour stream, depth stream and skeleton data. We only get the skeleton data since this gives us hand location data. However, this requires the full skeleton to be tracked to just get the hands. This means we can't track a single hand on its own. We could use the depth input and try to find hand locations ourselves, but this is extremely hard for little gain, and it probably wouldn't be as accurate as the skeleton data.
-We added the ability to adjust the scaling of the Kinect input into an option in the configuration file. This allowed for adjustment for people of smaller height. We chose to make this a configuration option rather than a hardcoded value because the placement of the Kinect in relation to the user can affect the user's ability to reach parts of the screen. We also scale the x and y axis input separately since people can usually reach from left to right easier than reaching vertically.
+\subsection{Hand tracking}
+The Kinect SDK allows us to register to three different types of data to get from the device; colour stream, depth stream and skeleton data.
+In this project we only use the skeleton data since we can pull out the hand location data from this.
+However, this requires the full skeleton to be tracked in order to get the hand data, and also means we can't track a single hand on its own.
+We could use the depth input and try to find hand locations ourselves, but this is extremely hard for little gain, and it probably wouldn't be as accurate as the skeleton data.
 
-One disadvantage to this scaling is it adversely affects the accuracy of the Kinect. The Kinect sensor does not track the user perfectly, especially the extremities such as the hands. As such the position of the person's hand is constantly in flux, even when the real hand is stationary. Increasing the scaling factor of the Kinect amplifies this inaccuracy. This can cause the hand to excessively jitter, and makes clapping much more difficult. As such, the values should be left to as low as is still usable.
-We did find that the angle of the Kinect and distance from the Kinect affected the difference in height greatly. Having a direct angle at mid-distance provided the most consistent usability between users.
+We ran into some issues during development where the position of the Kinect relative to the user, as well as the user's stature greatly affected usability.
+We found being able to naturally reach parts of the screen was an issue so we added the ability to scale the Kinect input.
+We chose to create this as a configuration option rather than as a hard coded value, so it could easily be adjusted for each environment where it's run.
+We also scale the x and y axis input separately since people can usually reach from left to right easier than reaching vertically.
 
-There are some hardware limitations of the Kinect however. For example, users in wheelchairs may have some difficulty in using the Kinect. Because we use skeleton tracking to find hand positions, if the Kinect has issues tracking the full user, then the hands can't be displayed. The Kinect will often interpret a wheelchair or crutches as legs, but this may not be a significant issue for us, since we only require the hands be accurately tracked. However, we did find that large jackets interfered with the hand positions.
-We also found the minimum hardware on the connected machine to run the Kinect was surprisingly high. It would seem the Kinect can be quite a CPU hog.
+One disadvantage to this scaling is it adversely affects the accuracy of the Kinect.
+The Kinect sensor does not track the user perfectly, especially the extremities such as the hands.
+As such the position of the person's hand on the screen is constantly in flux, even when the real hand is stationary.
+Increasing the scaling factor of the Kinect amplifies this inaccuracy, which can cause the hand to excessively jitter, and makes clapping much more difficult.
+As such, the values should be left as low as is still usable.
 
-\clearpage{}
+We also found that the angle and distance from the Kinect affected the user's ability to reach around the screen.
+Through trial and error during development and demos, we found a direct angle at mid-distance (2-3m) provided the most consistent usability between users.
+
+\subsection{Hardware limitations}
+There are some limitations with the Kinect, for example users in wheelchairs may have some difficulty using or being recognised by the device.
+Because we use skeleton tracking to find hand positions, if the Kinect has issues tracking the full user, then the hands can't be displayed.
+The Kinect will often interpret a wheelchair or crutches as legs, however we only require the hands be accurately tracked so this may not affect usability.
+Some further testing would be required to determine if this is going to be a significant issue for the application.
+However, we did find through our various demos that large jackets interfered with what the device interpreted as an arm, and thus adversely affected hand positions.
+
+We also found the minimum hardware for the machine connected to the Kinect was surprisingly high to achieve a usable application.
+The machines that were attached to the screens in the learning zone were not adequate to run the program, or even the sample projects that come with the Kinect SDK.
+The main bottleneck seems to be the CPU, which the Kinect likes to hog.
+
 \subsection{Developer Documentation}
-The Kinect Controller Input class (see table \ref{KinectInputRef}) is the implementation of the IInputManager interface for the Kinect device. It registers to the Kinect that it wants to receive skeleton data, which it then uses to generate hand objects. The Kinect sends us data by means of a callback method, so we have to use a lock to ensure GetHandPositions doesn't happen during the middle of an update.
+The Kinect Controller Input class (see table \ref{KinectInputRef}) is the implementation of the IInputManager interface for the Kinect device.
+It registers to the Kinect that it wants to receive skeleton data, which it then uses to generate hand objects.
+The Kinect sends us data by means of a callback method, so we have to use a lock to ensure a Kinect update doesn't interfere with a call to GetHandPositions.
 
 \begin{table}[h]
 \begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
@@ -41,16 +63,16 @@ It uses the skeleton data to generate hand data.\tabularnewline
 \label{KinectInputRef}
 \end{table}
 
-[It might be nice to have a table stating which configuration values affect this class in what way]
-
 \clearpage{}
 \subsection{Gestures}
-[I've also added a bit on gestures since I did most of that. Again, more as a reflection]
 
-We had originally designed the system to use multiple gestures to manipulate and navigate it; however through advice and some minor experimentation, we chose not to do this since recognising gestures is very difficult. The Kinect has no native support for recognising gestures, so it is left to the programmer to implement these. We refined the application to use only a clapping gesture, and just use the hand positions for the rest.
+We had originally designed the system to use multiple gestures to manipulate and navigate it; however through advice and some minor experimentation, we chose not to do this since recognising gestures is very difficult.
+The Kinect has no native support for recognising gestures, so it is left to the programmer to interpret the raw skeleton data.
+We refined the application to use only a clapping gesture, and used the position of the hands to control the rest of the application.
 
-We originally implemented the clap as checking if two hands are touching the same balloon, however this caused too many false positives. Users would burst balloons when they only meant to knock them, often by rapidly moving their arms around.
-We then improved this method by adding additional conditions to trigger a clap. These are:
+We originally implemented the clap as checking if two hands are touching the same balloon, however this caused too many false positives.
+Users would burst balloons when they only meant to knock them, often by rapidly moving their arms around.
+We then improved this method by adding additional conditions to trigger a clap:
 
 \begin{itemize}
 \item{The hands must be moving towards the balloons (with an angle of tolerance).}
@@ -58,9 +80,13 @@ We then improved this method by adding additional conditions to trigger a clap. 
 \item{Both hands must be moving above a certain speed.}
 \end{itemize}
 
-This did help to remove the false positives; however it did make it harder to actually burst a balloon, to the point users were having difficulty popping a balloon. We added each tolerance as an option in the configuration file, so this can be adjusted easily to a value that feels natural. We found through testing that setting the tolerances to be very generous (high angles, low speeds) was best, as an occasional accidental balloon burst was better than an extremely difficult time popping a balloon.
+This did help to remove the false positives by making it harder to actually burst a balloon, however users were actually having difficulty popping a balloon.
+We added each tolerance as an option in the configuration file, so this can be adjusted easily to a value that feels natural.
+We found through testing that setting the tolerances to be very generous (high angles, low speeds) was best, as an occasional accidental balloon burst was better than an extremely difficult time popping a balloon.
 
-Both of these methods use a reactive approach, only checking the conditions at the moment of impact between the hand and the balloon, however the Kinect sensor can adds extra jitter and inaccuracies to the data (as noted in Kinect section). If a jitter occurs just at the moment of impact (which it frequently does), then it will not register a clap (as the hands are not moving quite towards each other/the balloon in that frame), which is mainly why setting low tolerances helped.
+Both of these methods use a reactive approach, only checking the conditions at the moment of impact between the hand and the balloon, however the Kinect sensor can add extra jitter and inaccuracies to the data (as noted in Kinect section).
+If a jitter occurs just at the moment of impact, which it frequently does, it will not register a clap as the hands are not moving quite towards each other/the balloon in that frame.
+This is mainly why setting generous tolerances on the conditions helped.
 
-A better method would be to continuously track the hands and detect when a clap is happening, as this reduces the influence of random jitter in the data stream. Alternatively, if we calculated the velocity of the hand objects ourselves as a normalised sum of the n previous frames, this would help reduce noise in the data.
- 
+A better method would be to continuously track the hands and detect when a clap is happening, as this reduces the influence of random jitter in the data stream.
+Alternatively, if we calculated the velocity of the hand objects ourselves as a normalised sum of the \textit{n} previous frames, this would help reduce noise in the data.
