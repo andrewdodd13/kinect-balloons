@@ -1,38 +1,72 @@
 The application loads values from a configuration file at start-up, and a default file is created if not file is found.
 The valid options in the configuration file are show below.
 
-\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
+\begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
+\hline \multicolumn{3}{|c|}{Common (shared) values}  \\ \hline
+Value name & Default value & Comments \\ \hline
 
-\hline
-\multicolumn{3}{|c|}{Common (shared) values}\tabularnewline
-\hline
+LogToConsole & true & Whether log messages are displayed in the console (`stdout') or not.  \\ \hline
 
-Value name & Default value & Comments \tabularnewline
-\hline
+LogToFile & false & Whether log messages are written to a file or not. \\ \hline
 
-LogToConsole & true & comment
-\tabularnewline\hline
+LogFilePath & null & Path of the file log messages are written to (only if `LogToFile' is true). \\ \hline
 
-LogToFile & false & comment
-\tabularnewline\hline
+InputType & `Mouse' & Which input device to use (`Mouse' or `Kinect'). \\ \hline
 
-LogFilePath & null & comment
-\tabularnewline\hline
+SerializerType & `Binary' & Which serialiser to use for network communications (`Binary' or `Text'). \\ \hline
 
-InputType & Mouse & comment
-\tabularnewline\hline
+LogNetworkMessages & false & Whether incoming/outgoing messages are logged or not. \\ \hline
 
-SerializerType & Binary & comment
-\tabularnewline\hline
-
-LogNetworkMessages & false & comment
-\tabularnewline\hline
-
-BalloonDeadzoneMultiplier & 1.1 & comment
-\tabularnewline\hline
-
+BalloonDeadzoneMultiplier & 1.1 & Size (proportional to the size of a balloon) of the deadzone at each side of the screen. Balloons have to move past this zone before changing screens. \\ \hline
 
 \end{tabular}
+
+\clearpage{}
+
+\begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
+
+\hline \multicolumn{3}{|c|}{Server specific values} \\ \hline
+
+Value name & Default value & Comments \\ \hline
+
+LocalIPAddress & 0.0.0.0 & IP address of the interface the server uses to listen for incoming connections. The default value means `any interface'. \\ \hline
+
+LocalPort & 4000 & Port used to listen for incoming connections. \\ \hline
+
+FeedURL & \emph{See note below} & URL of the Web Feed API. The \verb${0}$ part gets replaced by the number of items to request. \\ \hline
+
+FeedTimeout & 60000 & Interval of time, in seconds, after which the server should request new items from the feed. \\ \hline
+
+MinBalloonsPerScreen & 1 & Threshold below which the server requests new items from the feed. \\ \hline
+
+MaxBalloonsPerScreen & 5 & Number of feed items (per screen) to request from the feed. \\ \hline
+
+BalloonVelocityLeftX & -10.0 & Initial velocity of a balloon appearing on the right side of the screen (X). \\ \hline
+
+BalloonVelocityLeftY & 0.0 & Initial velocity of a balloon appearing on the right side of the screen (Y). \\ \hline
+
+BalloonVelocityRightX & 10.0 & Initial velocity of a balloon appearing on the left side of the screen (X). \\ \hline
+
+BalloonVelocityRightY & 0.0 & Initial velocity of a balloon appearing on the left side of the screen (Y). \\ \hline
+
+PlaneVelocityLeftX & -2.0 & Initial velocity of a plane going from right to left (X). \\ \hline
+
+PlaneVelocityLeftY & 0.0 & Initial velocity of a plane going from right to left (Y). \\ \hline
+
+PlaneVelocityRightX & 2.0 & Initial velocity of a plane going from left to right (X). \\ \hline
+
+PlaneVelocityRightY & 0.0 & Initial velocity of a plane going from left to right (Y). \\ \hline
+
+PlaneInitialY & 0.5 & Initial, normalised value of a plane's initial Y coordinate on the screen. \\ \hline
+
+\end{tabular}
+
+\paragraph{Note}
+
+The default URL of the Web Feed is:\\ \url{http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/{0}}
+
+\clearpage{}
+
 \begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
 
 \hline
@@ -97,59 +131,5 @@ KinectYSensitivity & 2.0 & This is the vertical multiplier for the Kinect input.
 \tabularnewline\hline
 
 
-\end{tabular}
-\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
-
-\hline
-\multicolumn{3}{|c|}{Server specific values}\tabularnewline
-\hline
-
-Value name & Default value & Comments \tabularnewline
-\hline
-
-LocalIPAddress & 0.0.0.0 & comment
-\tabularnewline\hline
-
-LocalPort & 4000 & comment
-\tabularnewline\hline
-
-FeedURL & 'http://www.macs.hw.ac.uk/~cgw4/balloons/index.php/api/getFeed/{0}' & comment
-\tabularnewline\hline
-
-FeedTimeout & 60000 & comment
-\tabularnewline\hline
-
-MinBalloonsPerScreen & 1 & comment
-\tabularnewline\hline
-
-MaxBalloonsPerScreen & 5 & comment
-\tabularnewline\hline
-
-BalloonVelocityLeftX & -10.0 & comment
-\tabularnewline\hline
-
-BalloonVelocityLeftY & 0.0 & comment
-\tabularnewline\hline
-
-BalloonVelocityRightX & 10.0 & comment
-\tabularnewline\hline
-
-BalloonVelocityRightY & 0.0 & comment
-\tabularnewline\hline
-
-PlaneVelocityLeftX & -2.0 & comment
-\tabularnewline\hline
-
-PlaneVelocityLeftY & 0.0 & comment
-\tabularnewline\hline
-
-PlaneVelocityRightX & 2.0 & comment
-\tabularnewline\hline
-
-PlaneVelocityRightY & 0.0 & comment
-\tabularnewline\hline
-
-PlaneInitialY & 0.5 & comment
-\tabularnewline\hline
 
 \end{tabular}
