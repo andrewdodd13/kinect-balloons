@@ -1,9 +1,13 @@
 The application loads values from a configuration file at start-up, and a default file is created if not file is found.
 The valid options in the configuration file are show below.
 
-\begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
-\hline \multicolumn{3}{|c|}{Common (shared) values}  \\ \hline
-Value name & Default value & Comments \\ \hline
+\subsection{Common Configuration}
+
+Values present in this category are used by both clients and servers.
+
+\begin{tabular}{|p{5.2cm}|p{2.8cm}|p{7.6cm}|}
+
+\hline Value name & Default value & Comments \\ \hline
 
 LogToConsole & true & Whether log messages are displayed in the console (`stdout') or not.  \\ \hline
 
@@ -15,7 +19,7 @@ InputType & `Mouse' & Which input device to use (`Mouse' or `Kinect'). \\ \hline
 
 SerializerType & `Binary' & Which serialiser to use for network communications (`Binary' or `Text'). \\ \hline
 
-LogNetworkMessages & false & Whether incoming/outgoing messages are logged or not. \\ \hline
+LogNetworkMessages & false & Whether incoming and outgoing messages are logged or not. \\ \hline
 
 BalloonDeadzoneMultiplier & 1.1 & Size (proportional to the size of a balloon) of the deadzone at each side of the screen. Balloons have to move past this zone before changing screens. \\ \hline
 
@@ -23,19 +27,19 @@ BalloonDeadzoneMultiplier & 1.1 & Size (proportional to the size of a balloon) o
 
 \clearpage{}
 
+\subsection{Server Configuration}
+
 \begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
 
-\hline \multicolumn{3}{|c|}{Server specific values} \\ \hline
-
-Value name & Default value & Comments \\ \hline
+\hline Value name & Default value & Comments \\ \hline
 
 LocalIPAddress & 0.0.0.0 & IP address of the interface the server uses to listen for incoming connections. The default value means `any interface'. \\ \hline
 
-LocalPort & 4000 & Port used to listen for incoming connections. \\ \hline
+LocalPort & 4,000 & Port used to listen for incoming connections. \\ \hline
 
 FeedURL & \emph{See note below} & URL of the Web Feed API. The \verb${0}$ part gets replaced by the number of items to request. \\ \hline
 
-FeedTimeout & 60000 & Interval of time, in seconds, after which the server should request new items from the feed. \\ \hline
+FeedTimeout & 60,000 & Interval of time, in seconds, after which the server should request new items from the feed. \\ \hline
 
 MinBalloonsPerScreen & 1 & Threshold below which the server requests new items from the feed. \\ \hline
 
@@ -67,69 +71,56 @@ The default URL of the Web Feed is:\\ \url{http://www.macs.hw.ac.uk/~cgw4/balloo
 
 \clearpage{}
 
-\begin{tabular}{|>{\raggedright}p{5cm}|>{\raggedright}p{3.6cm}|>{\raggedright}p{7cm}|}
+\subsection{Client Configuration (General)}
 
-\hline
-\multicolumn{3}{|c|}{Client specific values}\tabularnewline
-\hline
+\begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
 
-Value name & Default value & Comments \tabularnewline
-\hline
+\hline Value name & Default value & Comments \\ \hline
 
-FullScreen & false & comment
-\tabularnewline\hline
+FullScreen & false & Whether the game should be rendered in full-screen mode. \\ \hline
 
-ScreenWidth & 1366 & comment
-\tabularnewline\hline
+ScreenWidth & 1,366 & Screen resolution, in pixels (X). \\ \hline
 
-ScreenHeight & 768 & comment
-\tabularnewline\hline
+ScreenHeight & 768 & Screen resolution, in pixels (Y). \\ \hline
 
-MessageDisplayTime & 30000 & comment
-\tabularnewline\hline
+MessageDisplayTime & 30,000 & How long, in miliseconds, the content box remains on the screen when an user pops a balloon. \\ \hline
 
-PopAnimationTime & 2500 & comment
-\tabularnewline\hline
+PopAnimationTime & 2,500 & Duration, in miliseconds, of the `POW' animation shown when an user pops a balloon. \\ \hline
 
-PopAnimationEnabled & true & comment
-\tabularnewline\hline
+PopAnimationEnabled & true & Whether the `confetti' animation is shown when an user pops a balloon. \\ \hline
 
-PopAnimationAlpha & 0.3 & comment
-\tabularnewline\hline
+PopAnimationAlpha & 0.3 & `Alpha' parameter of the `POW' animation shown when an user pops a balloon. \newline Controls the amplitude of pulses. \\ \hline
 
-PopAnimationBeta & 5.0 & comment
-\tabularnewline\hline
+PopAnimationBeta & 5.0 & `Beta' parameter of the `POW' animation shown when an user pops a balloon. \newline Controls the duration of a pulse. \\ \hline
 
-PopAnimationScale & 2.0 & comment
-\tabularnewline\hline
+PopAnimationScale & 2.0 & `Scale` parameter of the `POW' animation shown when an user pops a balloon. \\ \hline
 
-UseHtmlRendering & true & comment
-\tabularnewline\hline
+UseHtmlRendering & true & Whether text is laid out using HTML or XNA. \\ \hline
 
-RemoteIPAddress & localhost & comment
-\tabularnewline\hline
+RemoteIPAddress & `localhost' & IP address of the server to connect to. \\ \hline
 
-RemotePort & 4000 & comment
-\tabularnewline\hline
+RemotePort & 4,000 & Port of the server to connect to. \\ \hline
 
-EnableHighFive & false & High five allows two users to pop a balloon by each using a hand to create a clap (i.e. a high five). We decided to disable this because it's actually very hard to do!
-\tabularnewline\hline
+\end{tabular}
 
-KinectMovementThreshold & 2.0 & This is how fast both hands need to be moving for a clap to be triggered. It uses the velocity from the physics object attached to the hands, so the value is in metres/second.
-\tabularnewline\hline
+\clearpage{}
 
-KinectMaxHandRange & 2.0 & This is how far the second hand can be from a balloon to trigger a clap, when the first hand collides with the balloon. Measured in internal metres.
-\tabularnewline\hline
+\subsection{Client Configuration (Kinect)}
 
-KinectMinAttackAngle & 0.4 & This value ranges from -1 to 1 and is the cosine of the difference in angle allowed between hands and the balloon for triggering a clap. A value of 1 indicates the hand moves move directly at the balloon, 0 allows the hand to be moving parallel to the balloon (90 degrees) and -1 allows the hand to be moving directly away from the balloon.
-\tabularnewline\hline
+\begin{tabular}{|p{5.0cm}|p{3.0cm}|p{7.6cm}|}
 
-KinectXSensitivity & 1.5 & This is the horizontal multiplier for the Kinect input. Should be adjusted for each environment to maximize usability.
-\tabularnewline\hline
+\hline Value name & Default value & Comments \\ \hline
 
-KinectYSensitivity & 2.0 & This is the vertical multiplier for the Kinect input. Should be adjusted for each environment to maximize usability. Generally this should be bigger than the horizontal multiplier.
-\tabularnewline\hline
+EnableHighFive & false & High five allows two users to pop a balloon by each using a hand to create a clap (i.e. a high five). We decided to disable this because it's actually very hard to do! \\ \hline
 
+KinectMovementThreshold & 2.0 & This is how fast both hands need to be moving for a clap to be triggered. It uses the velocity from the physics object attached to the hands, so the value is in metres/second. \\ \hline
 
+KinectMaxHandRange & 2.0 & This is how far the second hand can be from a balloon to trigger a clap, when the first hand collides with the balloon. Measured in internal metres. \\ \hline
+
+KinectMinAttackAngle & 0.4 & This value ranges from -1 to 1 and is the cosine of the difference in angle allowed between hands and the balloon for triggering a clap. A value of 1 indicates the hand moves move directly at the balloon, 0 allows the hand to be moving parallel to the balloon (90 degrees) and -1 allows the hand to be moving directly away from the balloon. \\ \hline
+
+KinectXSensitivity & 1.5 & This is the horizontal multiplier for the Kinect input. Should be adjusted for each environment to maximize usability. \\ \hline
+
+KinectYSensitivity & 2.0 & This is the vertical multiplier for the Kinect input. Should be adjusted for each environment to maximize usability. Generally this should be bigger than the horizontal multiplier. \\ \hline
 
 \end{tabular}
