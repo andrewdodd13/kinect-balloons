@@ -1,0 +1,42 @@
+Introduction
+===============================================================================
+BubblesPortal is the CodeIgniter web application which provides user content
+submission, and balloon feed generation for the Balloons client application.
+
+Requirements
+===============================================================================
+To install and run this software, you will need a web server that meets the
+following requirements:
+
+~ PHP 5.2 or newer
+~ MySQL 5 or newer
+
+Installing
+===============================================================================
+To set up this application, follow the steps below.
+
+1) Create the tables needed by this application by running the SQL from the
+   files usercontent.sql and url_map.sql (found in the SQL folder)
+
+2) Place all of the files in the BubblesPortal directory into a web-accessible
+   location
+
+3) Make the uploads directory writeable by your web server process
+
+4) Edit the following configuration files as follows:
+
+	application/config/config.php
+	~ Set the $config['base_url'] variable to your web accessible location
+
+	application/config/database.php
+	~ Set the relevant host, username, password, and database config keys
+
+Configuration
+===============================================================================
+All feed configuration can be done in the application/config/feed.php file.
+
+Notes
+===============================================================================
+~ This software is designed to work with the unix login system of MACS, and as
+  such will require modification if you intend to authenticate in a different
+  way or at a different institution

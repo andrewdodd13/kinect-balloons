@@ -1,0 +1,28 @@
+After the initial planning of the app, we logically separated the project out into separate components and we discussed our various strength and allocated people accordingly.
+This division of labour worked very well for us, especially in the early prototype stages where each group could rapidly and in parallel, focus on their sections.
+This did cause some issues with our first integrated prototype, but we learned from that and worked smoothly afterwords.
+
+I primarily worked with Andrew to develop the client application, focusing mostly on the Kinect input, physics and gesture recognition, but I also helped with some of the initial graphics works.
+I'm glad we spent some time early on exploring what can be done with the Kinect as the limitations of the device caused us to refine our application.
+
+The way we split the groups, we ended up essentially having two man teams on each component which worked really well for us.
+While this wasn't anything as formal as paired programming, it did mean there was someone who could review code changes and discuss technical details for each section.
+It also provided some safety, that if a single member was missing one week, at least one other person would be aware of their progress.
+
+As for the choice of tools used in the project, I already had some experience with C\# so I felt quite comfortable there.
+I also found the Kinect SDK quite easy to work with, and the documentation and samples were of good quality.
+The physics library we used was quite nice to work with, after the initial set-up, however it was perhaps a bit more advanced than we required.
+We had initially thought about doing the physics ourselves, but choosing to use a library turned out to be a large time saver as the application became more complex and new things that interacted with the physics were added.
+Although, this did add some user input lag, which we tried to reduce but could never seem to completely eliminate.
+
+I was left as the sole author of the gesture recognition, since I was the only one with a Kinect device during the main development cycle.
+The Kinect has no native gesture support, so the programmer has to interpret the raw input themselves.
+This lead to a simplification of our application in this area, and I feel we were somewhat limited by this lack of support by Microsoft.
+However, it was an interesting challenge to develop our own solution.
+It took several iterations to get an implementation that felt natural to new users, but still functioned accurately.
+I chose to add config values to alter how the clap detection behaves because I found that each environment suited different values better.
+I feel that the clap detection could still be improved, specifically by detecting a clap before the moment of impact.
+
+The user evaluations were very strong in this project, which is not typical of my own projects, so this was a good learning experience for myself.
+
+I felt we worked overall very well together, and while there is always some issues of miscommunication or tardiness, I felt on the whole we were far above par during this project.
