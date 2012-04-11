@@ -4,3 +4,18 @@ Kinect Balloon System
 The Kinect Balloon System is a project which displays a news feed in a visually
 appealing way and lets users interact with the system using a Microsoft Kinect
 device.
+
+It is comprised of three parts (currently all of which are mandatory) :-
+- The user front-end which displays the balloons and allows users to interact 
+  with it using the Kinect system. This part, and the server part below, are in
+  the BubblesClient folder.
+- The server which fetches news content and organises the layout of the client
+  displays. 
+- The web application which allows users to submit content, administrators to
+  review it and provides the feed script used by the server. This part is in 
+  the BubblesPortal folder. 
+
+To-do:
+- Screen topology layout (currently each new screen is added in a 
+predetermined way).
+- Non-networked interface to let the client run standalone
